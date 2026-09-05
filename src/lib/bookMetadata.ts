@@ -1,5 +1,6 @@
 import { parseIsbn } from '@/lib/isbn';
 import { bibliotekaNarodowa, isPolishIsbn } from '@/lib/providers/bibliotekaNarodowa';
+import { eIsbn } from '@/lib/providers/eIsbn';
 import { googleBooks, googleVolumes, type BrowseSort } from '@/lib/providers/googleBooks';
 import { openLibrary } from '@/lib/providers/openLibrary';
 import type { BookResult, IsbnProvider, ProviderName } from '@/lib/providers/types';
@@ -23,15 +24,21 @@ export type { BookResult, BrowseSort, ProviderName };
 /**
  * **Polish-first for Polish ISBNs.** An ISBN-13 beginning `97883` is the Polish
  * registration group, and for those books Google and Open Library are usually
- * two guaranteed misses before the catalogue that actually has to hold it —
- * Poland has legal deposit, so BN does. Putting BN first for `978-83-…` makes
- * the common case one request instead of three; everything else keeps Google
- * first, where the covers and the descriptions are.
+ * two guaranteed misses before the catalogues that actually have to hold them.
+ * Poland has legal deposit, so BN holds what has been published; e-ISBN holds
+ * what has been *registered*, which is the newer and smaller-press tail BN has
+ * not catalogued yet. Measured against the three ISBNs that prompted this: BN
+ * answered one, e-ISBN answered a different one, neither answered the third.
+ *
+ * The two Polish sources go first for `978-83-…`; everything else keeps Google
+ * first, where the covers and the descriptions are. The Polish pair still sits
+ * at the back of the non-Polish chain: a Polish edition of a foreign novel can
+ * carry a non-Polish ISBN.
  */
 export function providersFor(isbn13: string): IsbnProvider[] {
   return isPolishIsbn(isbn13)
-    ? [bibliotekaNarodowa, googleBooks, openLibrary]
-    : [googleBooks, openLibrary, bibliotekaNarodowa];
+    ? [bibliotekaNarodowa, eIsbn, googleBooks, openLibrary]
+    : [googleBooks, openLibrary, bibliotekaNarodowa, eIsbn];
 }
 
 /**

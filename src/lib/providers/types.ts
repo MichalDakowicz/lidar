@@ -19,7 +19,7 @@ export type BookResult = {
   source?: ProviderName;
 };
 
-export type ProviderName = 'Google Books' | 'Open Library' | 'Biblioteka Narodowa';
+export type ProviderName = 'Google Books' | 'Open Library' | 'Biblioteka Narodowa' | 'e-ISBN';
 
 /**
  * One catalogue's ISBN lookup. Null means "not here", which is a real answer;

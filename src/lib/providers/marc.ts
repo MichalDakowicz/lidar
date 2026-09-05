@@ -15,6 +15,8 @@
  * recorded response without a network.
  */
 
+import { normalizeInvertedName } from './names';
+
 export type MarcSubfield = Record<string, string>;
 export type MarcField = { ind1?: string; ind2?: string; subfields?: MarcSubfield[] };
 /** Each entry is a single-key object: `{ "245": {...} }` or `{ "001": "b0001" }`. */
@@ -45,23 +47,6 @@ export function trimIsbd(value: string): string {
 }
 
 /**
- * "Nazwisko, Imię (1962- )" -> "Imię Nazwisko".
- *
- * The life dates are a disambiguator for a catalogue, not part of a name, and
- * an author rendered "Palahniuk, Chuck (1962- )" on a book card reads as a
- * database leak. Anything without a comma is left alone: a corporate author
- * ("Wydawnictwo Niebieska Studnia") is not surname-first.
- */
-export function normalizeMarcAuthor(raw: string): string {
-  const withoutDates = raw.replace(/\([^)]*\)/g, '').trim().replace(/[.,]$/, '').trim();
-  const comma = withoutDates.indexOf(',');
-  if (comma === -1) return withoutDates;
-  const surname = withoutDates.slice(0, comma).trim();
-  const given = withoutDates.slice(comma + 1).trim();
-  return given ? `${given} ${surname}` : surname;
-}
-
-/**
  * MARC 300 $a is a statement of extent, not a number: "246, [1] strona ;",
  * "318, [2] s.", "XII, 404 stron". The leading arabic integer is the page
  * count; a roman-numeral preface is deliberately not added to it, because the
@@ -86,14 +71,14 @@ export function marcAuthors(fields: MarcEntry[] | undefined): string[] {
   const names: string[] = [];
 
   for (const field of marcFields(fields, '100')) {
-    const name = normalizeMarcAuthor(subfield(field, 'a'));
+    const name = normalizeInvertedName(subfield(field, 'a'));
     if (name) names.push(name);
   }
 
   for (const field of marcFields(fields, '700')) {
     const roles = subfields(field, 'e').map((role) => role.toLowerCase().replace(/[.,]$/, ''));
     if (!roles.some((role) => AUTHOR_ROLES.includes(role))) continue;
-    const name = normalizeMarcAuthor(subfield(field, 'a'));
+    const name = normalizeInvertedName(subfield(field, 'a'));
     if (name && !names.includes(name)) names.push(name);
   }
 

@@ -1,10 +1,10 @@
+import { normalizeInvertedName } from './names';
 import {
   marcAuthors,
   marcIsbns,
   marcPageCount,
   marcPublisher,
   marcTitle,
-  normalizeMarcAuthor,
   parseExtent,
   trimIsbd,
   type MarcEntry,
@@ -32,18 +32,18 @@ const FIGHT_CLUB: MarcEntry[] = [
   { '700': { ind1: '1', ind2: ' ', subfields: [{ a: 'Jęczmyk, Lech' }, { d: '(1936-2023)' }, { e: 'Tłumaczenie' }] } },
 ];
 
-describe('normalizeMarcAuthor', () => {
+describe('normalizeInvertedName', () => {
   it('flips surname-first and drops the catalogue life dates', () => {
-    expect(normalizeMarcAuthor('Palahniuk, Chuck (1962- )')).toBe('Chuck Palahniuk');
-    expect(normalizeMarcAuthor('Lem, Stanisław (1921-2006)')).toBe('Stanisław Lem');
+    expect(normalizeInvertedName('Palahniuk, Chuck (1962- )')).toBe('Chuck Palahniuk');
+    expect(normalizeInvertedName('Lem, Stanisław (1921-2006)')).toBe('Stanisław Lem');
   });
 
   it('leaves a corporate author alone — it is not surname-first', () => {
-    expect(normalizeMarcAuthor('Wydawnictwo Niebieska Studnia')).toBe('Wydawnictwo Niebieska Studnia');
+    expect(normalizeInvertedName('Wydawnictwo Niebieska Studnia')).toBe('Wydawnictwo Niebieska Studnia');
   });
 
   it('survives a surname with no given name', () => {
-    expect(normalizeMarcAuthor('Homer,')).toBe('Homer');
+    expect(normalizeInvertedName('Homer,')).toBe('Homer');
   });
 });
 

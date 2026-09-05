@@ -100,9 +100,9 @@ all clean (117 tests, 0 errors, 0 warnings) as of the last commit.
   without it "Stanisław Lem" keyed as `stanis-aw-lem`).
 - `src/lib/bookMetadata.ts` (was `googleBooks.ts`) — `searchBooks`, `lookupIsbn`,
   `browseVolumes`, `fetchVolume`, over an ordered `src/lib/providers/` array: Google
-  Books, Open Library, Biblioteka Narodowa. BN goes first for a `978-83-…` ISBN. Covers
-  upgraded to https and de-curled; BN has no covers, so one is borrowed from another
-  provider when BN answers.
+  Books, Open Library, Biblioteka Narodowa, e-ISBN. The two Polish sources go first for
+  a `978-83-…` ISBN. Covers upgraded to https and de-curled; neither Polish source has
+  covers, so one is borrowed from another provider when they answer.
 - `src/lib/normalizeBook.ts` — the single read boundary (`normalizeBook`, `normalizeRead`,
   `normalizeRating`) and the single write mapper (`toBookRow` + `stripUndefined`).
 - `src/lib/formats.ts`, `bookStatus.ts` (incl. `readingProgress`), `ratings.ts` (facets:

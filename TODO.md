@@ -51,11 +51,15 @@ These are settled — do not re-litigate them, just build them.
    same PR as Item 8.
 3. ~~**The failing ISBNs**~~ **Answered 2026-09-05**, three of them, all `978-83-…`:
    `978-83-08-06856-4`, `978-83-66324-20-6`, `978-83-8196-545-3`. Results in §9.
-4. **e-ISBN: scrape or stop?** — NEW, and the only thing still blocking better Polish
-   coverage. §9 said to check whether e-isbn.pl has a JSON backend before committing, and
-   to stop and ask if it only renders HTML. It only renders HTML (a `POST` to
-   `/IsbnWeb/start/search.html`, jQuery, server-rendered). Two of the three ISBNs above
-   are in no free JSON catalogue, and e-ISBN is where they would be. Ask before scraping.
+4. ~~**e-ISBN: scrape or stop?**~~ **Answered 2026-09-05 — neither.** The user found
+   an actual documented API (dane.gov.pl dataset 3178): `e-isbn.pl/IsbnWeb/api.xml`,
+   ONIX 3.0, free, keyless, no scrape needed. Built. See §9.
+5. **Does e-ISBN work on the phone?** — NEW, and the only thing left open on §9.
+   e-isbn.pl serves an incomplete TLS chain (leaf only, no Certum intermediate). Node
+   rejects it and Android's TrustManager does not chase AIA, so this provider may be a
+   silent no-op on device while working on the web build. It fails safe — the chain
+   catches the throw and moves on. **Scan `978-83-8196-545-3` on the phone**; if it comes
+   back "not in any catalogue" there but resolves on the web build, that is this.
 
 ---
 
@@ -312,12 +316,13 @@ Item 6.
 - **Acceptance:** pinning four books in Lidar leaves Radar's pinned films untouched —
   verify by reading `profiles.favorites` before and after.
 
-### Item 9 — Polish ISBN coverage `feat/polish-isbn-source` — **DONE 2026-09-05, 1/3**
+### Item 9 — Polish ISBN coverage `feat/polish-isbn-source` — **DONE 2026-09-05, 2/3**
 
 Built. `lib/googleBooks.ts` is now `lib/bookMetadata.ts` over an ordered
-`lib/providers/` array, BN first for `978-83-…`. See "Hit rate" in §9 before adding
-another source — the honest answer is that BN closed one of the three, and the other two
-are in no free JSON catalogue at all.
+`lib/providers/` array — Biblioteka Narodowa **and e-ISBN** first for `978-83-…`. The two
+Polish sources are complementary, not redundant: BN answered one of the three ISBNs and
+e-ISBN answered a different one. See "Hit rate" in §9, including the TLS caveat on
+e-ISBN and the Google 429 that may explain the original failures.
 
 ### Item 9 — Polish ISBN coverage (original plan)
 
@@ -509,16 +514,26 @@ diacritics in the author and title, and the hit rate is written down here.
 
 ### Hit rate — measured 2026-09-05 against the live APIs
 
-| ISBN | Google Books | Open Library | Biblioteka Narodowa |
-| --- | --- | --- | --- |
-| 978-83-08-06856-4 | *untested, 429* | miss | **miss** |
-| 978-83-66324-20-6 | *untested, 429* | miss | **HIT** |
-| 978-83-8196-545-3 | *untested, 429* | miss | **miss** |
+| ISBN | Google Books | Open Library | Biblioteka Narodowa | e-ISBN |
+| --- | --- | --- | --- | --- |
+| 978-83-08-06856-4 | *untested, 429* | miss | miss | miss |
+| 978-83-66324-20-6 | *untested, 429* | miss | **HIT** | miss |
+| 978-83-8196-545-3 | *untested, 429* | miss | miss | **HIT** |
 
-**BN closed 1 of 3.** The one hit resolves completely and correctly: title
-"Fight club" / "podziemny krąg", author "Chuck Palahniuk" (the translator correctly *not*
-credited), publisher "Niebieska Studnia", 2020, 246 pages, language polski. Diacritics
-come through as proper UTF-8, and `bookKey`'s `UNDECOMPOSABLE` map handles them.
+**The two Polish sources together closed 2 of 3**, and they closed different ones — which
+is the case for keeping both. BN holds what has been *published* (legal deposit); e-ISBN
+holds what has been *registered*, which is the newer and smaller-press tail.
+
+Both hits resolve completely and correctly:
+
+- BN, 978-83-66324-20-6 — "Fight club" / "podziemny krąg", Chuck Palahniuk (the
+  translator Lech Jęczmyk correctly *not* credited), Niebieska Studnia, 2020, 246 pages,
+  polski.
+- e-ISBN, 978-83-8196-545-3 — "Dżuma", Albert Camus (the translator Joanna Guze correctly
+  *not* credited), Państwowy Instytut Wydawniczy, 2022-11-30, polski.
+
+Diacritics come through as proper UTF-8 in both (`D\xc5\xbcuma` on the wire), and
+`bookKey`'s `UNDECOMPOSABLE` map handles them.
 
 ### What the plan got wrong about BN
 
@@ -545,18 +560,41 @@ warned, had never been checked. Two of them are actively dangerous:
   (`"9788366324046 9788366324206"`), so the hardback and the paperback resolve to the
   same bib.
 
-### The other two, and why they are still missing
+### e-ISBN — what the plan did not know existed
 
-Both are absent from BN, Open Library, and BN under their ISBN-10 forms
-(`8308068561`, `8381965454`). `978-83-08-…` is Wydawnictwo Literackie, so these are not
-obscure self-published books — they are simply not catalogued under these numbers in any
-free JSON source.
+§9 checked the e-isbn.pl *search page*, found a jQuery form `POST` to
+`/IsbnWeb/start/search.html` returning server-rendered HTML, and said to stop and ask
+rather than scrape. That was the right call about the wrong thing: there is a real,
+documented API alongside it, registered on Poland's open-data portal as dataset 3178 —
+`https://e-isbn.pl/IsbnWeb/api.xml`, ONIX 3.0, free and keyless, sender `bnisbn@bn.org.pl`.
+No scraping involved.
 
-- **e-ISBN** is where they would be, and it has no JSON API — the search is a form `POST`
-  to `/IsbnWeb/start/search.html` returning server-rendered HTML. §9 says to stop and ask
-  rather than scrape, so that is open question §2.4.
-- **NUKAT** was not reachable at all: `sru.nukat.edu.pl` does not resolve over http or
-  https. §9 already rated it optional and fiction-irrelevant; nothing here changes that.
+Notes for whoever touches it next:
+
+- **`isbn` is the only parameter that filters.** `isbn13`, `productIdentifier` and
+  `search` are all silently ignored and hand back the first page of the bulk export —
+  the same trap BN sets with the opposite spelling, so the provider checks the returned
+  `ProductIdentifier` against the ISBN it asked for before believing a hit.
+- Plain ISBN-13 and the hyphenated form both work; ISBN-10 does not.
+- ONIX codes that matter: `ProductIDType` 15 = ISBN-13 / 02 = ISBN-10, `TitleType` 01 is
+  the distinctive title, `ContributorRole` A01 is the author (B06 is a translator and is
+  skipped), `PublishingDateRole` 01 is publication, `ExtentType` 00/11 is the page count.
+- No cover art here either, so `bookMetadata` borrows one from Google or Open Library.
+- React Native has no DOMParser, so `providers/onix.ts` is a purpose-built tag scanner
+  over a single `<Product>`, not an XML parser, and says so. 10 tests against the
+  recorded Camus response.
+- **Incomplete TLS chain** — see open question §2.5. This may not work on Android at all.
+
+### The third ISBN, and why it is still missing
+
+`978-83-08-06856-4` is absent from BN, e-ISBN and Open Library, and from BN under its
+ISBN-10 form (`8308068561`). `978-83-08-…` is Wydawnictwo Literackie, so this is not an
+obscure self-published book — it is simply not catalogued under this number in any free
+source reachable from here. **Google Books is the remaining candidate and could not be
+measured** (see below).
+
+**NUKAT** was not reachable at all: `sru.nukat.edu.pl` does not resolve over http or
+https. §9 already rated it optional and fiction-irrelevant; nothing here changes that.
 
 ### Google Books is currently rate-limited from this network
 
