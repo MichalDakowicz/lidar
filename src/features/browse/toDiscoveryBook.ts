@@ -1,4 +1,4 @@
-import type { BookResult } from '@/lib/googleBooks';
+import type { BookResult } from '@/lib/bookMetadata';
 import type { Book } from '@/types/book';
 
 /**

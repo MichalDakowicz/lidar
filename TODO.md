@@ -5,9 +5,9 @@ is needed.** `STATUS.md` says where the app stands today; this says where it is 
 in what order. Tick items off here as they land, and move anything finished into
 `STATUS.md` §2.
 
-Written 2026-09-05, before any of it was coded. **Items 1, 2, 3, 5 and 6 are done**
-(2026-09-05). Item 4 (Readlist surfaces), 7 (page tracker), 8 (top 4) and 9 (Polish
-ISBNs) are still untouched.
+Written 2026-09-05, before any of it was coded. **Items 1, 2, 3, 5, 6 and 9 are done**
+(2026-09-05) — 9 partly: see its hit rate below, one open question for the user. Item 4
+(Readlist surfaces), 7 (page tracker) and 8 (top 4) are still untouched.
 
 ---
 
@@ -49,10 +49,13 @@ These are settled — do not re-litigate them, just build them.
 2. ~~**Top 4 storage**~~ **Answered 2026-09-05: option A**, a new `book_favorites jsonb`
    column on `public.user_settings`. `docs/shared-database.md` has to be updated in the
    same PR as Item 8.
-3. **The failing ISBNs** — still open, and §9 cannot be started without them. Three to
-   five real ISBNs that come back "not in either catalogue" today. Ask for them first;
-   they are the test cases. (Everything recommended in §9 is free and keyless, so there
-   is no paid decision to make unless the Polish sources fall short.)
+3. ~~**The failing ISBNs**~~ **Answered 2026-09-05**, three of them, all `978-83-…`:
+   `978-83-08-06856-4`, `978-83-66324-20-6`, `978-83-8196-545-3`. Results in §9.
+4. **e-ISBN: scrape or stop?** — NEW, and the only thing still blocking better Polish
+   coverage. §9 said to check whether e-isbn.pl has a JSON backend before committing, and
+   to stop and ask if it only renders HTML. It only renders HTML (a `POST` to
+   `/IsbnWeb/start/search.html`, jQuery, server-rendered). Two of the three ISBNs above
+   are in no free JSON catalogue, and e-ISBN is where they would be. Ask before scraping.
 
 ---
 
@@ -309,7 +312,14 @@ Item 6.
 - **Acceptance:** pinning four books in Lidar leaves Radar's pinned films untouched —
   verify by reading `profiles.favorites` before and after.
 
-### Item 9 — Polish ISBN coverage `feat/polish-isbn-source`
+### Item 9 — Polish ISBN coverage `feat/polish-isbn-source` — **DONE 2026-09-05, 1/3**
+
+Built. `lib/googleBooks.ts` is now `lib/bookMetadata.ts` over an ordered
+`lib/providers/` array, BN first for `978-83-…`. See "Hit rate" in §9 before adding
+another source — the honest answer is that BN closed one of the three, and the other two
+are in no free JSON catalogue at all.
+
+### Item 9 — Polish ISBN coverage (original plan)
 
 **See §9 — it is the detailed spec for this item and supersedes the summary here.**
 The short version: Polish editions are the coverage gap, Biblioteka Narodowa
@@ -494,3 +504,68 @@ Then, in order:
 
 **Acceptance:** the specific ISBNs the user supplied resolve, with correct Polish
 diacritics in the author and title, and the hit rate is written down here.
+
+---
+
+### Hit rate — measured 2026-09-05 against the live APIs
+
+| ISBN | Google Books | Open Library | Biblioteka Narodowa |
+| --- | --- | --- | --- |
+| 978-83-08-06856-4 | *untested, 429* | miss | **miss** |
+| 978-83-66324-20-6 | *untested, 429* | miss | **HIT** |
+| 978-83-8196-545-3 | *untested, 429* | miss | **miss** |
+
+**BN closed 1 of 3.** The one hit resolves completely and correctly: title
+"Fight club" / "podziemny krąg", author "Chuck Palahniuk" (the translator correctly *not*
+credited), publisher "Niebieska Studnia", 2020, 246 pages, language polski. Diacritics
+come through as proper UTF-8, and `bookKey`'s `UNDECOMPOSABLE` map handles them.
+
+### What the plan got wrong about BN
+
+The §9 field notes were written from how the API is shaped generally and, as §9 itself
+warned, had never been checked. Two of them are actively dangerous:
+
+- **`isbn=` is silently ignored.** It does not error and it does not return nothing — it
+  returns *the first record in the zone*. `?isbn=9788308068564` came back as an unrelated
+  2002 biography of Mother Teresa. A provider written against `isbn=` would hand the
+  scanner a confidently wrong book, which is worse than a miss. **`isbnIssn=` is the
+  parameter**, and it is honoured. So is `title=`; `search=` is ignored the same way
+  `isbn=` is. Unknown parameters are dropped without complaint — that is the trap.
+- **The convenience fields are unusable.** `title`, `author` and `publisher` are
+  space-joined concatenations of every variant on the record: a title arrives as
+  `"Fight club : podziemny krąg / Podziemny krąg Fight club"`, an author as
+  `"Palahniuk, Chuck (1962- ) Jęczmyk, Lech (1936-2023) Wydawnictwo Niebieska Studnia"` —
+  novel, translator and publisher in one string with no separator to split on. Everything
+  has to be read out of `marc.fields` instead (245 $a/$b, 100/700 $a with $e for the role,
+  260/264 $b, 300 $a). `genre` is the same blob, so genres are dropped rather than guessed.
+- Right in the notes: no cover art, page count as a statement of extent (`"246, [1]
+  strona ;"` as well as the predicted `"318, [2] s."`), and authors as
+  `"Nazwisko, Imię (dates)"` needing the dates stripped and the name flipped.
+- `isbnIssn` is stored digits-only and carries **every binding's ISBN on one record**
+  (`"9788366324046 9788366324206"`), so the hardback and the paperback resolve to the
+  same bib.
+
+### The other two, and why they are still missing
+
+Both are absent from BN, Open Library, and BN under their ISBN-10 forms
+(`8308068561`, `8381965454`). `978-83-08-…` is Wydawnictwo Literackie, so these are not
+obscure self-published books — they are simply not catalogued under these numbers in any
+free JSON source.
+
+- **e-ISBN** is where they would be, and it has no JSON API — the search is a form `POST`
+  to `/IsbnWeb/start/search.html` returning server-rendered HTML. §9 says to stop and ask
+  rather than scrape, so that is open question §2.4.
+- **NUKAT** was not reachable at all: `sru.nukat.edu.pl` does not resolve over http or
+  https. §9 already rated it optional and fiction-irrelevant; nothing here changes that.
+
+### Google Books is currently rate-limited from this network
+
+Every anonymous `volumes` call returned **429, "Quota exceeded ... Queries per day"**, so
+Google's column above could not be measured. `EXPO_PUBLIC_GOOGLE_BOOKS_KEY` is
+deliberately blank (STATUS §3 step 1) and the anonymous quota is shared per IP.
+
+**This may be the whole story behind the reported failures.** If Google was 429ing when
+those three books were scanned, they would have come back "not in either catalogue"
+regardless of whether Google holds them. Setting a (free) Google Books API key in `.env`
+is the cheapest next thing to try, and it should be tried before any more catalogues are
+added.

@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 
 import { useBooks } from '@/hooks/useBooks';
-import { fetchVolume, lookupIsbn } from '@/lib/googleBooks';
+import { fetchVolume, lookupIsbn } from '@/lib/bookMetadata';
 import { goBackOrHome } from '@/lib/utils';
 import type { Book } from '@/types/book';
 

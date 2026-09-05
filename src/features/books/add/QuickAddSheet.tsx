@@ -1,17 +1,18 @@
 import { useRouter } from 'expo-router';
 import { PenLine, ScanBarcode, Search } from 'lucide-react-native';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { BottomSheetTextInput, Sheet, type BottomSheetModal } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
+import { formatIsbn, parseIsbn } from '@/lib/isbn';
 import { AddSearchResults } from '@/features/books/add/AddSearchResults';
 import { StatusPicker } from '@/features/books/add/StatusPicker';
 import { useBookSearch } from '@/features/books/add/useBookSearch';
 import { DEFAULT_DRAFT, useQuickAdd, type QuickAddDraft } from '@/features/books/add/useQuickAdd';
 import { useIsbnScannerStore } from '@/store/isbnScanner';
 import { authorList } from '@/lib/bookKey';
-import type { BookResult } from '@/lib/googleBooks';
+import type { BookResult } from '@/lib/bookMetadata';
 import { COLORS } from '@/theme/colors';
 
 /**
@@ -28,12 +29,26 @@ import { COLORS } from '@/theme/colors';
  * The status picker sits above the results because it applies to whatever you
  * pick next, and the default — the readlist — is what most adds want.
  */
-export const QuickAddSheet = forwardRef<BottomSheetModal>(function QuickAddSheet(_props, ref) {
+export const QuickAddSheet = forwardRef<BottomSheetModal, { seedIsbn?: string | null }>(function QuickAddSheet(
+  { seedIsbn },
+  ref,
+) {
   const router = useRouter();
   const { show } = useToast();
   const [term, setTerm] = useState('');
   const [draft, setDraft] = useState<QuickAddDraft>(DEFAULT_DRAFT);
   const [manual, setManual] = useState({ title: '', authors: '' });
+  // Set when the sheet was opened from a scan nothing could resolve.
+  const [seededIsbn, setSeededIsbn] = useState<string | null>(null);
+
+  // A scan nothing could resolve opens this sheet straight on the by-hand form,
+  // carrying its ISBN. Keyed on the value so re-scanning the same number after
+  // dismissing still re-opens it.
+  useEffect(() => {
+    if (!seedIsbn) return;
+    setSeededIsbn(seedIsbn);
+    setManualOpen(true);
+  }, [seedIsbn]);
   const [manualOpen, setManualOpen] = useState(false);
   const { results, loading } = useBookSearch(term);
   const { add, addManual, isAdded, pendingKey } = useQuickAdd();
@@ -68,11 +83,16 @@ export const QuickAddSheet = forwardRef<BottomSheetModal>(function QuickAddSheet
     const title = manual.title.trim();
     if (!title) return show('Give the book a title first');
     try {
-      const book = await addManual({ title, authors: authorList(manual.authors) }, draft);
+      const parsed = seededIsbn ? parseIsbn(seededIsbn) : null;
+      const book = await addManual(
+        { title, authors: authorList(manual.authors), isbn13: parsed?.isbn13, isbn10: parsed?.isbn10 },
+        draft,
+      );
       if (book) {
         show(`${book.title} added`);
         setManual({ title: '', authors: '' });
         setManualOpen(false);
+        setSeededIsbn(null);
         dismiss();
         router.push({ pathname: '/book/[bookId]', params: { bookId: book.id } });
       }
@@ -128,6 +148,12 @@ export const QuickAddSheet = forwardRef<BottomSheetModal>(function QuickAddSheet
           {manualOpen ? (
             <>
               <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Add by hand</Text>
+              {!!seededIsbn && (
+                <Text className="text-xs text-muted-foreground">
+                  Keeping ISBN <Text className="font-mono text-foreground">{formatIsbn(seededIsbn)}</Text> — it is what
+                  ties this to a rating made later.
+                </Text>
+              )}
               <BottomSheetTextInput
                 value={manual.title}
                 onChangeText={(title) => setManual((current) => ({ ...current, title }))}

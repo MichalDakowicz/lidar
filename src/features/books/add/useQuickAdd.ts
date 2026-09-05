@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useBooks, type NewBook } from '@/hooks/useBooks';
 import { bookKey } from '@/lib/bookKey';
-import type { BookResult } from '@/lib/googleBooks';
+import type { BookResult } from '@/lib/bookMetadata';
 import type { Book, BookStatus } from '@/types/book';
 
 export type QuickAddDraft = {

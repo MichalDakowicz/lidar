@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
-import { fetchVolume, lookupIsbn, searchBooks, type BookResult } from '@/lib/googleBooks';
+import { fetchVolume, lookupIsbn, searchBooks, type BookResult } from '@/lib/bookMetadata';
 import { parseIsbn } from '@/lib/isbn';
 
 /** Debounce a fast-changing string, so a keystroke is not a network call. */

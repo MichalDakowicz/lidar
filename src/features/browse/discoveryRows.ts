@@ -1,5 +1,5 @@
 import { isReadlist, isStarted } from '@/lib/bookStatus';
-import type { BrowseSort } from '@/lib/googleBooks';
+import type { BrowseSort } from '@/lib/bookMetadata';
 import type { Book } from '@/types/book';
 
 /**

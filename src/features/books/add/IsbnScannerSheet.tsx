@@ -1,13 +1,13 @@
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { Image } from 'expo-image';
-import { BookOpen, Camera, Check, Flashlight, Keyboard, Plus, RotateCcw } from 'lucide-react-native';
+import { BookOpen, Camera, Check, Flashlight, Keyboard, PenLine, Plus, RotateCcw } from 'lucide-react-native';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 
 import { BottomSheetTextInput, Sheet, type BottomSheetModal } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import { useIsbnLookup } from '@/features/books/add/useBookSearch';
-import type { BookResult } from '@/lib/googleBooks';
+import type { BookResult } from '@/lib/bookMetadata';
 import { DEFAULT_DRAFT, useQuickAdd, type QuickAddDraft } from '@/features/books/add/useQuickAdd';
 import { formatIsbn, isBooklandEan, parseIsbn } from '@/lib/isbn';
 import { authorsToDisplayString, publishedYear } from '@/lib/utils';
@@ -29,6 +29,8 @@ type IsbnScannerSheetProps = {
   draft?: QuickAddDraft;
   /** Called after a book lands on the shelf, so the caller can navigate. */
   onAdded?: (book: Book) => void;
+  /** Nothing resolved: hand the ISBN to the by-hand form. The parent closes this sheet first. */
+  onAddByHand?: (isbn13: string) => void;
 };
 
 /**
@@ -47,7 +49,7 @@ type IsbnScannerSheetProps = {
  * moment a number exists.
  */
 export const IsbnScannerSheet = forwardRef<BottomSheetModal, IsbnScannerSheetProps>(function IsbnScannerSheet(
-  { draft = DEFAULT_DRAFT, onAdded },
+  { draft = DEFAULT_DRAFT, onAdded, onAddByHand },
   ref,
 ) {
   const { show } = useToast();
@@ -107,6 +109,21 @@ export const IsbnScannerSheet = forwardRef<BottomSheetModal, IsbnScannerSheetPro
     setIsbn(parsed.isbn13);
   };
 
+  /**
+   * Nothing answered, so the catalogues cannot name this book — but the number
+   * still identifies the edition. Handing it to the Quick-Add sheet is what
+   * keeps the hand-typed row keyed `isbn:<n>` rather than `manual:<author>|
+   * <title>`, which is what lets a rating made later from a catalogue hit for
+   * the same edition find it.
+   */
+  const handleAddByHand = () => {
+    const scanned = isbn;
+    reset();
+    // The parent closes this sheet before opening the next: two stacked bottom
+    // sheets fight over the backdrop and the keyboard.
+    if (scanned) onAddByHand?.(scanned);
+  };
+
   const handleAdd = async () => {
     if (!found) return;
     try {
@@ -148,6 +165,7 @@ export const IsbnScannerSheet = forwardRef<BottomSheetModal, IsbnScannerSheetPro
             onShelf={onShelf}
             pending={!!found && pendingKey === found.bookKey}
             onAdd={handleAdd}
+            onAddByHand={handleAddByHand}
             onAgain={reset}
           />
         ) : typing || !cameraAvailable ? (
@@ -257,9 +275,10 @@ type ScanResultProps = {
   pending: boolean;
   onAdd: () => void;
   onAgain: () => void;
+  onAddByHand: () => void;
 };
 
-function ScanResult({ isbn, loading, notFound, found, onShelf, pending, onAdd, onAgain }: ScanResultProps) {
+function ScanResult({ isbn, loading, notFound, found, onShelf, pending, onAdd, onAgain, onAddByHand }: ScanResultProps) {
   return (
     <View className="gap-4">
       <View className="flex-row items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5">
@@ -277,12 +296,19 @@ function ScanResult({ isbn, loading, notFound, found, onShelf, pending, onAdd, o
       )}
 
       {notFound && (
-        <View className="gap-2 rounded-xl border border-border bg-card p-4">
-          <Text className="font-semibold text-foreground">Not in either catalogue</Text>
+        <View className="gap-3 rounded-xl border border-border bg-card p-4">
+          <Text className="font-semibold text-foreground">Not in any catalogue</Text>
           <Text className="text-sm text-muted-foreground">
-            Neither Google Books nor Open Library has this edition. Add it by hand from the search sheet — the ISBN
-            above still identifies it.
+            Google Books, Open Library and Biblioteka Narodowa have no record of this edition. Add it by hand — the
+            ISBN goes with it, so a rating you give it later still finds this book.
           </Text>
+          <Pressable
+            onPress={onAddByHand}
+            className="flex-row items-center justify-center gap-2 rounded-full border border-border py-3 active:opacity-80"
+          >
+            <PenLine size={16} color={COLORS.foreground} />
+            <Text className="font-medium text-foreground">Add by hand</Text>
+          </Pressable>
         </View>
       )}
 
@@ -311,6 +337,13 @@ function ScanResult({ isbn, loading, notFound, found, onShelf, pending, onAdd, o
                   .filter(Boolean)
                   .join(' • ')}
               </Text>
+              {/* Which catalogue answered. A wrong record is otherwise
+                  untraceable to the source that supplied it. */}
+              {!!found.source && (
+                <View className="mt-0.5 self-start rounded-full bg-secondary px-2 py-0.5">
+                  <Text className="text-[10px] font-medium text-muted-foreground">via {found.source}</Text>
+                </View>
+              )}
             </View>
           </View>
 

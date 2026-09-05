@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { browseVolumes, type BookResult } from '@/lib/googleBooks';
+import { browseVolumes, type BookResult } from '@/lib/bookMetadata';
 
 import { toDiscoveryBook } from './toDiscoveryBook';
 import type { RowSpec } from './discoveryRows';

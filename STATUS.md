@@ -4,9 +4,11 @@
 It says what Lidar is, what state it is in, what is verified, what is not, and what to do
 next, in order. Update it as work lands — it is the handover, not a changelog.
 
-> **0.2.0 is under way.** `TODO.md` is the work order — Items 1, 2, 3, 5 and 6 have
+> **0.2.0 is under way.** `TODO.md` is the work order — Items 1, 2, 3, 5, 6 and 9 have
 > landed (strip ownership, rectangular covers, drop the recent rail, Browse replaces
-> Ratings, Radar's stats with a page streak); Items 4, 7, 8 and 9 have not started.
+> Ratings, Radar's stats with a page streak, Biblioteka Narodowa as an ISBN source);
+> Items 4, 7 and 8 have not started. **Google Books is 429ing anonymous requests from
+> this network — set `EXPO_PUBLIC_GOOGLE_BOOKS_KEY` before judging any lookup failure.**
 > `TODO.md` is
 > re-cutting Lidar to follow Radar rather than Sonar (no ownership, rectangular covers,
 > Browse instead of the rating page, a readlist, page-based reading streaks, a top 4, and
@@ -96,8 +98,11 @@ all clean (117 tests, 0 errors, 0 warnings) as of the last commit.
 - `src/lib/bookKey.ts` + test — `isbn:` › `gbooks:` › `manual:`, with an
   `UNDECOMPOSABLE` map so `ł`, `ø`, `đ` etc. slug correctly (NFKD will not split them;
   without it "Stanisław Lem" keyed as `stanis-aw-lem`).
-- `src/lib/googleBooks.ts` — `searchBooks`, `lookupIsbn` (Google by ISBN-13, then by
-  ISBN-10, then Open Library), `fetchVolume`. Covers upgraded to https and de-curled.
+- `src/lib/bookMetadata.ts` (was `googleBooks.ts`) — `searchBooks`, `lookupIsbn`,
+  `browseVolumes`, `fetchVolume`, over an ordered `src/lib/providers/` array: Google
+  Books, Open Library, Biblioteka Narodowa. BN goes first for a `978-83-…` ISBN. Covers
+  upgraded to https and de-curled; BN has no covers, so one is borrowed from another
+  provider when BN answers.
 - `src/lib/normalizeBook.ts` — the single read boundary (`normalizeBook`, `normalizeRead`,
   `normalizeRating`) and the single write mapper (`toBookRow` + `stripUndefined`).
 - `src/lib/formats.ts`, `bookStatus.ts` (incl. `readingProgress`), `ratings.ts` (facets:

@@ -30,6 +30,7 @@ export default function TabsLayout() {
   const scannerRef = useRef<BottomSheetModal>(null);
   const periodRef = useRef<BottomSheetModal>(null);
   const [scanDraft, setScanDraft] = useState<QuickAddDraft>(DEFAULT_DRAFT);
+  const [seedIsbn, setSeedIsbn] = useState<string | null>(null);
   const setPresentQuickAdd = useQuickAddSheetStore((s) => s.setPresent);
   const setPresentScanner = useIsbnScannerStore((s) => s.setPresent);
   const setPresentPeriod = useStatsPeriodSheet((s) => s.setPresent);
@@ -44,7 +45,10 @@ export default function TabsLayout() {
   // library, the period picker from that action on Stats and from the pill.
   // The scanner especially — one live CameraView in the tree, never several.
   useEffect(() => {
-    setPresentQuickAdd(() => quickAddRef.current?.present());
+    setPresentQuickAdd((isbn?: string | null) => {
+      setSeedIsbn(isbn ?? null);
+      quickAddRef.current?.present();
+    });
     return () => setPresentQuickAdd(null);
   }, [setPresentQuickAdd]);
 
@@ -80,13 +84,18 @@ export default function TabsLayout() {
         <Tabs.Screen name="social" options={{ title: 'Social' }} />
         <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
       </Tabs>
-      <QuickAddSheet ref={quickAddRef} />
+      <QuickAddSheet ref={quickAddRef} seedIsbn={seedIsbn} />
       <IsbnScannerSheet
         ref={scannerRef}
         draft={scanDraft}
         onAdded={(book) => {
           scannerRef.current?.dismiss();
           router.push({ pathname: '/book/[bookId]', params: { bookId: book.id } });
+        }}
+        onAddByHand={(isbn13) => {
+          scannerRef.current?.dismiss();
+          setSeedIsbn(isbn13);
+          quickAddRef.current?.present();
         }}
       />
       <StatsPeriodSheet ref={periodRef} onPicked={() => periodRef.current?.dismiss()} />

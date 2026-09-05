@@ -3,7 +3,7 @@ import { BookOpen, Check, Plus } from 'lucide-react-native';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/ui/EmptyState';
-import type { BookResult } from '@/lib/googleBooks';
+import type { BookResult } from '@/lib/bookMetadata';
 import { authorsToDisplayString, publishedYear } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
 

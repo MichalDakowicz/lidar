@@ -5,6 +5,9 @@ See `UPDATE-schema.md` for how to write these.
 ## 0.2.0 — Unreleased
 
 ### Added
+- Scanning a Polish book now checks Biblioteka Narodowa, which Google and Open Library miss
+- Scan card says which catalogue answered, so a wrong record is traceable
+- A scan no catalogue knows can be added by hand keeping its ISBN, so a later rating finds it
 - Reading streak counts pages a week, so a long novel keeps it alive as well as a short one
 - Stats gets a six-month reading calendar, shaded by how much you read each day
 - Weekly page goal in Settings, defaulting to 150
