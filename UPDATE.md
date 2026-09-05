@@ -19,6 +19,7 @@ See `UPDATE-schema.md` for how to write these.
 - Add a book straight from a Browse row or a search result, without opening it
 
 ### Changed
+- Sign-in screen names both siblings, Radar and Sonar, as the same account
 - Stats is laid out as sections rather than a stack of cards, so the big numbers lead
 - Most-read authors are ranked by pages read, not by how many of their books you own
 - Covers are rectangular, the shape a book jacket actually is, everywhere in the app
