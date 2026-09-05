@@ -1,17 +1,19 @@
-import { BookMarked, BookOpen, CalendarRange, Flame, Library, Play, Star, Users } from 'lucide-react-native';
+import { BarChart3, CalendarRange, Flame } from 'lucide-react-native';
 import { ScrollView, Text, View } from 'react-native';
 
-import { BookCarousel } from '@/components/media/BookCarousel';
-import { CountBars } from '@/components/stats/CountBars';
+import { AuthorItem } from '@/components/stats/AuthorItem';
 import { DecadeBars } from '@/components/stats/DecadeBars';
-import { QuickStat } from '@/components/stats/QuickStat';
+import { GenreTag, rankFor } from '@/components/stats/GenreTag';
+import { Masterpieces } from '@/components/stats/Masterpieces';
 import { RatingCurve } from '@/components/stats/RatingCurve';
-import { ReadStrip } from '@/components/stats/ReadStrip';
+import { StreakCalendar } from '@/components/stats/StreakCalendar';
 import { ThinProgressBar } from '@/components/stats/ThinProgressBar';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { StatsOverview } from '@/features/stats/StatsOverview';
 import { useStats } from '@/features/stats/useStats';
 import { useNavBarSpace } from '@/hooks/useNavBarSpace';
 import { periodShortLabel, type StatsPeriodId } from '@/lib/statsPeriod';
+import { DEFAULT_WEEKLY_PAGES } from '@/store/readingGoal';
 import { COLORS } from '@/theme/colors';
 import type { Book, BookRating, Ratings, Read } from '@/types/book';
 
@@ -26,35 +28,47 @@ type StatsViewProps = {
   onOpenBook?: (book: Book) => void;
   /** Own-stats screen only; the public shelf renders the pill inert. */
   onOpenPeriod?: () => void;
+  /**
+   * Own screen passes the reader's goal. A friend's shelf omits it — the goal is
+   * device-local (store/readingGoal), so the only honest thing to show on
+   * somebody else's numbers is the default.
+   */
+  weeklyGoal?: number;
 };
 
-function Card({ title, children, action }: { title?: string; children: React.ReactNode; action?: React.ReactNode }) {
-  return (
-    <View className="gap-4 rounded-2xl border border-border bg-card/50 p-5">
-      {(!!title || !!action) && (
-        <View className="flex-row items-center justify-between">
-          {!!title && <Text className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{title}</Text>}
-          {action}
-        </View>
-      )}
-      {children}
-    </View>
-  );
+/** Radar's section heading: a real title, not a caption on a card. */
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <Text className="mb-6 text-2xl font-bold tracking-tight text-foreground">{children}</Text>;
 }
 
 /**
  * The whole Stats screen body, shared by your own stats and a friend's public
  * shelf so the two can never drift. Every number comes from useStats; this file
  * only lays them out.
+ *
+ * Laid out as Radar's is: full-bleed sections separated by rules and headings,
+ * not a stack of rounded cards. The cards were Sonar's, and on a page that is
+ * almost entirely numbers they framed every figure identically — which is a way
+ * of saying none of them matters more than the others.
  */
-export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBook, onOpenPeriod }: StatsViewProps) {
-  const { stats, distribution, perDay, streak, periodReads } = useStats({ books, reads, ratings, period });
+export function StatsView({
+  books,
+  reads,
+  ratings,
+  period,
+  ratingsFor,
+  onOpenBook,
+  onOpenPeriod,
+  weeklyGoal = DEFAULT_WEEKLY_PAGES,
+}: StatsViewProps) {
   const navBarSpace = useNavBarSpace();
+  const bundle = useStats({ books, reads, ratings, period, weeklyGoal });
+  const { stats, distribution, streak, longestStreak, weekNeeded, weekPages } = bundle;
 
   if (books.length === 0 && ratings.length === 0) {
     return (
       <EmptyState
-        icon={<BookOpen size={40} color={COLORS.mutedDeep} />}
+        icon={<BarChart3 size={40} color={COLORS.mutedDeep} />}
         title="No numbers yet"
         description="Add a few books and log what you finish — the shape shows up fast."
       />
@@ -62,126 +76,104 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
   }
 
   const statusMax = Math.max(stats.totalBooks + stats.readlistCount, 1);
+  const maxAuthorPages = stats.authorsByPages[0]?.pages ?? 1;
 
   return (
-    <ScrollView
-      className="flex-1"
-      contentContainerClassName="gap-5 px-4 pt-4"
-      contentContainerStyle={{ paddingBottom: navBarSpace + 24 }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* The period pill: the window applies to reads, not to the shelf, so it
-          sits with the reading numbers rather than at the top of the screen. */}
-      <View className="flex-row flex-wrap gap-4 rounded-2xl border border-border bg-card/50 p-5">
-        <View className="min-w-[45%] flex-1">
-          <QuickStat value={stats.totalBooks} label="Books" icon={<Library size={16} color={MUTED} />} />
-        </View>
-        <View className="min-w-[45%] flex-1">
-          <QuickStat value={stats.uniqueAuthors} label="Authors" icon={<Users size={16} color={MUTED} />} />
-        </View>
-        <View className="min-w-[45%] flex-1">
-          <QuickStat
-            value={stats.averageRating != null ? stats.averageRating.toFixed(1) : '—'}
-            label="Avg rating"
-            suffix={stats.ratedCount > 0 ? `of ${stats.ratedCount}` : undefined}
-            icon={<Star size={16} color={MUTED} />}
-          />
-        </View>
-        <View className="min-w-[45%] flex-1">
-          <QuickStat
-            value={stats.readlistCount}
-            label="Readlist"
-            suffix={stats.readingCount > 0 ? `${stats.readingCount} on the go` : undefined}
-            icon={<BookMarked size={16} color={MUTED} />}
-          />
-        </View>
-      </View>
+    <ScrollView contentContainerStyle={{ paddingBottom: navBarSpace + 24 }} showsVerticalScrollIndicator={false}>
+      <StatsOverview stats={stats} streak={streak} periodReads={bundle.periodReads} />
 
-      <Card
-        title="Reading"
-        action={
-          <View className="flex-row items-center gap-1.5">
+      {/* Reading streak */}
+      <View className="mb-12 gap-4 px-4">
+        <View className="flex-row items-center justify-between gap-3">
+          <SectionTitle>Reading streak</SectionTitle>
+          <View className="flex-row items-center gap-1.5 pb-6">
             <CalendarRange size={13} color={onOpenPeriod ? COLORS.accent : MUTED} />
             <Text className="text-xs" style={{ color: onOpenPeriod ? COLORS.accent : MUTED }} onPress={onOpenPeriod}>
               {periodShortLabel(period)}
             </Text>
           </View>
-        }
-      >
-        <View className="flex-row flex-wrap gap-4">
-          <View className="min-w-[45%] flex-1">
-            <QuickStat value={periodReads} label="Reads" icon={<Play size={16} color={MUTED} />} />
-          </View>
-          <View className="min-w-[45%] flex-1">
-            <QuickStat value={streak} label="Day streak" suffix="days" icon={<Flame size={16} color={MUTED} />} />
+        </View>
+
+        <View className="flex-row items-center gap-2">
+          <Flame size={14} color={COLORS.accent} />
+          <Text className="text-xs text-muted-foreground">
+            {streak} days · Longest {longestStreak} · {weekPages.toLocaleString()} of {weeklyGoal.toLocaleString()} pages
+            this week
+            {weekNeeded > 0 ? ` · ${weekNeeded.toLocaleString()} to go` : ' · goal met'}
+          </Text>
+        </View>
+
+        <StreakCalendar daily={bundle.dailyPages} weeklyGoal={weeklyGoal} />
+      </View>
+
+      <View className="mb-12">
+        <Masterpieces books={books} ratings={ratings} ratingsFor={ratingsFor} onPress={onOpenBook} />
+      </View>
+
+      <View className="mb-12 px-4">
+        <SectionTitle>Status breakdown</SectionTitle>
+        <View className="gap-6">
+          <ThinProgressBar label="Read" value={stats.readCount} max={statusMax} />
+          <ThinProgressBar label="Reading" value={stats.readingCount} max={statusMax} />
+          <ThinProgressBar label="Readlist" value={stats.readlistCount} max={statusMax} />
+          <ThinProgressBar label="Did not finish" value={stats.dnfCount} max={statusMax} />
+        </View>
+      </View>
+
+      <View className="mb-12 px-4">
+        <SectionTitle>How you rate</SectionTitle>
+        <RatingCurve distribution={distribution} />
+      </View>
+
+      {stats.authorsByPages.length > 0 && (
+        <View className="mb-12 px-4">
+          <SectionTitle>Most read authors</SectionTitle>
+          <View>
+            {stats.authorsByPages.map((author) => (
+              <AuthorItem
+                key={author.name}
+                name={author.name}
+                pages={author.pages}
+                books={author.books}
+                max={maxAuthorPages}
+              />
+            ))}
           </View>
         </View>
-        <ReadStrip perDay={perDay} />
-      </Card>
+      )}
 
-      {stats.mostSpun.length > 0 && (
-        <Card title="Most read">
-          <BookCarousel
-            books={stats.mostSpun.map((entry) => entry.book)}
-            cardVariant="compact"
-            cardWidth={110}
-            ratingsFor={ratingsFor}
-            onPress={onOpenBook}
-            readOnly={!onOpenBook}
-          />
-          <View className="gap-1.5">
-            {stats.mostSpun.map((entry) => (
+      {stats.mostReread.length > 0 && (
+        <View className="mb-12 px-4">
+          <SectionTitle>Read more than once</SectionTitle>
+          <View className="gap-3">
+            {stats.mostReread.map((entry) => (
               <View key={entry.book.id} className="flex-row items-center justify-between gap-3">
-                <Text numberOfLines={1} className="min-w-0 flex-1 text-xs text-muted-foreground">
+                <Text numberOfLines={1} className="min-w-0 flex-1 text-base text-foreground">
                   {entry.book.title}
                 </Text>
-                <Text className="text-xs font-semibold text-foreground">{entry.count}×</Text>
+                <Text className="text-sm font-semibold text-primary">{entry.count}×</Text>
               </View>
             ))}
           </View>
-        </Card>
-      )}
-
-      <Card title="Shelf">
-        <ThinProgressBar label="Read" value={stats.readCount} max={statusMax} />
-        <ThinProgressBar label="Reading" value={stats.readingCount} max={statusMax} />
-        <ThinProgressBar label="Readlist" value={stats.readlistCount} max={statusMax} />
-        <ThinProgressBar label="Did not finish" value={stats.dnfCount} max={statusMax} />
-      </Card>
-
-      <Card>
-        <RatingCurve distribution={distribution} />
-      </Card>
-
-      {stats.bestRated.length > 0 && (
-        <Card title="Rated highest">
-          <BookCarousel
-            books={stats.bestRated.map((entry) => entry.book)}
-            cardVariant="compact"
-            cardWidth={110}
-            ratingsFor={ratingsFor}
-            onPress={onOpenBook}
-            readOnly={!onOpenBook}
-          />
-        </Card>
-      )}
-
-      {stats.topAuthors.length > 0 && (
-        <Card title="Most read authors">
-          <CountBars slices={stats.topAuthors} />
-        </Card>
+        </View>
       )}
 
       {stats.decades.length > 0 && (
-        <Card title="Publication eras">
+        <View className="mb-12 px-4">
+          <SectionTitle>Publication eras</SectionTitle>
           <DecadeBars decades={stats.decades} />
-        </Card>
+        </View>
       )}
 
       {stats.topGenres.length > 0 && (
-        <Card title="Genres">
-          <CountBars slices={stats.topGenres} accent="#a855f7" />
-        </Card>
+        <View className="mb-12 px-4">
+          <SectionTitle>Favourite subjects</SectionTitle>
+          <View className="flex-row flex-wrap gap-3">
+            {stats.topGenres.map((genre, index) => (
+              <GenreTag key={genre.name} name={genre.name} count={genre.count} rank={rankFor(index)} />
+            ))}
+          </View>
+        </View>
       )}
     </ScrollView>
   );

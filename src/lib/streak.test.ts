@@ -1,0 +1,134 @@
+import { currentStreak, dailyPages, dateKey, longestStreak, pagesInWeek, weekShortfall, weekStart } from './streak';
+import type { Read } from '@/types/book';
+
+function read(finishedAt: string, pageCount: number | null, overrides: Partial<Read> = {}): Read {
+  return {
+    id: `${finishedAt}-${pageCount}`,
+    userId: 'u',
+    bookId: 'b',
+    bookKey: 'isbn:9780000000001',
+    title: 'A book',
+    authors: [],
+    coverUrl: null,
+    startedAt: null,
+    finishedAt,
+    pageCount,
+    ...overrides,
+  };
+}
+
+/** Local noon, so a timezone offset cannot shift the day under the test. */
+function at(iso: string): string {
+  return new Date(`${iso}T12:00:00`).toISOString();
+}
+
+describe('weekStart', () => {
+  it('anchors on Monday, and treats Sunday as the end of its week', () => {
+    // 2026-06-03 is a Wednesday; 2026-06-07 the Sunday after it.
+    expect(dateKey(weekStart(new Date('2026-06-03T12:00:00')))).toBe('2026-06-01');
+    expect(dateKey(weekStart(new Date('2026-06-07T12:00:00')))).toBe('2026-06-01');
+    expect(dateKey(weekStart(new Date('2026-06-08T12:00:00')))).toBe('2026-06-08');
+  });
+});
+
+describe('pagesInWeek', () => {
+  it('sums a week that straddles a month boundary', () => {
+    // Mon 2026-06-29 .. Sun 2026-07-05 — four days in June, three in July.
+    const daily = { '2026-06-29': 40, '2026-06-30': 60, '2026-07-01': 50, '2026-07-05': 30 };
+    expect(pagesInWeek(daily, weekStart(new Date('2026-07-02T12:00:00')))).toBe(180);
+  });
+
+  it('does not bleed into the week either side of the boundary', () => {
+    const daily = { '2026-06-28': 999, '2026-07-06': 999, '2026-06-29': 10 };
+    expect(pagesInWeek(daily, weekStart(new Date('2026-07-02T12:00:00')))).toBe(10);
+  });
+});
+
+describe('dailyPages', () => {
+  it('buckets a finished read on the day it was finished', () => {
+    expect(dailyPages([read(at('2026-06-01'), 320)])['2026-06-01']).toBe(320);
+  });
+
+  it('counts a re-read of a different edition at that edition’s length', () => {
+    const daily = dailyPages([
+      read(at('2026-06-01'), 320, { id: 'first' }),
+      read(at('2026-09-01'), 288, { id: 'reread', bookKey: 'isbn:9780000000002' }),
+    ]);
+    expect(daily['2026-06-01']).toBe(320);
+    expect(daily['2026-09-01']).toBe(288);
+  });
+
+  it('adds two finishes on the same day together', () => {
+    const daily = dailyPages([read(at('2026-06-01'), 120, { id: 'a' }), read(at('2026-06-01'), 80, { id: 'b' })]);
+    expect(daily['2026-06-01']).toBe(200);
+  });
+
+  it('contributes nothing for a book with no page count, rather than guessing', () => {
+    expect(dailyPages([read(at('2026-06-01'), null)])).toEqual({});
+  });
+
+  it('folds in bookmark moves alongside finished reads', () => {
+    const daily = dailyPages([read(at('2026-06-01'), 100)], [{ recordedAt: at('2026-06-01'), pages: 45 }]);
+    expect(daily['2026-06-01']).toBe(145);
+  });
+});
+
+describe('currentStreak', () => {
+  const now = new Date('2026-06-03T12:00:00'); // Wednesday
+
+  it('is zero with nothing read', () => {
+    expect(currentStreak({}, 150, now)).toBe(0);
+  });
+
+  it('counts the current week on any pages at all, because it is not over', () => {
+    const daily = { '2026-06-01': 20, '2026-06-02': 20, '2026-06-03': 20 };
+    expect(currentStreak(daily, 150, now)).toBe(3);
+  });
+
+  it('skips an empty day while its week still clears the threshold', () => {
+    // Previous week (Mon 2026-05-25..Sun 05-31) totals 200, over the threshold,
+    // so the blank Thursday inside it does not end the run.
+    const daily = {
+      '2026-06-01': 30,
+      '2026-05-31': 50,
+      '2026-05-30': 50,
+      // 2026-05-29 blank
+      '2026-05-28': 100,
+    };
+    expect(currentStreak(daily, 150, now)).toBe(4);
+  });
+
+  it('stops at a past week that fell short of the threshold', () => {
+    const daily = { '2026-06-01': 30, '2026-05-31': 10, '2026-05-30': 10 };
+    expect(currentStreak(daily, 150, now)).toBe(1);
+  });
+});
+
+describe('longestStreak', () => {
+  it('finds the best historical run, not the current one', () => {
+    const daily = {
+      '2026-05-25': 200,
+      '2026-05-26': 200,
+      '2026-05-27': 200,
+      // a fortnight of nothing
+      '2026-06-15': 200,
+    };
+    expect(longestStreak(daily, 150)).toBe(3);
+  });
+});
+
+describe('weekShortfall', () => {
+  it('reports what is still owed this week', () => {
+    const now = new Date('2026-06-03T12:00:00');
+    expect(weekShortfall({ '2026-06-01': 40 }, 150, now)).toEqual({
+      weekStart: '2026-06-01',
+      needed: 110,
+      read: 40,
+    });
+  });
+
+  it('reports nothing owed once the threshold is met', () => {
+    const now = new Date('2026-06-03T12:00:00');
+    expect(weekShortfall({ '2026-06-01': 400 }, 150, now).needed).toBe(0);
+  });
+});

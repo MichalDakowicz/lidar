@@ -10,6 +10,7 @@ import { useBookRatings } from '@/hooks/useBookRatings';
 import { useBooks } from '@/hooks/useBooks';
 import { MAX_W } from '@/hooks/useResponsive';
 import { useReads } from '@/hooks/useReads';
+import { useReadingGoal } from '@/store/readingGoal';
 import { useStatsPeriod, useStatsPeriodSheet } from '@/store/statsPeriod';
 import { withTabReload } from '@/store/tabReload';
 import type { Book } from '@/types/book';
@@ -26,6 +27,7 @@ function StatsScreen() {
   const { ratings, ratingFor } = useBookRatings();
   const period = useStatsPeriod((s) => s.period);
   const presentPeriod = useStatsPeriodSheet((s) => s.present);
+  const weeklyGoal = useReadingGoal((s) => s.weeklyPages);
 
   if (loading) {
     return (
@@ -53,6 +55,7 @@ function StatsScreen() {
           reads={reads}
           ratings={ratings}
           period={period}
+          weeklyGoal={weeklyGoal}
           ratingsFor={(book: Book) => ratingFor(book.bookKey)?.ratings ?? null}
           onOpenBook={(book) => router.push({ pathname: '/book/[bookId]', params: { bookId: book.id } })}
           onOpenPeriod={() => presentPeriod?.()}

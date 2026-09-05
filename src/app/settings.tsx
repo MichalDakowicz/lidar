@@ -1,4 +1,4 @@
-import { Database, Globe, Info, LogOut, Monitor } from 'lucide-react-native';
+import { BookOpen, Database, Globe, Info, LogOut, Monitor } from 'lucide-react-native';
 import { useRef } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -12,6 +12,7 @@ import { ImportExportSheet } from '@/features/settings/ImportExportSheet';
 import { PrivacyControl } from '@/features/settings/PrivacyControl';
 import { SettingsSection } from '@/features/settings/SettingsSection';
 import { ThemeControl } from '@/features/settings/ThemeControl';
+import { WeeklyGoalControl } from '@/features/settings/WeeklyGoalControl';
 import { NestedHeader } from '@/features/social/NestedHeader';
 import { useNavBarSpace } from '@/hooks/useNavBarSpace';
 import { MAX_W, useCenteredContentStyle } from '@/hooks/useResponsive';
@@ -53,6 +54,14 @@ export default function Settings() {
           <SettingsSection icon={<Monitor size={18} color={MUTED} />} title="Appearance">
             <ThemeControl />
             <CardSizeControl />
+          </SettingsSection>
+
+          <SettingsSection icon={<BookOpen size={18} color={MUTED} />} title="Reading">
+            <WeeklyGoalControl />
+            <Text className="text-xs text-muted-foreground">
+              Kept on this device. A week that clears the goal keeps your streak alive, so a night off
+              costs nothing.
+            </Text>
           </SettingsSection>
 
           <SettingsSection icon={<Database size={18} color={MUTED} />} title="Data">

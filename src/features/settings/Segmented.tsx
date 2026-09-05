@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-export type SegmentedOption<T extends string> = { value: T; label: string; icon?: ReactNode };
+export type SegmentedOption<T extends string | number> = { value: T; label: string; icon?: ReactNode };
 
-// Equal-width option grid used by the theme, privacy, and card-size controls -
-// the RN stand-in for legacy's radio-button card rows. Highlights the active
-// option in the app's blue accent.
-export function Segmented<T extends string>({
+// Equal-width option grid used by the theme, privacy, card-size and weekly-goal
+// controls — the RN stand-in for legacy's radio-button card rows. Highlights the
+// active option in the app's accent.
+export function Segmented<T extends string | number>({
   options,
   value,
   onChange,
@@ -34,7 +34,7 @@ export function Segmented<T extends string>({
               flexBasis: basis,
               flexGrow: 1,
               borderColor: active ? 'hsl(258 90% 66%)' : 'hsl(0 0% 20%)',
-              backgroundColor: active ? 'hsla(160,84%,39%,0.16)' : 'transparent',
+              backgroundColor: active ? 'hsla(258,90%,66%,0.16)' : 'transparent',
               opacity: disabled ? 0.5 : 1,
             }}
           >

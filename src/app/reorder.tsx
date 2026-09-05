@@ -49,7 +49,7 @@ export default function Reorder() {
       // Silent: a nudge up the shelf is not something a friend's feed wants.
       await updateBook(book.id, { customOrder: orderBetween(previous, next) }, { silent: true });
     } catch (error) {
-      show(error instanceof Error ? error.message : 'Could not move that record');
+      show(error instanceof Error ? error.message : 'Could not move that book');
     } finally {
       setBusyId(null);
     }

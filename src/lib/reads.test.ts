@@ -1,4 +1,4 @@
-import { listeningStreak, localDateKey, readsPerDay, summarizeReads, topSpun } from './reads';
+import { summarizeReads, topRereads } from './reads';
 import type { Book, Read } from '@/types/book';
 
 function read(bookId: string | null, finishedAt: string, id = `${bookId}-${finishedAt}`): Read {
@@ -46,7 +46,7 @@ function at(day: number, hour = 12): string {
 describe('summarizeReads', () => {
   it('takes the newest play per book from a newest-first log', () => {
     const summary = summarizeReads([read('a', at(10)), read('a', at(3)), read('b', at(5))]);
-    expect(summary.lastPlayedById.get('a')).toBe(at(10));
+    expect(summary.lastReadById.get('a')).toBe(at(10));
     expect(summary.countById.get('a')).toBe(2);
     expect(summary.totalReads).toBe(3);
   });
@@ -58,41 +58,15 @@ describe('summarizeReads', () => {
   });
 });
 
-describe('topSpun', () => {
-  it('ranks by play count and leaves unplayed records out', () => {
+describe('topRereads', () => {
+  it('ranks by read count and leaves books read once out', () => {
     const books = [book('a'), book('b'), book('c')];
-    const summary = summarizeReads([read('a', at(3)), read('a', at(2)), read('b', at(1))]);
-    expect(topSpun(books, summary).map((entry) => entry.book.id)).toEqual(['a', 'b']);
-  });
-});
-
-describe('readsPerDay', () => {
-  it('returns every day in the window, zeroes included', () => {
-    const now = new Date(2026, 5, 10, 12).getTime();
-    const perDay = readsPerDay([read('a', at(10)), read('a', at(10, 20))], 3, now);
-    expect(perDay).toHaveLength(3);
-    expect(perDay[2]).toEqual({ date: localDateKey(new Date(2026, 5, 10)), count: 2 });
-    expect(perDay[0].count).toBe(0);
-  });
-});
-
-describe('listeningStreak', () => {
-  it('counts consecutive days up to today', () => {
-    const now = new Date(2026, 5, 10, 9).getTime();
-    expect(listeningStreak([read('a', at(10)), read('a', at(9)), read('a', at(8))], now)).toBe(3);
+    const summary = summarizeReads([read('a', at(4)), read('a', at(3)), read('b', at(2)), read('b', at(1))]);
+    expect(topRereads(books, summary).map((entry) => entry.book.id)).toEqual(['a', 'b']);
   });
 
-  it('stays alive on a day with nothing played yet, counting back from yesterday', () => {
-    const now = new Date(2026, 5, 11, 9).getTime();
-    expect(listeningStreak([read('a', at(10)), read('a', at(9))], now)).toBe(2);
-  });
-
-  it('is broken once two days have gone by', () => {
-    const now = new Date(2026, 5, 12, 9).getTime();
-    expect(listeningStreak([read('a', at(10))], now)).toBe(0);
-  });
-
-  it('is zero with nothing logged', () => {
-    expect(listeningStreak([])).toBe(0);
+  it('leaves out a book finished exactly once — that is not a re-read', () => {
+    const summary = summarizeReads([read('a', at(1))]);
+    expect(topRereads([book('a')], summary)).toEqual([]);
   });
 });

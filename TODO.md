@@ -5,9 +5,9 @@ is needed.** `STATUS.md` says where the app stands today; this says where it is 
 in what order. Tick items off here as they land, and move anything finished into
 `STATUS.md` §2.
 
-Written 2026-09-05, before any of it was coded. **Items 1, 2, 3 and 5 are done**
-(2026-09-05). Item 4 (Readlist surfaces), 6 (stats + page streak), 7 (page tracker),
-8 (top 4) and 9 (Polish ISBNs) are still untouched.
+Written 2026-09-05, before any of it was coded. **Items 1, 2, 3, 5 and 6 are done**
+(2026-09-05). Item 4 (Readlist surfaces), 7 (page tracker), 8 (top 4) and 9 (Polish
+ISBNs) are still untouched.
 
 ---
 
@@ -218,7 +218,35 @@ through the normal `useQuickAdd`, rather than growing a second set of either.
 - **Acceptance:** Browse opens with content on a cold start (preload after login, as
   Radar does), and never shows an empty screen for a user with at least one book.
 
-### Item 6 — Stats + page streak `feat/reading-stats`
+### Item 6 — Stats + page streak `feat/reading-stats` — **DONE 2026-09-05**
+
+Radar's layout: an eight-cell bordered overview grid, then full-bleed sections with
+`text-2xl` headings — no card stack. New components ported: `StreakCalendar` (six months,
+shaded in four bands against a seventh of the weekly goal), `GenreTag`, `AuthorItem`
+(initials disc, no author images exist), `Masterpieces`.
+
+`src/lib/streak.ts` is Radar's weekly-threshold maths verbatim — it never cared what the
+per-day number meant, so pages drop straight in. 15 tests, including the month-straddling
+week and a re-read of a different edition counting that edition's length.
+
+**The streak is currently pages from finished books only.** `dailyPages(reads, progress)`
+already takes the bookmark deltas as its second argument; it is `[]` until Item 7 writes
+`public.book_progress`, and nothing else on the screen changes when it does.
+
+**Weekly goal lives in MMKV** (`store/readingGoal`), not on `user_settings`. Nothing
+server-side reads it yet, and the shared-table contract is not worth spending on a
+preference. `lib/streak.weekShortfall` is already the shape that write would take if
+streak notifications are ever added, so `streakSnapshot` was not ported — there is no
+server to snapshot to.
+
+Swept out with it: `ReadStrip`, `CountBars`, and `reads.ts`'s `readsPerDay`,
+`listeningStreak`, `localDateKey`, `readsSince` — all dead once the card stack went.
+`topSpun`/`mostSpun` (Sonar's word for playing a record) became `topRereads`/`mostReread`
+and now filter to two reads and up, surfaced as a "Read more than once" section.
+Also fixed: `Segmented`'s active fill was still Sonar's emerald against Lidar's violet
+border.
+
+### Item 6 — Stats + page streak (original plan)
 
 - Port `../radar/src/lib/stats.ts`, `statsPeriod.ts`, `streakSnapshot.ts` and
   `../radar/src/features/stats/` structure over Lidar's.

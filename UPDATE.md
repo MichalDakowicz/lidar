@@ -5,10 +5,17 @@ See `UPDATE-schema.md` for how to write these.
 ## 0.2.0 — Unreleased
 
 ### Added
+- Reading streak counts pages a week, so a long novel keeps it alive as well as a short one
+- Stats gets a six-month reading calendar, shaded by how much you read each day
+- Weekly page goal in Settings, defaulting to 150
+- Stats adds pages this year, pages a day, longest book and authors ranked by pages
+- Masterpieces on Stats: every book you have rated a perfect 5
 - Browse tab: search any book, and rows built from the authors and subjects you read
 - Add a book straight from a Browse row or a search result, without opening it
 
 ### Changed
+- Stats is laid out as sections rather than a stack of cards, so the big numbers lead
+- Most-read authors are ranked by pages read, not by how many of their books you own
 - Covers are rectangular, the shape a book jacket actually is, everywhere in the app
 - Library fits fewer, larger covers across the grid, so a title is readable at a glance
 - An odd-shaped cover is shown whole against a blur instead of having its title cropped off
@@ -25,6 +32,7 @@ See `UPDATE-schema.md` for how to write these.
 - Book page no longer asks what you paid, where you bought it, or the edition
 - Library filters drop Format, and sorting drops Price paid
 - Stats drop the format split, where books came from, and what you spent
+- Stats drop the daily reads strip, replaced by the reading calendar
 
 ## 0.1.0 — Unreleased
 

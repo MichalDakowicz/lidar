@@ -137,17 +137,14 @@ describe('computeStats', () => {
     expect(stats.bestRated.map((entry) => entry.book.id)).toEqual(['a']);
   });
 
-  it('ranks most read from the log it was given', () => {
+  it('ranks re-reads from the log it was given, ignoring books read once', () => {
     const stats = computeStats({
       books: [book({ id: 'a' }), book({ id: 'b' })],
       reads: [read('a'), read('a'), read('b')],
       ratings: [],
       scoreOf,
     });
-    expect(stats.mostSpun.map((entry) => [entry.book.id, entry.count])).toEqual([
-      ['a', 2],
-      ['b', 1],
-    ]);
+    expect(stats.mostReread.map((entry) => [entry.book.id, entry.count])).toEqual([['a', 2]]);
     expect(stats.reads.totalReads).toBe(3);
   });
 
