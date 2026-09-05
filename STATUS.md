@@ -50,7 +50,8 @@ Everything below is committed, and `npm test`, `npx tsc --noEmit` and `npm run l
 all clean (117 tests, 0 errors, 0 warnings) as of the last commit.
 
 ### Repo and tooling
-- `git init` done, commits on `main`, no remote yet.
+- `git init` done, commits on `main` (renamed off git’s default `master`, to match the
+  siblings), no remote yet.
 - `package.json`, `app.json` (`com.michaldakowicz.lidar`, scheme `lidar`, version `0.1.0`,
   `versionCode` 1), `babel/metro/tailwind/tsconfig/eslint`, `plugins/withGradleMemory`,
   `scripts/generate-icons.mjs`, `.gitignore`, `.gitattributes`, `firebase.json`.
