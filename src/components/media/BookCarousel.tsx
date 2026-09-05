@@ -26,6 +26,8 @@ type BookCarouselProps = {
   isAdded?: (book: Book) => boolean;
   highlightedId?: string | null;
   readOnly?: boolean;
+  /** Off for catalogue rows (Browse) — see BookCard. */
+  showStatus?: boolean;
 };
 
 const GAP = 16;
@@ -44,6 +46,7 @@ export function BookCarousel({
   isAdded,
   highlightedId,
   readOnly,
+  showStatus,
 }: BookCarouselProps) {
   const isDesktop = useIsDesktop();
   const { width: rowWidth, onLayout } = useMeasuredWidth();
@@ -96,6 +99,7 @@ export function BookCarousel({
                 isAdded={isAdded?.(book)}
                 highlighted={highlightedId === book.id}
                 readOnly={readOnly}
+                showStatus={showStatus}
               />
             </View>
           ))}

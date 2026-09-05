@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, Plus, StickyNote } from 'lucide-react-native';
+import { Check, Play, Plus, StickyNote } from 'lucide-react-native';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -28,6 +28,12 @@ export type BookCardProps = {
   isAdded?: boolean;
   highlighted?: boolean;
   readOnly?: boolean;
+  /**
+   * Off for catalogue results (Browse), which have no row behind them: both the
+   * status badge and the not-yet-read dimming would be claims about a book the
+   * shelf has never seen.
+   */
+  showStatus?: boolean;
   /** Cover crossfade length. 0 for rapid source swaps (the random-pick reel). */
   coverTransitionMs?: number;
 };
@@ -50,9 +56,9 @@ function BookCardImpl(props: BookCardProps) {
   }
 }
 
-/** A book you have not opened yet reads as dimmed. */
-function isDimmed(book: Book) {
-  return book.status === 'Readlist';
+/** A book you have not opened yet reads as dimmed — but only if it is yours. */
+function isDimmed(book: Book, showStatus: boolean) {
+  return showStatus && book.status === 'Readlist';
 }
 
 /** Finishing is only offered for a book you have actually started. */
@@ -69,6 +75,7 @@ function CoverCard({
   isAdded = false,
   highlighted = false,
   readOnly = false,
+  showStatus = true,
   coverTransitionMs,
 }: BookCardProps) {
   const authorLine = authorsToDisplayString(book.authors);
@@ -92,7 +99,7 @@ function CoverCard({
           hovered ? { transform: [{ scale: 1.035 }] } : null,
         ]}
       >
-        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book)} transitionMs={coverTransitionMs} />
+        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} transitionMs={coverTransitionMs} />
         <LinearGradient
           colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.2)', 'transparent']}
           locations={[0, 0.25, 0.55]}
@@ -122,7 +129,7 @@ function CoverCard({
         )}
 
         <View className="absolute inset-x-0 top-0 flex-row items-start justify-between gap-1.5 p-2.5">
-          <StatusBadge status={book.status} />
+          {showStatus && <StatusBadge status={book.status} />}
           {!!year && <Text className="text-[10px] font-medium text-neutral-300">{year}</Text>}
         </View>
 
@@ -144,6 +151,13 @@ function CoverCard({
             <Plus size={12} color="#fff" />
           </Pressable>
         )}
+        {/* Browse tiles for books already on the shelf: not a button, just the
+            answer to "do I have this one" without opening it. */}
+        {!readOnly && !!onAdd && isAdded && (
+          <View className="absolute bottom-2 right-2 rounded-full bg-emerald-600/90 p-2">
+            <Check size={12} color="#fff" />
+          </View>
+        )}
         {!readOnly && !!book.notes && (
           <View className="absolute bottom-2 left-2 rounded-full bg-neutral-800/90 p-1.5">
             <StickyNote size={12} color="#d4d4d4" />
@@ -161,7 +175,7 @@ function CoverCard({
   );
 }
 
-function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readOnly = false }: BookCardProps) {
+function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readOnly = false, showStatus = true }: BookCardProps) {
   const authorLine = authorsToDisplayString(book.authors);
   const year = publishedYear(book.publishedDate);
   const { hovered, bind } = useHover();
@@ -177,7 +191,7 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
       )}
     >
       <View className="h-28 w-20 overflow-hidden rounded-lg bg-neutral-800">
-        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book)} iconSize={22} />
+        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} iconSize={22} />
       </View>
 
       <View className="min-w-0 flex-1 justify-center gap-1">
@@ -191,7 +205,7 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
       </View>
 
       <View className="items-end gap-1">
-        <StatusBadge status={book.status} size={15} />
+        {showStatus && <StatusBadge status={book.status} size={15} />}
         {!readOnly && !!onLogRead && canLogRead(book) && (
           <Pressable
             onPress={() => onLogRead(book)}
@@ -213,7 +227,7 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
  * list of tiles, and the banner is what makes a section feel like a shelf
  * rather than more grid.
  */
-function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, readOnly = false }: BookCardProps) {
+function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, readOnly = false, showStatus = true }: BookCardProps) {
   const authorLine = authorsToDisplayString(book.authors);
   const lastRead = formatRelativeTime(book.lastReadAt);
 
@@ -223,7 +237,7 @@ function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, 
       className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-900"
       style={[{ cursor: 'pointer' }, highlighted ? { borderWidth: 2, borderColor: COLORS.accent } : null]}
     >
-      <CoverImage uri={book.coverUrl} dimmed={isDimmed(book)} iconSize={40} />
+      <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} iconSize={40} />
       {/* Left veil anchors the text, bottom veil keeps the meta legible. */}
       <LinearGradient
         colors={['rgba(0,0,0,0.85)', 'rgba(0,0,0,0.15)', 'transparent']}
@@ -234,7 +248,7 @@ function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, 
       <LinearGradient colors={['transparent', 'rgba(0,0,0,0.65)']} locations={[0.4, 1]} style={StyleSheet.absoluteFill} />
 
       <View className="absolute inset-x-0 top-0 flex-row items-start justify-between p-3">
-        <StatusBadge status={book.status} />
+        {showStatus && <StatusBadge status={book.status} />}
         <ScoreBadge ratings={ratings} />
       </View>
 
@@ -265,7 +279,7 @@ function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, 
   );
 }
 
-function CompactCard({ book, ratings, onPress, highlighted = false }: BookCardProps) {
+function CompactCard({ book, ratings, onPress, highlighted = false, showStatus = true }: BookCardProps) {
   const { hovered, bind } = useHover();
 
   return (
@@ -280,9 +294,9 @@ function CompactCard({ book, ratings, onPress, highlighted = false }: BookCardPr
         hovered ? { transform: [{ scale: 1.04 }], zIndex: 10 } : null,
       ]}
     >
-      <CoverImage uri={book.coverUrl} dimmed={isDimmed(book)} iconSize={22} />
+      <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} iconSize={22} />
       <View className="absolute left-1.5 top-1.5 flex-row items-center gap-1">
-        <StatusBadge status={book.status} size={11} />
+        {showStatus && <StatusBadge status={book.status} size={11} />}
         <ScoreBadge ratings={ratings} />
       </View>
       <View className="absolute inset-x-0 bottom-0 bg-black/65 px-1.5 py-1">

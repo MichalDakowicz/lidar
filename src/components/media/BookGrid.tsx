@@ -56,6 +56,8 @@ type BookGridProps = {
   isAdded?: (book: Book) => boolean;
   highlightedId?: string | null;
   readOnly?: boolean;
+  /** Off for catalogue results (Browse) — see BookCard. */
+  showStatus?: boolean;
   /** Leaves room for the floating nav. Off inside another scroll container. */
   padForNavBar?: boolean;
   ListHeaderComponent?: ReactElement;
@@ -81,6 +83,7 @@ export function BookGrid({
   isAdded,
   highlightedId,
   readOnly,
+  showStatus,
   padForNavBar = true,
   ListHeaderComponent,
   ListFooterComponent,
@@ -137,6 +140,7 @@ export function BookGrid({
               isAdded={isAdded?.(item)}
               highlighted={highlightedId === item.id}
               readOnly={readOnly}
+              showStatus={showStatus}
             />
           </View>
         )}

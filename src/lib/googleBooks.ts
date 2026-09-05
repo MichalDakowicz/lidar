@@ -111,10 +111,14 @@ function volumeToResult(volume: GoogleVolume): BookResult {
   };
 }
 
-async function googleVolumes(query: string, limit: number): Promise<BookResult[]> {
+/** Google's two orderings. `newest` is the only way to ask for recent books. */
+export type BrowseSort = 'relevance' | 'newest';
+
+async function googleVolumes(query: string, limit: number, orderBy: BrowseSort = 'relevance'): Promise<BookResult[]> {
   const params = new URLSearchParams({
     q: query,
     maxResults: String(Math.min(limit, 40)),
+    orderBy,
     printType: 'books',
     // Ask for the fields we read, so a search response is a few KB rather than
     // a few hundred — this runs per keystroke behind a debounce.
@@ -182,6 +186,23 @@ async function openLibraryByIsbn(isbn13: string, isbn10: string | null): Promise
 // ---------------------------------------------------------------------------
 // The two entry points the app uses
 // ---------------------------------------------------------------------------
+
+/**
+ * A discovery query, passed to Google's `q` verbatim so a caller can use the
+ * field qualifiers — `inauthor:"Le Guin"`, `subject:"Science fiction"`.
+ *
+ * Separate from `searchBooks` because that one intercepts an ISBN and falls
+ * back to Open Library. Neither makes sense for a shelf row: a row is built
+ * from a qualifier, never from a number, and a single Open Library edition is
+ * not a row. A failure here is an empty row, not an error — Browse degrades to
+ * the rows that did answer rather than to an error screen.
+ */
+export async function browseVolumes(
+  query: string,
+  { limit = 20, orderBy = 'relevance' }: { limit?: number; orderBy?: BrowseSort } = {},
+): Promise<BookResult[]> {
+  return googleVolumes(query, limit, orderBy);
+}
 
 /** Free-text search: title, author, whatever was typed. */
 export async function searchBooks(query: string, limit = 20): Promise<BookResult[]> {

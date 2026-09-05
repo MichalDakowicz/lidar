@@ -7,6 +7,7 @@ import { IsbnScannerSheet } from '@/features/books/add/IsbnScannerSheet';
 import { QuickAddSheet } from '@/features/books/add/QuickAddSheet';
 import { DEFAULT_DRAFT, type QuickAddDraft } from '@/features/books/add/useQuickAdd';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useBrowsePreload } from '@/features/browse/useBrowsePreload';
 import { FriendRequestListener } from '@/features/friends/FriendRequestListener';
 import { StatsPeriodSheet } from '@/features/stats/StatsPeriodSheet';
 import { useIsbnScannerStore } from '@/store/isbnScanner';
@@ -32,6 +33,11 @@ export default function TabsLayout() {
   const setPresentQuickAdd = useQuickAddSheetStore((s) => s.setPresent);
   const setPresentScanner = useIsbnScannerStore((s) => s.setPresent);
   const setPresentPeriod = useStatsPeriodSheet((s) => s.setPresent);
+
+  // Warms Browse's rows in the background after login, so the tab opens on
+  // content rather than on spinners. Mounted here because it must not wait for
+  // the user to reach that tab.
+  useBrowsePreload();
 
   // All three sheets mount once here rather than per screen, so anything on any
   // route can open the same instance: Add from the nav's left action on the
@@ -69,7 +75,7 @@ export default function TabsLayout() {
         screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: 'hsl(0 0% 3.9%)' } }}
       >
         <Tabs.Screen name="index" options={{ title: 'Library' }} />
-        <Tabs.Screen name="ratings" options={{ title: 'Ratings' }} />
+        <Tabs.Screen name="browse" options={{ title: 'Browse' }} />
         <Tabs.Screen name="stats" options={{ title: 'Stats' }} />
         <Tabs.Screen name="social" options={{ title: 'Social' }} />
         <Tabs.Screen name="profile" options={{ title: 'Profile' }} />

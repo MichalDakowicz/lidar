@@ -5,8 +5,9 @@ is needed.** `STATUS.md` says where the app stands today; this says where it is 
 in what order. Tick items off here as they land, and move anything finished into
 `STATUS.md` §2.
 
-Written 2026-09-05, before any of it was coded. **Items 1, 2 and 3 are done**
-(2026-09-05); Items 4-9 are still untouched.
+Written 2026-09-05, before any of it was coded. **Items 1, 2, 3 and 5 are done**
+(2026-09-05). Item 4 (Readlist surfaces), 6 (stats + page streak), 7 (page tracker),
+8 (top 4) and 9 (Polish ISBNs) are still untouched.
 
 ---
 
@@ -167,9 +168,31 @@ had no other caller and was deleted with its test.
 - Radar's equivalent is its Watchlist — read `../radar/src/features/library/` and mirror
   the affordances.
 
-### Item 5 — Browse replaces Ratings `feat/browse-tab`
+### Item 5 — Browse replaces Ratings `feat/browse-tab` — **DONE 2026-09-05**
 
-The biggest UI item. Ask the open question from §2.1 first.
+Built as specified. `RatingEditor` / `RatingSlider` / `RatingStars` / `lib/ratings.ts` /
+`personalScore.ts` / `ratingDistribution.ts` all kept; `RatingCurve` still renders inside
+Stats. The tier board, drop sheet, unrated rail, rating search row and `lib/tiers.ts` are
+deleted with their test.
+
+**The rows that exist**, from `discoveryRowSpecs` (pure, 8 tests): up to three *More by
+<author>* rows from authors you have read, up to two *New in <subject>* rows
+(`subject:` + `orderBy=newest`, subject narrowed to the last segment of Google's
+breadcrumb), and up to two *Because <author> is on your readlist* rows for authors not
+already covered. An empty shelf falls back to three broad subjects so the tab is never
+blank. **No Open Library trending row** — it was the plan's nice-to-have and one good row
+beats a noisy one; the hook is there if it is ever wanted.
+
+Books already on the shelf are filtered out of every row: the rows are built from what you
+have read, so without that "More by Ursula K. Le Guin" opens with the ones you own.
+
+Beyond the plan: `BookCard`/`BookCarousel`/`BookGrid` gained `showStatus`, off for
+catalogue tiles — a reading status drawn on a book the shelf has never seen is a lie, and
+it also switches off the readlist dimming. `toDiscoveryBook`/`fromDiscoveryBook` convert
+between `BookResult` and `Book` so Browse renders through the normal card and writes
+through the normal `useQuickAdd`, rather than growing a second set of either.
+
+### Item 5 — Browse replaces Ratings (original plan)
 
 - Delete `src/app/(tabs)/ratings.tsx` and `src/features/ratings/TierBoard.tsx`,
   `DropSheet.tsx`, `UnratedRail.tsx`, `RatingSearchRow.tsx`, `src/lib/tiers.ts`.

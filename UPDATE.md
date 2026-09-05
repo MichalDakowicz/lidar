@@ -4,6 +4,10 @@ See `UPDATE-schema.md` for how to write these.
 
 ## 0.2.0 — Unreleased
 
+### Added
+- Browse tab: search any book, and rows built from the authors and subjects you read
+- Add a book straight from a Browse row or a search result, without opening it
+
 ### Changed
 - Covers are rectangular, the shape a book jacket actually is, everywhere in the app
 - Library fits fewer, larger covers across the grid, so a title is readable at a glance
@@ -15,6 +19,7 @@ See `UPDATE-schema.md` for how to write these.
 - Finishing a book marks it Read whatever it was before, including straight off the readlist
 
 ### Removed
+- Ratings tab and its S-F tier board are gone — rate a book on the book page instead
 - Library drops the Recently finished rail — the shelf itself is the answer
 - Formats are gone — no more Hardcover, Paperback, Ebook or Audiobook on a book
 - Book page no longer asks what you paid, where you bought it, or the edition

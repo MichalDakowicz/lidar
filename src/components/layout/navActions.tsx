@@ -18,7 +18,7 @@ export type NavAction = {
 
 const ICONS: Record<string, LucideIcon> = {
   index: Plus,
-  ratings: Search,
+  browse: Search,
   stats: CalendarRange,
   social: Inbox,
   profile: Settings,
@@ -58,7 +58,7 @@ export function useNavAction(pathname: string, activeTab: string | null): NavAct
     switch (activeTab) {
       case 'index':
         return presentQuickAdd?.();
-      case 'ratings':
+      case 'browse':
         return useSearchFocus.getState().focus?.();
       case 'stats':
         return presentPeriod?.();
@@ -74,8 +74,8 @@ export function useNavAction(pathname: string, activeTab: string | null): NavAct
   }
 
   const labels: Record<string, string> = {
-    index: 'Add an book',
-    ratings: 'Rate anything',
+    index: 'Add a book',
+    browse: 'Search books',
     stats: `Time period: ${periodShortLabel(period)}`,
     social: inboxCount ? `Requests, ${inboxCount} waiting` : 'Friend requests',
     profile: 'Settings',
@@ -83,7 +83,7 @@ export function useNavAction(pathname: string, activeTab: string | null): NavAct
   const key = activeTab ?? 'index';
 
   return {
-    label: labels[key] ?? 'Add an book',
+    label: labels[key] ?? 'Add a book',
     Icon: ICONS[key] ?? Plus,
     badge: key === 'social' ? inboxCount : 0,
     onPress,

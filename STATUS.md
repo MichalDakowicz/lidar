@@ -4,9 +4,9 @@
 It says what Lidar is, what state it is in, what is verified, what is not, and what to do
 next, in order. Update it as work lands — it is the handover, not a changelog.
 
-> **0.2.0 is under way.** `TODO.md` is the work order — Items 1-3 (strip ownership,
-> rectangular covers, drop the recent rail) have landed; Items 4-9 have not started.
-> `TODO.md` is
+> **0.2.0 is under way.** `TODO.md` is the work order — Items 1, 2, 3 and 5 have landed
+> (strip ownership, rectangular covers, drop the recent rail, Browse replaces Ratings);
+> Items 4, 6, 7, 8 and 9 have not started. `TODO.md` is
 > re-cutting Lidar to follow Radar rather than Sonar (no ownership, rectangular covers,
 > Browse instead of the rating page, a readlist, page-based reading streaks, a top 4, and
 > Polish ISBN coverage). Read it before picking up any feature work; the rest of this
