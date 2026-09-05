@@ -17,7 +17,7 @@ const VISIBLE = 8;
 
 /**
  * Every time you have put this record on. The log is the source of truth for
- * "last played" everywhere else in the app, so removing a mistaken read here
+ * "last finished" everywhere else in the app, so removing a mistaken read here
  * is what corrects the card, the sort and the stats.
  */
 export function ReadHistory({ reads, onLogRead, onRemoveRead, readOnly }: ReadHistoryProps) {

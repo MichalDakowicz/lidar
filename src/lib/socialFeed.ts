@@ -28,7 +28,7 @@ export type FeedFilter = 'all' | FeedKind;
 
 export const FEED_FILTERS: { key: FeedFilter; label: string }[] = [
   { key: 'all', label: 'All' },
-  { key: 'read', label: 'Reads' },
+  { key: 'read', label: 'Finished' },
   { key: 'rating', label: 'Ratings' },
   { key: 'library', label: 'Library' },
   { key: 'wishlist', label: 'Wishlist' },
@@ -86,21 +86,21 @@ export function activityVerb(event: MinimalEvent): string {
   const details = event.details ?? {};
   switch (event.type) {
     case 'finished_read':
-      return 'spun';
+      return 'finished it';
     case 'rating_changed': {
       const rating = details.rating;
       return typeof rating === 'number' ? `rated it ${formatScore(rating)}` : 'rated it';
     }
     case 'format_added': {
       const format = stringOf(details, 'format');
-      return format ? `picked it up on ${format}` : 'added a format';
+      return format ? `picked it up in ${format}` : 'added a format';
     }
     case 'added': {
       const status = stringOf(details, 'status');
       if (status === 'Wishlist') return 'added to their wishlist';
       if (status === 'Pre-order') return 'pre-ordered';
       const format = stringOf(details, 'format');
-      return format ? `added it on ${format}` : 'added to their library';
+      return format ? `added it in ${format}` : 'added to their library';
     }
     case 'status_changed': {
       const next = stringOf(details, 'newStatus');
@@ -156,8 +156,8 @@ export function weekDigest(
   for (const event of events) {
     const at = Date.parse(event.createdAt);
     if (Number.isNaN(at) || at < since || at > now) continue;
-    // Only listening counts as a week's worth of music — a wishlist add is an
-    // intention, and counting it would inflate everyone's number.
+    // Only finishing and rating count as a week's worth of reading — a wishlist
+    // add is an intention, and counting it would inflate everyone's number.
     const kind = feedKind(event);
     if (kind !== 'read' && kind !== 'rating') continue;
     counts.set(event.userId, (counts.get(event.userId) ?? 0) + 1);

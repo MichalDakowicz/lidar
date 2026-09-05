@@ -127,7 +127,7 @@ function CoverCard({
         {!readOnly && !!onLogRead && book.status === 'Library' && (
           <Pressable
             onPress={() => onLogRead(book)}
-            accessibilityLabel={`Log a listen of ${book.title}`}
+            accessibilityLabel={`Mark ${book.title} finished`}
             className="absolute bottom-2 right-2 rounded-full bg-primary/90 p-2"
           >
             <Play size={12} color="#fff" fill="#fff" />
@@ -196,7 +196,7 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
         {!readOnly && !!onLogRead && book.status === 'Library' && (
           <Pressable
             onPress={() => onLogRead(book)}
-            accessibilityLabel={`Log a listen of ${book.title}`}
+            accessibilityLabel={`Mark ${book.title} finished`}
             hitSlop={8}
             className="rounded-full bg-primary/15 p-2"
           >
@@ -259,7 +259,7 @@ function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, 
       {!readOnly && !!onLogRead && book.status === 'Library' && (
         <Pressable
           onPress={() => onLogRead(book)}
-          accessibilityLabel={`Log a listen of ${book.title}`}
+          accessibilityLabel={`Mark ${book.title} finished`}
           className="absolute bottom-4 right-4 rounded-full bg-primary p-3"
         >
           <Play size={16} color="#fff" fill="#fff" />

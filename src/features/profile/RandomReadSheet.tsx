@@ -69,7 +69,7 @@ export const RandomReadSheet = forwardRef<BottomSheetModal, RandomReadSheetProps
 
         {!book ? (
           <Text className="py-10 text-center text-sm text-muted-foreground">
-            Nothing to draw from — the picker only uses records in your library that match the filters you have on.
+            Nothing to draw from — the picker only uses books in your library that match the filters you have on.
           </Text>
         ) : (
           <>

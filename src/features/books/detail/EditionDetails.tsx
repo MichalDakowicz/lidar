@@ -71,10 +71,10 @@ export function EditionDetails({ form, issues, onChange }: EditionDetailsProps) 
       <Text className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Your copy</Text>
 
       <Field
-        label="Favourite tracks"
+        label="Favourite passages"
         value={form.favoriteQuotes}
         onChangeText={(favoriteQuotes) => onChange({ favoriteQuotes })}
-        placeholder="Side A opener, track 4…"
+        placeholder="Page 214, the ending…"
       />
 
       <View className="flex-row gap-4">
@@ -89,7 +89,7 @@ export function EditionDetails({ form, issues, onChange }: EditionDetailsProps) 
           label="Store / source"
           value={form.storeName}
           onChangeText={(storeName) => onChange({ storeName })}
-          placeholder="Local record shop"
+          placeholder="Local bookshop"
         />
       </View>
 

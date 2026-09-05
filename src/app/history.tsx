@@ -21,7 +21,7 @@ import type { Read } from '@/types/book';
 /**
  * Every listen you have logged, newest first.
  *
- * This log is the source of truth for "last played" everywhere else, so
+ * This log is the source of truth for "last finished" everywhere else, so
  * deleting a mistaken read here is what corrects the card, the shelf sort and
  * the stats — useReads re-derives the book's mirror from what is left.
  */
@@ -46,7 +46,7 @@ export default function History() {
 
   return (
     <View className="flex-1 bg-background">
-      <NestedHeader title="Listening history" />
+      <NestedHeader title="Reading history" />
 
       <ContentShell fill maxWidth={MAX_W.text}>
         {loading ? (
@@ -55,7 +55,7 @@ export default function History() {
           <EmptyState
             icon={<Music size={40} color={COLORS.mutedDeep} />}
             title="Nothing logged yet"
-            description="Press play on a record's card, or open it and log a read."
+            description="Finish a book from its card, or open it and log a read."
           />
         ) : (
           <FlashList

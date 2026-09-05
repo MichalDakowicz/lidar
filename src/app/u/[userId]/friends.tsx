@@ -35,7 +35,7 @@ export default function PublicFriends() {
         <EmptyState
           icon={<Lock size={40} color={COLORS.mutedDeep} />}
           title="This list is private"
-          description="Only friends can see who they listen alongside."
+          description="Only friends can see who they read alongside."
         />
       </View>
     );

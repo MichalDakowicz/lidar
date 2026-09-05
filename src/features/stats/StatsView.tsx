@@ -57,7 +57,7 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
       <EmptyState
         icon={<Disc size={40} color={COLORS.mutedDeep} />}
         title="No numbers yet"
-        description="Add a few records and log what you play — the shape shows up fast."
+        description="Add a few books and log what you finish — the shape shows up fast."
       />
     );
   }
@@ -99,7 +99,7 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
       </View>
 
       <Card
-        title="Listening"
+        title="Reading"
         action={
           <View className="flex-row items-center gap-1.5">
             <CalendarRange size={13} color={onOpenPeriod ? COLORS.accent : MUTED} />
@@ -121,7 +121,7 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
       </Card>
 
       {stats.mostSpun.length > 0 && (
-        <Card title="Most spun">
+        <Card title="Most read">
           <BookCarousel
             books={stats.mostSpun.map((entry) => entry.book)}
             cardVariant="compact"

@@ -28,7 +28,7 @@ export function summarizeReads(reads: Read[]): ReadSummary {
   return { lastPlayedById, countById, totalReads: reads.length };
 }
 
-/** The books played most, richest first. Used by Stats' "most spun" list. */
+/** The books played most, richest first. Used by Stats' "most read" list. */
 export function topSpun(books: Book[], summary: ReadSummary, limit = 5): { book: Book; count: number }[] {
   return books
     .map((book) => ({ book, count: summary.countById.get(book.id) ?? 0 }))

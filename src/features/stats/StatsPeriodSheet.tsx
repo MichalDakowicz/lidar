@@ -39,7 +39,7 @@ export const StatsPeriodSheet = forwardRef<BottomSheetModal, { onPicked?: () => 
           );
         })}
         <Text className="px-3 pt-3 text-xs text-muted-foreground">
-          The window scopes what you played. Library totals always describe the whole shelf.
+          The window scopes what you finished. Library totals always describe the whole shelf.
         </Text>
       </View>
     </Sheet>

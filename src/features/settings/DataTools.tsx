@@ -58,12 +58,12 @@ export function DataTools({ onOpenImportExport }: { onOpenImportExport: () => vo
       <ToolRow
         icon={<ArrowUpDown size={20} color={MUTED} />}
         title="Reorder shelf"
-        subtitle="Set the order records appear in when sorting by shelf order"
+        subtitle="Set the order books appear in when sorting by shelf order"
         onPress={() => router.push('/reorder')}
       />
       <ToolRow
         icon={<Clock size={20} color={MUTED} />}
-        title="Listening history"
+        title="Reading history"
         subtitle="Every read you have logged, newest first"
         onPress={() => router.push('/history')}
       />

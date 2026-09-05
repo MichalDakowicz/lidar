@@ -118,7 +118,7 @@ function LibraryScreen() {
   const sections = (
     <>
       <LibrarySection
-        title="Recently played"
+        title="Recently finished"
         books={filters.recentlyPlayed}
         ratingsFor={ratingsFor}
         onPress={openBook}

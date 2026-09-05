@@ -17,7 +17,7 @@ export function CardSizeControl() {
   const { gridSize, setGridSize } = useLibraryPrefs();
   return (
     <>
-      <SettingLabel title="Cover size" description="How many records fit across the grid" />
+      <SettingLabel title="Cover size" description="How many books fit across the grid" />
       <Segmented options={OPTIONS} value={gridSize} onChange={setGridSize} />
     </>
   );

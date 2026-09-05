@@ -63,7 +63,7 @@ export default function Reorder() {
         {loading ? (
           <LoadingState label="Loading your shelf…" />
         ) : ordered.length === 0 ? (
-          <EmptyState title="Nothing to reorder" description="Add a few records first." />
+          <EmptyState title="Nothing to reorder" description="Add a few books first." />
         ) : (
           <ScrollView
             className="flex-1"

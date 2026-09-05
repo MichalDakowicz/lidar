@@ -14,7 +14,7 @@ import { COLORS } from '@/theme/colors';
 
 /**
  * A friend's numbers, through the same StatsView your own tab renders — so the
- * two can never disagree about what "most spun" means.
+ * two can never disagree about what "most read" means.
  *
  * Fixed at all-time: the period picker is a control of your app, and there is
  * no bar here to hang it off.

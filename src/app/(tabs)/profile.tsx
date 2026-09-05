@@ -155,7 +155,7 @@ function ProfileScreen() {
               >
                 <Clock size={18} color={COLORS.accent} />
                 <View className="min-w-0 flex-1">
-                  <Text className="text-sm font-semibold text-foreground">Listening history</Text>
+                  <Text className="text-sm font-semibold text-foreground">Reading history</Text>
                   <Text className="text-xs text-muted-foreground">
                     {reads.length === 0 ? 'Nothing logged yet' : `${reads.length} reads logged`}
                   </Text>

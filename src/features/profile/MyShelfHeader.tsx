@@ -72,7 +72,7 @@ export function MyShelfHeader({ profile, email, stats, backdropUrl, onEdit, onSh
         </View>
 
         <View className="flex-row items-center justify-around rounded-2xl border border-border bg-card/60 py-4">
-          <Stat value={stats.books} label="Records" />
+          <Stat value={stats.books} label="Books" />
           <Stat value={stats.thisYear} label="This year" />
           <Stat value={stats.average != null ? stats.average.toFixed(1) : '—'} label="Avg rating" />
         </View>

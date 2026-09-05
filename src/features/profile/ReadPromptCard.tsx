@@ -14,7 +14,7 @@ type ReadPromptCardProps = {
  * "Put something on" — the picker's entry point, moved here from the legacy top
  * bar where it was an unlabelled shuffle icon nobody found.
  *
- * Two scopes, because the honest answer to "what should I play" is usually one
+ * Two scopes, because the honest answer to "what should I read next" is usually one
  * of two questions: anything at all, or something you have been neglecting.
  */
 export function ReadPromptCard({ libraryCount, neglectedCount, onPick }: ReadPromptCardProps) {
@@ -24,7 +24,7 @@ export function ReadPromptCard({ libraryCount, neglectedCount, onPick }: ReadPro
     <View className="mx-4 gap-3 rounded-2xl border border-border bg-card/60 p-4">
       <View className="gap-1">
         <Text className="text-base font-bold text-foreground">What should I put on?</Text>
-        <Text className="text-xs text-muted-foreground">Draw a record from the shelf and log it if you play it.</Text>
+        <Text className="text-xs text-muted-foreground">Draw a book off the shelf, and log it when you finish.</Text>
       </View>
 
       <View className="flex-row gap-2">
