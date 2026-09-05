@@ -1,13 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1667 1667" width="1667" height="1667">
-  <!-- Lidar: an open book emitting three ranging pulses. The arcs are the same
-       visual language as Sonar's mark; the book is what this app measures. -->
-  <g fill="none" stroke="currentColor" stroke-width="62" stroke-linecap="round">
-    <path d="M616.5 855 A250 250 0 0 1 1049.5 855"/>
-    <path d="M495.3 785 A390 390 0 0 1 1170.7 785"/>
-    <path d="M374 715 A530 530 0 0 1 1292 715"/>
-  </g>
-  <g fill="currentColor" stroke="currentColor" stroke-width="46" stroke-linejoin="round">
-    <path d="M803 1035 L380 955 L380 1335 L803 1415 Z"/>
-    <path d="M863 1035 L1286 955 L1286 1335 L863 1415 Z"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <path d="M53.86 18.87A25.5 25.5 0 1 1 39.03 7.49" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" />
+  <circle cx="48.44" cy="10.58" r="3.6" fill="currentColor" />
+  <path d="M29 28 20.5 24 20.5 38.5 29 41.8Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+  <path d="M35 28 43.5 24 43.5 38.5 35 41.8Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
 </svg>

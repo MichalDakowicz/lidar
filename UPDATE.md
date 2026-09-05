@@ -14,3 +14,4 @@ See `UPDATE-schema.md` for how to write these.
 - See reading stats: pages and books finished, rating curve, decades, most-read authors
 - Follow friends' reading in the Social feed, with reactions and comments
 - Share one account, friend list and privacy switch with Radar and Sonar
+- Sign-in screen leads with the Lidar mark, a lidar scope sweeping an open book
