@@ -22,14 +22,9 @@ function book(overrides: Partial<Book> = {}): Book {
     genres: [],
     description: '',
     url: '',
-    formats: ['Hardcover'],
-    status: 'Library',
+    status: 'Read',
     notes: '',
     favoriteQuotes: '',
-    acquisitionDate: null,
-    storeName: '',
-    pricePaid: null,
-    edition: '',
     currentPage: null,
     progressUpdatedAt: null,
     customOrder: null,
@@ -99,7 +94,7 @@ describe('parseImport', () => {
     expect(parsed.books[0].bookKey).toBe('manual:franz-kafka|the-trial');
   });
 
-  it('reads a legacy export: keyed objects, a bare `format`, epoch millis', () => {
+  it('reads a legacy export: keyed objects, retired fields, epoch millis', () => {
     const legacy = {
       books: {
         '-Nabc': {
@@ -118,8 +113,11 @@ describe('parseImport', () => {
     const parsed = parseImport(JSON.stringify(legacy));
 
     expect(parsed.books).toHaveLength(1);
-    expect(parsed.books[0].formats).toEqual(['Hardcover']);
+    // `format` is an ownership field and 0.2.0 does not carry it any more.
+    expect(parsed.books[0]).not.toHaveProperty('formats');
     expect(parsed.books[0].authors).toEqual(['Frank Herbert']);
+    // A row with a read behind it is a book that was read, not one still to go.
+    expect(parsed.books[0].status).toBe('Read');
     expect(parsed.books[0].addedAt).toBe(new Date(1700000000000).toISOString());
     expect(parsed.books[0].lastReadAt).toBe(new Date(1700086400000).toISOString());
     // The legacy single `rating` becomes an overall score on a rating row.

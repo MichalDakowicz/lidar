@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { isOwned } from '@/lib/bookStatus';
+import { isStarted } from '@/lib/bookStatus';
 import { authorsToDisplayString } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
 import type { Book, BookRating } from '@/types/book';
@@ -20,10 +20,10 @@ type UnratedRailProps = {
 };
 
 /**
- * Records you own and have never scored — the obvious next thing to rate, and
+ * Books you have opened and never scored — the obvious next thing to rate, and
  * the only place on this page where the library is consulted at all.
  *
- * Newest first: what you bought last week is what you have an opinion about.
+ * Newest first: what you read last week is what you have an opinion about.
  * Hidden entirely once the shelf is fully rated, rather than left as a
  * permanently empty row.
  */
@@ -31,7 +31,7 @@ export function UnratedRail({ books, ratingFor, onPick }: UnratedRailProps) {
   const unrated = useMemo(
     () =>
       books
-        .filter((book) => isOwned(book) && !ratingFor(book.bookKey))
+        .filter((book) => isStarted(book) && !ratingFor(book.bookKey))
         .sort((a, b) => Date.parse(b.addedAt) - Date.parse(a.addedAt)),
     [books, ratingFor],
   );

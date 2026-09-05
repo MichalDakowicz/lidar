@@ -1,6 +1,5 @@
 import { authorList, bookKey } from '@/lib/bookKey';
 import { normalizeStatus } from '@/lib/bookStatus';
-import { normalizeFormats } from '@/lib/formats';
 import { cleanIsbn } from '@/lib/isbn';
 import type { Book, BookRating, Ratings, Read } from '@/types/book';
 
@@ -25,20 +24,23 @@ export type BookRow = {
   genres: unknown;
   description: string | null;
   url: string | null;
-  formats: unknown;
   status: string | null;
   notes: string | null;
   favorite_quotes: string | null;
-  acquisition_date: string | null;
-  store_name: string | null;
-  price_paid: number | string | null;
-  edition: string | null;
   current_page: number | null;
   progress_updated_at: string | null;
   custom_order: number | null;
   last_read_at: string | null;
   added_at: string;
   updated_at: string;
+  // Retired in 0.2.0 when ownership was dropped. The columns are still there —
+  // supabase/schema.sql never drops one — and an old export still carries them,
+  // but nothing app-side reads them any more.
+  formats?: unknown;
+  acquisition_date?: string | null;
+  store_name?: string | null;
+  price_paid?: number | string | null;
+  edition?: string | null;
 };
 
 function stringList(raw: unknown): string[] {
@@ -56,7 +58,7 @@ function numberOrNull(raw: number | string | null): number | null {
 /**
  * The single read boundary: every screen consumes `Book`, never a raw row.
  * Coerces the loose shapes an import can write (a single-string author, a
- * single-string format, an absent status) so a row can never render in an
+ * retired status) so a row can never render in an
  * inconsistent state, and back-fills book_key for rows written before it
  * existed — the rating join depends on it never being null in app-land.
  */
@@ -84,14 +86,9 @@ export function normalizeBook(row: BookRow): Book {
     genres: stringList(row.genres),
     description: row.description ?? '',
     url: row.url ?? '',
-    formats: normalizeFormats(row.formats),
     status: normalizeStatus(row.status),
     notes: row.notes ?? '',
     favoriteQuotes: row.favorite_quotes ?? '',
-    acquisitionDate: row.acquisition_date,
-    storeName: row.store_name ?? '',
-    pricePaid: numberOrNull(row.price_paid),
-    edition: row.edition ?? '',
     currentPage: row.current_page,
     progressUpdatedAt: row.progress_updated_at,
     customOrder: row.custom_order,
@@ -122,14 +119,9 @@ const FIELD_MAP: Record<string, string> = {
   genres: 'genres',
   description: 'description',
   url: 'url',
-  formats: 'formats',
   status: 'status',
   notes: 'notes',
   favoriteQuotes: 'favorite_quotes',
-  acquisitionDate: 'acquisition_date',
-  storeName: 'store_name',
-  pricePaid: 'price_paid',
-  edition: 'edition',
   currentPage: 'current_page',
   progressUpdatedAt: 'progress_updated_at',
   customOrder: 'custom_order',
@@ -138,7 +130,7 @@ const FIELD_MAP: Record<string, string> = {
 };
 
 /** Columns Postgres rejects an empty string for — a blank form field is null. */
-const NULL_ON_EMPTY = new Set(['acquisition_date', 'price_paid', 'page_count', 'series_index', 'current_page']);
+const NULL_ON_EMPTY = new Set(['page_count', 'series_index', 'current_page']);
 
 export function toBookRow(book: Partial<Book>): Record<string, unknown> {
   const row: Record<string, unknown> = {};

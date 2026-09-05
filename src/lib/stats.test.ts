@@ -25,14 +25,9 @@ function book(overrides: Partial<Book> = {}): Book {
     pageCount: null,
     genres: overrides.genres ?? [],
     url: '',
-    formats: overrides.formats ?? ['Hardcover'],
-    status: overrides.status ?? 'Library',
+    status: overrides.status ?? 'Read',
     notes: '',
     favoriteQuotes: '',
-    acquisitionDate: null,
-    storeName: overrides.storeName ?? '',
-    pricePaid: overrides.pricePaid ?? null,
-    edition: '',
     customOrder: null,
     lastReadAt: null,
     addedAt: '2026-01-01T00:00:00.000Z',
@@ -75,41 +70,34 @@ function read(bookId: string): Read {
 const scoreOf = (entry: BookRating) => personalScore(entry.ratings);
 
 describe('computeStats', () => {
-  it('counts only owned records as the library', () => {
+  it('counts only books you have opened as the shelf, and breaks the rest out', () => {
     const stats = computeStats({
-      books: [book({ id: 'a' }), book({ id: 'b', status: 'Wishlist' }), book({ id: 'c', status: 'Pre-order' })],
+      books: [
+        book({ id: 'a' }),
+        book({ id: 'b', status: 'Reading' }),
+        book({ id: 'c', status: 'Did not finish' }),
+        book({ id: 'd', status: 'Readlist' }),
+      ],
       reads: [],
       ratings: [],
       scoreOf,
     });
-    expect(stats.totalBooks).toBe(1);
-    expect(stats.wishlistCount).toBe(1);
-    expect(stats.preOrderCount).toBe(1);
+    expect(stats.totalBooks).toBe(3);
+    expect(stats.readCount).toBe(1);
+    expect(stats.readingCount).toBe(1);
+    expect(stats.dnfCount).toBe(1);
+    expect(stats.readlistCount).toBe(1);
   });
 
-  it('keeps a wishlist price out of what you have spent', () => {
+  it('keeps a readlist entry out of the author and genre splits', () => {
     const stats = computeStats({
-      books: [book({ id: 'a', pricePaid: 20 }), book({ id: 'b', status: 'Wishlist', pricePaid: 999 })],
+      books: [book({ id: 'a', authors: ['Read Author'] }), book({ id: 'b', status: 'Readlist', authors: ['Planned Author'] })],
       reads: [],
       ratings: [],
       scoreOf,
     });
-    expect(stats.totalValue).toBe(20);
-    expect(stats.averagePrice).toBe(20);
-  });
-
-  it('counts a record owned on two media once per format', () => {
-    const stats = computeStats({
-      books: [book({ id: 'a', formats: ['Hardcover', 'Ebook'] })],
-      reads: [],
-      ratings: [],
-      scoreOf,
-    });
-    expect(stats.formats.map((slice) => [slice.name, slice.count])).toEqual([
-      ['Ebook', 1],
-      ['Hardcover', 1],
-    ]);
-    expect(stats.totalBooks).toBe(1);
+    expect(stats.uniqueAuthors).toBe(1);
+    expect(stats.topAuthors.map((slice) => slice.name)).toEqual(['Read Author']);
   });
 
   it('counts every credited author, and reports how many are unique', () => {
@@ -149,7 +137,7 @@ describe('computeStats', () => {
     expect(stats.bestRated.map((entry) => entry.book.id)).toEqual(['a']);
   });
 
-  it('ranks most spun from the log it was given', () => {
+  it('ranks most read from the log it was given', () => {
     const stats = computeStats({
       books: [book({ id: 'a' }), book({ id: 'b' })],
       reads: [read('a'), read('a'), read('b')],
@@ -166,7 +154,7 @@ describe('computeStats', () => {
   it('reports empty rather than dividing by zero on a bare account', () => {
     const stats = computeStats({ books: [], reads: [], ratings: [], scoreOf });
     expect(stats.totalBooks).toBe(0);
-    expect(stats.averagePrice).toBeNull();
+    expect(stats.readlistCount).toBe(0);
     expect(stats.averageRating).toBeNull();
   });
 });

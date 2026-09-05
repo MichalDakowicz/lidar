@@ -19,7 +19,7 @@ export function RatingCurve({ distribution }: { distribution: RatingDistribution
       <View className="gap-2">
         <Text className="text-sm font-bold uppercase tracking-widest text-muted-foreground">How you rate</Text>
         <Text className="text-xs text-muted-foreground">
-          Nothing rated yet. Open any book — owned or not — and give it a score.
+          Nothing rated yet. Open any book — on your shelf or not — and give it a score.
         </Text>
       </View>
     );

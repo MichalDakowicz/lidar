@@ -1,8 +1,7 @@
 import { authorList, bookKey, isbnFromKey } from '@/lib/bookKey';
 import { parseIsbn } from '@/lib/isbn';
 import { normalizeStatus } from '@/lib/bookStatus';
-import { normalizeFormats } from '@/lib/formats';
-import type { Book, BookRating, Ratings, Read } from '@/types/book';
+import type { Book, BookRating, BookStatus, Ratings, Read } from '@/types/book';
 
 // Stable import/export format. The payload is versioned so future shape
 // changes stay backwards-readable, and it carries all three of the things that
@@ -11,7 +10,9 @@ import type { Book, BookRating, Ratings, Read } from '@/types/book';
 // re-minted per account on import.
 //
 // It also reads an export produced by either sibling app, so a shelf exported
-// from one shape imports here without hand conversion.
+// from one shape imports here without hand conversion — including a Lidar 0.1
+// export, whose ownership fields (formats, price, store, edition) are simply
+// dropped and whose retired statuses are mapped in importedStatus below.
 
 export const EXPORT_VERSION = 2;
 
@@ -85,6 +86,17 @@ function coerceRatings(raw: unknown): Ratings | undefined {
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+/**
+ * normalizeStatus lands every retired ownership status on the readlist, because
+ * a bare string cannot say whether the book was read. Here the whole row is in
+ * hand, so a finished read is proof: an old `Library` row with a read behind it
+ * comes back as `Read` rather than as something still to be started.
+ */
+function importedStatus(raw: unknown, lastReadAt: string | null): BookStatus {
+  const status = normalizeStatus(raw);
+  return status === 'Readlist' && lastReadAt ? 'Read' : status;
+}
+
 function coerceBook(item: Record<string, unknown>, index: number, errors: string[]): PortableBook | null {
   const title = typeof item.title === 'string' ? item.title.trim() : '';
   if (!title) {
@@ -94,6 +106,7 @@ function coerceBook(item: Record<string, unknown>, index: number, errors: string
 
   const authors = authorList((item.authors as string[] | string | null) ?? null);
   const googleId = typeof item.googleId === 'string' ? item.googleId : null;
+  const lastReadAt = isoOrUndefined(item.lastReadAt ?? item.lastListened) ?? null;
 
   return {
     title,
@@ -105,18 +118,12 @@ function coerceBook(item: Record<string, unknown>, index: number, errors: string
     publishedDate: typeof item.publishedDate === 'string' ? item.publishedDate : null,
     pageCount: numberOrUndefined(item.pageCount) ?? null,
     genres: Array.isArray(item.genres) ? item.genres.map(String) : [],
-    // Legacy key was `format` (sometimes a bare string), current is `formats`.
-    formats: normalizeFormats(item.formats ?? item.format),
-    status: normalizeStatus(item.status),
+    status: importedStatus(item.status, lastReadAt),
     url: typeof item.url === 'string' ? item.url : '',
     notes: typeof item.notes === 'string' ? item.notes : '',
     favoriteQuotes: typeof item.favoriteQuotes === 'string' ? item.favoriteQuotes : '',
-    acquisitionDate: typeof item.acquisitionDate === 'string' && item.acquisitionDate ? item.acquisitionDate : null,
-    storeName: typeof item.storeName === 'string' ? item.storeName : '',
-    pricePaid: numberOrUndefined(item.pricePaid) ?? null,
-    edition: typeof item.edition === 'string' ? item.edition : '',
     customOrder: numberOrUndefined(item.customOrder) ?? null,
-    lastReadAt: isoOrUndefined(item.lastReadAt ?? item.lastListened) ?? null,
+    lastReadAt,
     addedAt: isoOrUndefined(item.addedAt) ?? new Date().toISOString(),
   };
 }

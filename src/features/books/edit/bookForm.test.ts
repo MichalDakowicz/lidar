@@ -1,4 +1,4 @@
-import { buildBookPayload, fromBook, isDirty, parsePrice, validate } from './bookForm';
+import { buildBookPayload, fromBook, isDirty, validate } from './bookForm';
 import type { Book } from '@/types/book';
 
 function book(overrides: Partial<Book> = {}): Book {
@@ -16,22 +16,17 @@ function book(overrides: Partial<Book> = {}): Book {
     description: '',
     currentPage: null,
     progressUpdatedAt: null,
-    bookKey: 'manual:daft-punk|discovery',
-    title: 'Discovery',
-    authors: ['Daft Punk'],
+    bookKey: 'manual:ursula-k-le-guin|the-dispossessed',
+    title: 'The Dispossessed',
+    authors: ['Ursula K. Le Guin'],
     coverUrl: null,
-    publishedDate: '2001-03-12',
-    pageCount: 14,
+    publishedDate: '1974-05-01',
+    pageCount: 341,
     genres: [],
     url: '',
-    formats: ['Hardcover'],
-    status: 'Library',
+    status: 'Read',
     notes: '',
     favoriteQuotes: '',
-    acquisitionDate: null,
-    storeName: '',
-    pricePaid: null,
-    edition: '',
     customOrder: null,
     lastReadAt: null,
     addedAt: '2026-01-01T00:00:00.000Z',
@@ -39,23 +34,6 @@ function book(overrides: Partial<Book> = {}): Book {
     ...overrides,
   };
 }
-
-describe('parsePrice', () => {
-  it('reads a typed number, comma decimal included', () => {
-    expect(parsePrice('24.99')).toBe(24.99);
-    expect(parsePrice('24,99')).toBe(24.99);
-  });
-
-  it('reads an empty box as no price, not as zero', () => {
-    expect(parsePrice('')).toBeNull();
-    expect(parsePrice('   ')).toBeNull();
-  });
-
-  it('rejects nonsense and negatives', () => {
-    expect(parsePrice('free')).toBeNull();
-    expect(parsePrice('-5')).toBeNull();
-  });
-});
 
 describe('validate', () => {
   it('accepts an untouched form off a real row', () => {
@@ -65,34 +43,22 @@ describe('validate', () => {
   it('demands a title', () => {
     expect(validate({ ...fromBook(book()), title: '  ' }).title).toBeDefined();
   });
-
-  it('accepts an empty acquired date but not a malformed one', () => {
-    expect(validate({ ...fromBook(book()), acquisitionDate: '' }).acquisitionDate).toBeUndefined();
-    expect(validate({ ...fromBook(book()), acquisitionDate: '03/12/2001' }).acquisitionDate).toBeDefined();
-  });
-
-  it('flags a price that is not a number', () => {
-    expect(validate({ ...fromBook(book()), pricePaid: 'a lot' }).pricePaid).toBeDefined();
-  });
 });
 
 describe('buildBookPayload', () => {
   it('sends null rather than an empty string for the nullable columns', () => {
-    const payload = buildBookPayload({ ...fromBook(book()), acquisitionDate: '', coverUrl: '', pricePaid: '' });
-    expect(payload.acquisitionDate).toBeNull();
+    const payload = buildBookPayload({ ...fromBook(book()), coverUrl: '', publishedDate: '' });
     expect(payload.coverUrl).toBeNull();
-    expect(payload.pricePaid).toBeNull();
+    expect(payload.publishedDate).toBeNull();
   });
 
   it('trims what the user typed', () => {
-    const payload = buildBookPayload({ ...fromBook(book()), title: '  Homework  ', storeName: ' Rough Trade ' });
-    expect(payload.title).toBe('Homework');
-    expect(payload.storeName).toBe('Rough Trade');
+    const payload = buildBookPayload({ ...fromBook(book()), title: '  The Left Hand of Darkness  ' });
+    expect(payload.title).toBe('The Left Hand of Darkness');
   });
 
-  it('treats a book with every format unticked as Paperback', () => {
-    const payload = buildBookPayload({ ...fromBook(book()), formats: [] });
-    expect(payload.formats).toEqual(['Paperback']);
+  it('carries the status through even when it did not change', () => {
+    expect(buildBookPayload(fromBook(book({ status: 'Reading' }))).status).toBe('Reading');
   });
 });
 
@@ -104,8 +70,8 @@ describe('isDirty', () => {
 
   it('notices an edit to any editable field', () => {
     const row = book();
-    expect(isDirty({ ...fromBook(row), notes: 'scratchy but great' }, row)).toBe(true);
-    expect(isDirty({ ...fromBook(row), formats: ['Hardcover', 'Ebook'] }, row)).toBe(true);
-    expect(isDirty({ ...fromBook(row), status: 'Wishlist' }, row)).toBe(true);
+    expect(isDirty({ ...fromBook(row), notes: 'the wall is the whole book' }, row)).toBe(true);
+    expect(isDirty({ ...fromBook(row), status: 'Readlist' }, row)).toBe(true);
+    expect(isDirty({ ...fromBook(row), authors: ['Ursula K. Le Guin', 'Someone Else'] }, row)).toBe(true);
   });
 });

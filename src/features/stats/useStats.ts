@@ -13,17 +13,17 @@ export type StatsBundle = {
   distribution: RatingDistributionResult;
   perDay: { date: string; count: number }[];
   streak: number;
-  /** Reads inside the window — the headline "plays" number. */
+  /** Reads inside the window — the headline "finished" number. */
   periodReads: number;
 };
 
 /**
  * Everything the Stats screen reads, in one memo chain.
  *
- * The period scopes the read log only. The library is a shelf, not a stream
- * of events: narrowing "records owned" by when a sleeve was bought would answer
- * a question nobody asked, and would make the format split and total value
- * jump around as the window changes.
+ * The period scopes the read log only. The shelf is a shelf, not a stream of
+ * events: narrowing "books on the shelf" by when each was added would answer a
+ * question nobody asked, and would make the author and genre splits jump around
+ * as the window changes.
  */
 export function useStats({
   books,
@@ -49,7 +49,7 @@ export function useStats({
   // width, and "this year" is the only period that can exceed it.
   const perDay = useMemo(() => readsPerDay(scopedReads, Math.min(periodDays(period), 90)), [scopedReads, period]);
 
-  // The streak reads the whole log, never the window: a run of listening days
+  // The streak reads the whole log, never the window: a run of reading days
   // does not restart because you changed the period picker.
   const streak = useMemo(() => listeningStreak(reads), [reads]);
 

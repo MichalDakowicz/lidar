@@ -3,13 +3,13 @@ import { useMemo } from 'react';
 import {
   groupBooks,
   matchesAuthorFilter,
-  matchesFormatFilter,
   matchesGenreFilter,
   matchesStatusFilter,
   matchesYearFilter,
   type BookGroup,
   type GroupBy,
 } from '@/lib/libraryFacets';
+import { isStarted } from '@/lib/bookStatus';
 import { bookMatchesSearchQuery } from '@/lib/librarySearch';
 import { compareBooks, type SortBy, type SortDir } from '@/lib/librarySort';
 import { recentlyPlayed } from '@/lib/reads';
@@ -19,12 +19,12 @@ import type { StatusFilter } from '@/store/libraryPrefs';
 export type LibraryFilters = {
   /** The rails above the main list. */
   recentlyPlayed: Book[];
-  wishlist: Book[];
+  readlist: Book[];
   /** Everything the filters allow, minus what the rails already showed. */
   mainBooks: Book[];
   /** Grouped view of the same list, or null when grouping is off. */
   groups: BookGroup[] | null;
-  /** What the random read may draw from — owned records only. */
+  /** What the random pick may draw from — books already opened. */
   readPool: Book[];
   totalCount: number;
   filteredCount: number;
@@ -35,7 +35,6 @@ export type LibraryFilterInput = {
   reads: Read[];
   searchQuery: string;
   statusFilter: StatusFilter;
-  selectedFormats: string[];
   selectedAuthors: string[];
   selectedGenres: string[];
   selectedYears: string[];
@@ -55,7 +54,6 @@ export function useLibraryFilters({
   reads,
   searchQuery,
   statusFilter,
-  selectedFormats,
   selectedAuthors,
   selectedGenres,
   selectedYears,
@@ -64,7 +62,7 @@ export function useLibraryFilters({
   groupBy,
   scoreFor,
 }: LibraryFilterInput): LibraryFilters {
-  // The rails answer "what have I had on lately" and "what am I still after",
+  // The rails answer "what have I finished lately" and "what is next",
   // so they are not narrowed by the filter chips — only by the search box, or
   // searching would leave two rails of non-matches at the top of the results.
   const playedRail = useMemo(() => {
@@ -72,9 +70,9 @@ export function useLibraryFilters({
     return searchQuery.trim() ? rail.filter((book) => bookMatchesSearchQuery(book, searchQuery)) : rail;
   }, [books, reads, searchQuery]);
 
-  const wishlistRail = useMemo(() => {
+  const readlistRail = useMemo(() => {
     const rail = books
-      .filter((book) => book.status === 'Wishlist' || book.status === 'Pre-order')
+      .filter((book) => book.status === 'Readlist')
       .sort((a, b) => Date.parse(b.addedAt) - Date.parse(a.addedAt))
       .slice(0, 20);
     return searchQuery.trim() ? rail.filter((book) => bookMatchesSearchQuery(book, searchQuery)) : rail;
@@ -84,21 +82,20 @@ export function useLibraryFilters({
     let result = books;
     if (searchQuery.trim()) result = result.filter((book) => bookMatchesSearchQuery(book, searchQuery));
     result = result.filter((book) => matchesStatusFilter(book, statusFilter));
-    result = result.filter((book) => matchesFormatFilter(book, selectedFormats));
     result = result.filter((book) => matchesAuthorFilter(book, selectedAuthors));
     result = result.filter((book) => matchesGenreFilter(book, selectedGenres));
     result = result.filter((book) => matchesYearFilter(book, selectedYears));
     return [...result].sort((a, b) => compareBooks(a, b, sortBy, sortDir, { scoreFor }));
-  }, [books, searchQuery, statusFilter, selectedFormats, selectedAuthors, selectedGenres, selectedYears, sortBy, sortDir, scoreFor]);
+  }, [books, searchQuery, statusFilter, selectedAuthors, selectedGenres, selectedYears, sortBy, sortDir, scoreFor]);
 
   const railIds = useMemo(() => {
     const ids = new Set<string>();
-    // Only the wishlist rail claims its books outright. A record you played
+    // Only the readlist rail claims its books outright. A book you finished
     // yesterday still belongs in the main grid — that rail is a shortcut, not a
     // section that owns rows.
-    wishlistRail.forEach((book) => ids.add(book.id));
+    readlistRail.forEach((book) => ids.add(book.id));
     return ids;
-  }, [wishlistRail]);
+  }, [readlistRail]);
 
   const mainBooks = useMemo(
     () => (statusFilter === 'all' ? filtered.filter((book) => !railIds.has(book.id)) : filtered),
@@ -107,14 +104,14 @@ export function useLibraryFilters({
 
   const groups = useMemo(() => groupBooks(mainBooks, groupBy), [mainBooks, groupBy]);
 
-  // The read picker draws from what is on the shelf and passes the filters —
-  // "pick something from my jazz records" is exactly why filters exist — but a
-  // wishlist entry can never be picked, because you cannot play it.
-  const readPool = useMemo(() => filtered.filter((book) => book.status === 'Library'), [filtered]);
+  // The random picker draws from what is on the shelf and passes the filters —
+  // "pick something from my science fiction" is exactly why filters exist — but
+  // a readlist entry can never be picked, because you have not opened it yet.
+  const readPool = useMemo(() => filtered.filter(isStarted), [filtered]);
 
   return {
     recentlyPlayed: playedRail,
-    wishlist: wishlistRail,
+    readlist: readlistRail,
     mainBooks,
     groups,
     readPool,

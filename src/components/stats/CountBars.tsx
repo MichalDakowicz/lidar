@@ -11,7 +11,7 @@ type CountBarsProps = {
 };
 
 /**
- * A labelled bar per row — the format split, top authors, top genres, stores.
+ * A labelled bar per row — top authors, top genres.
  * One component for all four because they are the same shape of answer, and the
  * legacy screen repeated the same markup four times with different colours.
  *

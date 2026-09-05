@@ -1,4 +1,4 @@
-import { CalendarRange, Coins, Disc, Flame, Library, Play, Star, Users } from 'lucide-react-native';
+import { BookMarked, BookOpen, CalendarRange, Flame, Library, Play, Star, Users } from 'lucide-react-native';
 import { ScrollView, Text, View } from 'react-native';
 
 import { BookCarousel } from '@/components/media/BookCarousel';
@@ -11,7 +11,6 @@ import { ThinProgressBar } from '@/components/stats/ThinProgressBar';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useStats } from '@/features/stats/useStats';
 import { useNavBarSpace } from '@/hooks/useNavBarSpace';
-import { formatPrice } from '@/lib/utils';
 import { periodShortLabel, type StatsPeriodId } from '@/lib/statsPeriod';
 import { COLORS } from '@/theme/colors';
 import type { Book, BookRating, Ratings, Read } from '@/types/book';
@@ -55,14 +54,14 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
   if (books.length === 0 && ratings.length === 0) {
     return (
       <EmptyState
-        icon={<Disc size={40} color={COLORS.mutedDeep} />}
+        icon={<BookOpen size={40} color={COLORS.mutedDeep} />}
         title="No numbers yet"
         description="Add a few books and log what you finish — the shape shows up fast."
       />
     );
   }
 
-  const statusMax = Math.max(stats.totalBooks + stats.wishlistCount + stats.preOrderCount, 1);
+  const statusMax = Math.max(stats.totalBooks + stats.readlistCount, 1);
 
   return (
     <ScrollView
@@ -71,11 +70,11 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
       contentContainerStyle={{ paddingBottom: navBarSpace + 24 }}
       showsVerticalScrollIndicator={false}
     >
-      {/* The period pill: the window applies to plays, not to the shelf, so it
-          sits with the listening numbers rather than at the top of the screen. */}
+      {/* The period pill: the window applies to reads, not to the shelf, so it
+          sits with the reading numbers rather than at the top of the screen. */}
       <View className="flex-row flex-wrap gap-4 rounded-2xl border border-border bg-card/50 p-5">
         <View className="min-w-[45%] flex-1">
-          <QuickStat value={stats.totalBooks} label="In library" icon={<Library size={16} color={MUTED} />} />
+          <QuickStat value={stats.totalBooks} label="Books" icon={<Library size={16} color={MUTED} />} />
         </View>
         <View className="min-w-[45%] flex-1">
           <QuickStat value={stats.uniqueAuthors} label="Authors" icon={<Users size={16} color={MUTED} />} />
@@ -90,10 +89,10 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
         </View>
         <View className="min-w-[45%] flex-1">
           <QuickStat
-            value={stats.totalValue > 0 ? formatPrice(stats.totalValue) : '—'}
-            label="Spent"
-            suffix={stats.averagePrice != null ? `avg ${formatPrice(stats.averagePrice)}` : undefined}
-            icon={<Coins size={16} color={MUTED} />}
+            value={stats.readlistCount}
+            label="Readlist"
+            suffix={stats.readingCount > 0 ? `${stats.readingCount} on the go` : undefined}
+            icon={<BookMarked size={16} color={MUTED} />}
           />
         </View>
       </View>
@@ -144,16 +143,11 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
       )}
 
       <Card title="Shelf">
-        <ThinProgressBar label="Library" value={stats.totalBooks} max={statusMax} />
-        <ThinProgressBar label="Wishlist" value={stats.wishlistCount} max={statusMax} />
-        <ThinProgressBar label="Pre-orders" value={stats.preOrderCount} max={statusMax} />
+        <ThinProgressBar label="Read" value={stats.readCount} max={statusMax} />
+        <ThinProgressBar label="Reading" value={stats.readingCount} max={statusMax} />
+        <ThinProgressBar label="Readlist" value={stats.readlistCount} max={statusMax} />
+        <ThinProgressBar label="Did not finish" value={stats.dnfCount} max={statusMax} />
       </Card>
-
-      {stats.formats.length > 0 && (
-        <Card title="Formats">
-          <CountBars slices={stats.formats} accent="#3b82f6" />
-        </Card>
-      )}
 
       <Card>
         <RatingCurve distribution={distribution} />
@@ -173,13 +167,13 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
       )}
 
       {stats.topAuthors.length > 0 && (
-        <Card title="Most collected authors">
+        <Card title="Most read authors">
           <CountBars slices={stats.topAuthors} />
         </Card>
       )}
 
       {stats.decades.length > 0 && (
-        <Card title="Release eras">
+        <Card title="Publication eras">
           <DecadeBars decades={stats.decades} />
         </Card>
       )}
@@ -187,27 +181,6 @@ export function StatsView({ books, reads, ratings, period, ratingsFor, onOpenBoo
       {stats.topGenres.length > 0 && (
         <Card title="Genres">
           <CountBars slices={stats.topGenres} accent="#a855f7" />
-        </Card>
-      )}
-
-      {stats.topStores.length > 0 && (
-        <Card title="Where it came from">
-          <CountBars slices={stats.topStores} accent="#f59e0b" />
-        </Card>
-      )}
-
-      {stats.mostExpensive.length > 0 && (
-        <Card title="Priciest">
-          <View className="gap-2">
-            {stats.mostExpensive.map((entry) => (
-              <View key={entry.book.id} className="flex-row items-center justify-between gap-3">
-                <Text numberOfLines={1} className="min-w-0 flex-1 text-sm text-foreground">
-                  {entry.book.title}
-                </Text>
-                <Text className="text-sm font-semibold text-primary">{formatPrice(entry.price)}</Text>
-              </View>
-            ))}
-          </View>
         </Card>
       )}
     </ScrollView>

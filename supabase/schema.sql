@@ -37,9 +37,15 @@ end $$;
 -- SCHEMA
 -- ============================================================================
 
--- Formats and shelf status are free text with a CHECK rather than enums: the
--- lists live in the client (lib/formats.ts, lib/bookStatus.ts) and gain entries
--- faster than a Postgres type should be altered.
+-- Reading status is free text with a CHECK rather than an enum: the list lives
+-- in the client (lib/bookStatus.ts) and gains entries faster than a Postgres
+-- type should be altered.
+--
+-- NOTE: the create table below still carries the 0.1.0 status list and the
+-- retired ownership columns. Neither is edited, because on a live database the
+-- create is skipped entirely and an edit here would silently do nothing — the
+-- 0.2.0 CHECK is applied by the COLUMN MIGRATIONS block further down, which
+-- runs on a fresh database and an existing one alike.
 
 create table if not exists public.books (
   id            uuid primary key default gen_random_uuid(),
@@ -106,10 +112,11 @@ create index if not exists books_user_id_added_at_idx on public.books (user_id, 
 -- the "you already own this" check is an index hit, not a table scan.
 create index if not exists books_user_id_isbn13_idx   on public.books (user_id, isbn13);
 
--- UNIQUE, not just an index: one row per edition per person. Owning the same
--- book in hardcover and on Kindle is one row with two `formats`, never two rows
--- — and the uniqueness is also what `on conflict (user_id, book_key)` needs,
--- which is how the JSON import avoids doubling a library on a second run.
+-- UNIQUE, not just an index: one row per edition per person. Reading the same
+-- book twice is two public.book_reads rows against one books row, never two
+-- books rows — and the uniqueness is also what `on conflict (user_id,
+-- book_key)` needs, which is how the JSON import avoids doubling a shelf on a
+-- second run.
 create unique index if not exists books_user_id_book_key_key on public.books (user_id, book_key);
 
 -- One row per finished read. The log is the source of truth; books.last_read_at
@@ -204,8 +211,52 @@ create index if not exists book_activity_comments_activity_id_created_at_idx
 -- COLUMN MIGRATIONS — for a database created by an earlier run of this file.
 -- The CREATE TABLEs above are skipped entirely once the tables exist, so every
 -- column added later has to be repeated here as an `add column if not exists`.
--- None yet. Add them below, newest last, and never edit a create table.
+-- Add them below, newest last, and never edit a create table.
 -- ============================================================================
+
+-- 0.2.0 — reading-lifecycle statuses, replacing the ownership ones.
+--
+-- Lidar tracks reading, not a shelf of objects, so Library / Wishlist /
+-- Pre-order are gone and Readlist / Read take their place. Postgres cannot
+-- widen a CHECK in place: it has to be dropped, the rows moved off every
+-- retired value, and the constraint re-added — in that order, or the re-add
+-- fails on the rows it is meant to be validating.
+--
+-- Which value a retired row lands on is decided by the read log's mirror: a
+-- book with a finished read behind it was read, and anything else is still to
+-- be read. That is the same rule lib/dataTransfer applies to an old export.
+--
+-- Idempotent: dropping the constraint is `if exists`, the updates match no rows
+-- on a second run, and re-adding is guarded on the constraint being absent.
+do $$
+begin
+  alter table public.books drop constraint if exists books_status_check;
+
+  update public.books
+     set status = 'Read'
+   where status in ('Library', 'Wishlist', 'Pre-order')
+     and last_read_at is not null;
+
+  update public.books
+     set status = 'Readlist'
+   where status in ('Library', 'Wishlist', 'Pre-order');
+
+  if not exists (
+    select 1 from pg_constraint
+     where conrelid = 'public.books'::regclass and conname = 'books_status_check'
+  ) then
+    alter table public.books
+      add constraint books_status_check
+      check (status in ('Readlist', 'Reading', 'Read', 'Did not finish'));
+  end if;
+
+  alter table public.books alter column status set default 'Readlist';
+end $$;
+
+-- Retired in 0.2.0 and deliberately NOT dropped: this file never drops a
+-- column, an old export may still carry these, and a column nothing writes
+-- costs nothing to keep.
+--   public.books.formats, .price_paid, .store_name, .acquisition_date, .edition
 
 -- ============================================================================
 -- RLS — the same two-policy shape the siblings use: owner writes, visible reads.

@@ -22,7 +22,7 @@ export const REACTIONS: { kind: ReactionKind; emoji: string; label: string }[] =
 ];
 
 /** What an activity row means to the feed, collapsed from the raw event type. */
-export type FeedKind = 'read' | 'rating' | 'library' | 'wishlist' | 'other';
+export type FeedKind = 'read' | 'rating' | 'reading' | 'readlist' | 'other';
 
 export type FeedFilter = 'all' | FeedKind;
 
@@ -30,8 +30,8 @@ export const FEED_FILTERS: { key: FeedFilter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'read', label: 'Finished' },
   { key: 'rating', label: 'Ratings' },
-  { key: 'library', label: 'Library' },
-  { key: 'wishlist', label: 'Wishlist' },
+  { key: 'reading', label: 'Reading' },
+  { key: 'readlist', label: 'Readlist' },
 ];
 
 // `details` is nullable so a raw Postgres row can be passed straight in,
@@ -45,8 +45,8 @@ function stringOf(details: Record<string, unknown>, key: string): string {
 
 /**
  * 'added' and 'status_changed' both cover several outcomes, so the kind comes
- * from the details payload rather than the type alone — otherwise "wishlisted"
- * and "bought the record" would land in the same bucket.
+ * from the details payload rather than the type alone — otherwise "put it on
+ * the readlist" and "finished it" would land in the same bucket.
  */
 export function feedKind(event: MinimalEvent): FeedKind {
   const details = event.details ?? {};
@@ -59,16 +59,15 @@ export function feedKind(event: MinimalEvent): FeedKind {
       return statusKind(stringOf(details, 'status'));
     case 'status_changed':
       return statusKind(stringOf(details, 'newStatus'));
-    case 'format_added':
-      return 'library';
     default:
       return 'other';
   }
 }
 
 function statusKind(status: string): FeedKind {
-  if (status === 'Wishlist' || status === 'Pre-order') return 'wishlist';
-  if (status === 'Library') return 'library';
+  if (status === 'Readlist') return 'readlist';
+  if (status === 'Reading') return 'reading';
+  if (status === 'Read') return 'read';
   return 'other';
 }
 
@@ -81,7 +80,7 @@ export function isFeedWorthy(event: MinimalEvent): boolean {
   return event.type !== 'removed' && event.type !== 'updated';
 }
 
-/** The grey line after the name: "spun", "rated it 4.5", "added to their shelf". */
+/** The grey line after the name: "finished it", "rated it 4.5", "started it". */
 export function activityVerb(event: MinimalEvent): string {
   const details = event.details ?? {};
   switch (event.type) {
@@ -91,20 +90,20 @@ export function activityVerb(event: MinimalEvent): string {
       const rating = details.rating;
       return typeof rating === 'number' ? `rated it ${formatScore(rating)}` : 'rated it';
     }
-    case 'format_added': {
-      const format = stringOf(details, 'format');
-      return format ? `picked it up in ${format}` : 'added a format';
-    }
     case 'added': {
       const status = stringOf(details, 'status');
-      if (status === 'Wishlist') return 'added to their wishlist';
-      if (status === 'Pre-order') return 'pre-ordered';
-      const format = stringOf(details, 'format');
-      return format ? `added it in ${format}` : 'added to their library';
+      if (status === 'Reading') return 'started reading it';
+      if (status === 'Read') return 'added it as read';
+      if (status === 'Did not finish') return 'added it as unfinished';
+      return 'added it to their readlist';
     }
     case 'status_changed': {
       const next = stringOf(details, 'newStatus');
-      return next ? `moved it to ${next}` : 'changed its status';
+      if (next === 'Reading') return 'started reading it';
+      if (next === 'Read') return 'finished it';
+      if (next === 'Readlist') return 'moved it to their readlist';
+      if (next === 'Did not finish') return 'gave up on it';
+      return 'changed its status';
     }
     default:
       return 'updated it';
@@ -140,7 +139,7 @@ export type WeekBar = { userId: string; count: number; widthPct: number };
 export type WeekDigest = { total: number; bars: WeekBar[]; leaderId: string | null };
 
 /**
- * "This week" — how much each friend actually played in the trailing window.
+ * "This week" — how much each friend actually read in the trailing window.
  * Bars are relative to the busiest friend, not to the total, so the shape stays
  * readable when one person logs ten reads and everyone else logs one.
  */
@@ -156,7 +155,7 @@ export function weekDigest(
   for (const event of events) {
     const at = Date.parse(event.createdAt);
     if (Number.isNaN(at) || at < since || at > now) continue;
-    // Only finishing and rating count as a week's worth of reading — a wishlist
+    // Only finishing and rating count as a week's worth of reading — a readlist
     // add is an intention, and counting it would inflate everyone's number.
     const kind = feedKind(event);
     if (kind !== 'read' && kind !== 'rating') continue;

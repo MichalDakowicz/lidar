@@ -24,14 +24,9 @@ function book(overrides: Partial<Book> = {}): Book {
     pageCount: null,
     genres: [],
     url: '',
-    formats: ['Ebook'],
-    status: overrides.status ?? 'Library',
+    status: overrides.status ?? 'Read',
     notes: '',
     favoriteQuotes: '',
-    acquisitionDate: null,
-    storeName: '',
-    pricePaid: overrides.pricePaid ?? null,
-    edition: '',
     customOrder: overrides.customOrder ?? null,
     lastReadAt: overrides.lastReadAt ?? null,
     addedAt: overrides.addedAt ?? '2026-01-01T00:00:00.000Z',
@@ -87,19 +82,19 @@ describe('compareBooks', () => {
   });
 
   it('treats a never-played record as older than any play', () => {
-    const played = book({ id: 'played', lastReadAt: '2026-01-01T00:00:00.000Z' });
+    const read = book({ id: 'read', lastReadAt: '2026-01-01T00:00:00.000Z' });
     const never = book({ id: 'never' });
-    const list = [never, played];
+    const list = [never, read];
     list.sort((a, b) => compareBooks(a, b, 'lastRead', 'desc', noScores));
-    expect(list[0].id).toBe('played');
+    expect(list[0].id).toBe('read');
   });
 
   it('breaks ties on title so the grid never reshuffles between renders', () => {
     const b = book({ id: 'b', title: 'B' });
     const a = book({ id: 'a', title: 'A' });
-    // Same (absent) price, so the price comparison is a tie.
-    expect(compareBooks(b, a, 'price', 'asc', noScores)).toBeGreaterThan(0);
-    expect(compareBooks(a, b, 'price', 'asc', noScores)).toBeLessThan(0);
+    // Same (absent) publication date, so that comparison is a tie.
+    expect(compareBooks(b, a, 'publishedDate', 'asc', noScores)).toBeGreaterThan(0);
+    expect(compareBooks(a, b, 'publishedDate', 'asc', noScores)).toBeLessThan(0);
   });
 
   it('every sort has a natural direction', () => {

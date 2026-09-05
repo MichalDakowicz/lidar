@@ -1,11 +1,12 @@
 // App-side shapes, produced at the read boundary (lib/normalizeBook). Screens
 // consume these, never a raw Postgres row.
 
-/** A copy you own of a book. Physical or not — "Ebook" is a format too. */
-export type Format = 'Hardcover' | 'Paperback' | 'Ebook' | 'Audiobook';
-
-/** Where a book sits on your shelf. Mutually exclusive, unlike Format. */
-export type BookStatus = 'Library' | 'Reading' | 'Wishlist' | 'Pre-order' | 'Did not finish';
+/**
+ * Where a book sits in your reading life. Mutually exclusive, and deliberately
+ * *only* about reading: Lidar tracks what you read, not a shelf of objects, so
+ * there is nothing here about owning a copy or which format it is.
+ */
+export type BookStatus = 'Readlist' | 'Reading' | 'Read' | 'Did not finish';
 
 /**
  * The four facets plus the overall score, in the same jsonb shape Radar stores
@@ -62,16 +63,11 @@ export type Book = {
   genres: string[];
   description: string;
   url: string;
-  formats: Format[];
   status: BookStatus;
 
-  // edition / personal details
+  // your own notes on the book, as opposed to catalogue facts about it
   notes: string;
   favoriteQuotes: string;
-  acquisitionDate: string | null;
-  storeName: string;
-  pricePaid: number | null;
-  edition: string;
 
   /** Live bookmark. The read log is the history; this is where you are now. */
   currentPage: number | null;
@@ -104,7 +100,6 @@ export type BookActivityType =
   | 'progress_updated'
   | 'status_changed'
   | 'rating_changed'
-  | 'format_added'
   | 'updated'
   | 'removed';
 

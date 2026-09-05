@@ -32,7 +32,7 @@ import type { Book } from '@/types/book';
  * useLibraryFilters, all durable prefs in the zustand+MMKV store, all
  * rendering in the Library* components.
  *
- * Double-edition the tab is "give me my library back", so it clears the
+ * Double-tapping the tab is "give me my library back", so it clears the
  * persisted filters as well as the remount-scoped state (search, scroll). View
  * mode, card size, grouping and sort are deliberately left alone: those are how
  * you like to look at the shelf, not a narrowing you need undone.
@@ -54,7 +54,6 @@ function LibraryScreen() {
     reads,
     searchQuery,
     statusFilter: prefs.statusFilter,
-    selectedFormats: prefs.selectedFormats,
     selectedAuthors: prefs.selectedAuthors,
     selectedGenres: prefs.selectedGenres,
     selectedYears: prefs.selectedYears,
@@ -74,7 +73,6 @@ function LibraryScreen() {
       prefs.sortBy,
       prefs.sortDir,
       prefs.groupBy,
-      prefs.selectedFormats,
       prefs.selectedAuthors,
       prefs.selectedGenres,
       prefs.selectedYears,
@@ -126,14 +124,14 @@ function LibraryScreen() {
         variant="cover"
       />
       <LibrarySection
-        title="Wishlist"
-        books={filters.wishlist}
+        title="Readlist"
+        books={filters.readlist}
         ratingsFor={ratingsFor}
         onPress={openBook}
         variant="cover"
         collapsible
-        collapsed={prefs.wishlistCollapsed}
-        onToggleCollapse={prefs.toggleWishlistCollapsed}
+        collapsed={prefs.readlistCollapsed}
+        onToggleCollapse={prefs.toggleReadlistCollapsed}
       />
     </>
   );

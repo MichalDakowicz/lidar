@@ -8,7 +8,7 @@ import { BookDetailScreen } from '@/features/books/detail/BookDetailScreen';
  * owner controls only if it is.
  *
  * The rating editor is here either way, which is the point: a score belongs to
- * the release, so you can rate something you have never owned.
+ * the edition, so you can rate something you have never read.
  */
 export default function ReleaseRoute() {
   const { bookKey } = useLocalSearchParams<{ bookKey: string }>();

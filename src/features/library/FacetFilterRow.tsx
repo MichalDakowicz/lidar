@@ -18,8 +18,8 @@ type FacetFilterRowProps = {
 const COLLAPSED_LIMIT = 18;
 
 /**
- * One filter dimension derived from the library (author / genre / year /
- * format). Values come from the records the user actually has, so there are no
+ * One filter dimension derived from the library (author / genre / year).
+ * Values come from the books the user actually has, so there are no
  * chips that match nothing. Long lists (authors, mainly) get a search box and
  * stay capped until the user asks for the rest.
  */

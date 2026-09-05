@@ -1,12 +1,12 @@
 // The three numbers and two rails at the top of a shelf — yours on Profile,
 // a friend's on their shelf screen. One builder, so the two never disagree.
 
-import { isOwned } from '@/lib/bookStatus';
+import { isStarted } from '@/lib/bookStatus';
 import { personalScore } from '@/lib/personalScore';
 import type { Book, BookRating, Read } from '@/types/book';
 
 export type ShelfStats = {
-  /** Records owned — wishlist and pre-orders excluded. */
+  /** Books actually opened — the readlist is a plan, not a shelf. */
   books: number;
   /** Of those, the ones added in the current calendar year. */
   thisYear: number;
@@ -21,12 +21,12 @@ function time(value: string | null | undefined): number {
 
 export function shelfStats(books: Book[], ratings: BookRating[], now: Date = new Date()): ShelfStats {
   const year = now.getFullYear();
-  let owned = 0;
+  let started = 0;
   let thisYear = 0;
 
   for (const book of books) {
-    if (!isOwned(book)) continue;
-    owned += 1;
+    if (!isStarted(book)) continue;
+    started += 1;
     const at = time(book.addedAt);
     if (at && new Date(at).getFullYear() === year) thisYear += 1;
   }
@@ -42,7 +42,7 @@ export function shelfStats(books: Book[], ratings: BookRating[], now: Date = new
   }
 
   return {
-    books: owned,
+    books: started,
     thisYear,
     average: scored === 0 ? null : Math.round((total / scored) * 10) / 10,
   };
@@ -81,7 +81,7 @@ export function nowPlaying(books: Book[], reads: Read[], limit = 4): Book[] {
     .slice(0, limit);
 }
 
-/** The releases they rate highest — Lidar's stand-in for Radar's pinned top 4. */
+/** The books they rate highest — Lidar's stand-in for Radar's pinned top 4. */
 export function topRated(books: Book[], ratings: BookRating[], limit = 4): Book[] {
   const scoreByKey = new Map<string, number>();
   for (const rating of ratings) {

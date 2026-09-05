@@ -3,14 +3,18 @@ import { useCallback, useMemo, useState } from 'react';
 import { useBooks, type NewBook } from '@/hooks/useBooks';
 import { bookKey } from '@/lib/bookKey';
 import type { BookResult } from '@/lib/googleBooks';
-import type { Book, BookStatus, Format } from '@/types/book';
+import type { Book, BookStatus } from '@/types/book';
 
 export type QuickAddDraft = {
   status: BookStatus;
-  formats: Format[];
 };
 
-export const DEFAULT_DRAFT: QuickAddDraft = { status: 'Library', formats: ['Paperback'] };
+/**
+ * A book you have just found is one you intend to read, not one you have read —
+ * the same default Radar's watchlist takes. Anything else is a claim the app
+ * has no evidence for.
+ */
+export const DEFAULT_DRAFT: QuickAddDraft = { status: 'Readlist' };
 
 /**
  * The shared "put this on my shelf" path: the Quick-Add sheet's search rows,
@@ -43,12 +47,11 @@ export function useQuickAdd() {
       description: found.description,
       genres: found.genres,
       url: found.url,
-      formats: draft.formats,
       status: draft.status,
     };
   }
 
-  /** One-tap add from search or a scan: the draft defaults (Library, Paperback). */
+  /** One-tap add from search or a scan: the draft defaults to the readlist. */
   const add = async (found: BookResult, draft: QuickAddDraft = DEFAULT_DRAFT): Promise<Book | null> => {
     if (isAdded(found.bookKey)) return null;
     setPendingKey(found.bookKey);
@@ -92,7 +95,6 @@ export function useQuickAdd() {
         pageCount: input.pageCount ?? null,
         url: input.url ?? '',
         genres: [],
-        formats: draft.formats,
         status: draft.status,
       });
     } finally {

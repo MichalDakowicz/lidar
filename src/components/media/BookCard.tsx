@@ -4,8 +4,8 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CoverImage } from '@/components/media/CoverImage';
-import { FormatBadges, FormatLine, StatusBadge } from '@/components/media/FormatBadges';
 import { RatingStars, ScoreBadge } from '@/components/media/RatingStars';
+import { StatusBadge } from '@/components/media/StatusBadges';
 import { useHover, webTransition } from '@/hooks/useResponsive';
 import { authorsToDisplayString, cn, formatRelativeTime, publishedYear } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
@@ -18,17 +18,17 @@ export type BookCardVariant = 'cover' | 'row' | 'featured' | 'compact';
 export type BookCardProps = {
   book: Book;
   variant?: BookCardVariant;
-  /** The user's own rating for this release, looked up by book key. */
+  /** The user's own rating for this book, looked up by book key. */
   ratings?: Ratings | null;
   onPress?: (book: Book) => void;
-  /** Log a listen straight from the card — the legacy "read" button. */
+  /** Log a finished read straight from the card. */
   onLogRead?: (book: Book) => void;
-  /** Discover: add a release the shelf does not have yet. */
+  /** Browse: add a book the shelf does not have yet. */
   onAdd?: (book: Book) => void;
   isAdded?: boolean;
   highlighted?: boolean;
   readOnly?: boolean;
-  /** Cover crossfade length. 0 for rapid source swaps (the read reel). */
+  /** Cover crossfade length. 0 for rapid source swaps (the random-pick reel). */
   coverTransitionMs?: number;
 };
 
@@ -50,9 +50,14 @@ function BookCardImpl(props: BookCardProps) {
   }
 }
 
-/** Anything you do not actually own reads as dimmed. */
+/** A book you have not opened yet reads as dimmed. */
 function isDimmed(book: Book) {
-  return book.status !== 'Library';
+  return book.status === 'Readlist';
+}
+
+/** Finishing is only offered for a book you have actually started. */
+function canLogRead(book: Book) {
+  return book.status !== 'Readlist';
 }
 
 function CoverCard({
@@ -117,14 +122,11 @@ function CoverCard({
         )}
 
         <View className="absolute inset-x-0 top-0 flex-row items-start justify-between gap-1.5 p-2">
-          <View className="flex-row items-center gap-1">
-            <StatusBadge status={book.status} />
-            <FormatBadges formats={book.formats} />
-          </View>
+          <StatusBadge status={book.status} />
           {!!year && <Text className="text-[10px] font-medium text-neutral-300">{year}</Text>}
         </View>
 
-        {!readOnly && !!onLogRead && book.status === 'Library' && (
+        {!readOnly && !!onLogRead && canLogRead(book) && (
           <Pressable
             onPress={() => onLogRead(book)}
             accessibilityLabel={`Mark ${book.title} finished`}
@@ -185,15 +187,12 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
         <Text numberOfLines={1} className="text-xs text-muted-foreground">
           {[authorLine, year].filter(Boolean).join(' • ')}
         </Text>
-        <View className="flex-row items-center gap-2">
-          <FormatLine formats={book.formats} />
-          <RatingStars ratings={ratings} size={10} />
-        </View>
+        <RatingStars ratings={ratings} size={10} />
       </View>
 
       <View className="items-end gap-1">
         <StatusBadge status={book.status} size={15} />
-        {!readOnly && !!onLogRead && book.status === 'Library' && (
+        {!readOnly && !!onLogRead && canLogRead(book) && (
           <Pressable
             onPress={() => onLogRead(book)}
             accessibilityLabel={`Mark ${book.title} finished`}
@@ -209,14 +208,14 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
 }
 
 /**
- * Wide banner for the library's own sections (Recently played, Wishlist).
- * Crops the square cover to 16:9 on purpose: a row of square cards at full
- * width reads as a list of tiles, and the banner is what makes a section feel
- * like a shelf rather than more grid.
+ * Wide banner for the library's own sections (Recently finished, Readlist).
+ * Crops the cover to 16:9 on purpose: a row of cards at full width reads as a
+ * list of tiles, and the banner is what makes a section feel like a shelf
+ * rather than more grid.
  */
 function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, readOnly = false }: BookCardProps) {
   const authorLine = authorsToDisplayString(book.authors);
-  const played = formatRelativeTime(book.lastReadAt);
+  const lastRead = formatRelativeTime(book.lastReadAt);
 
   return (
     <Pressable
@@ -235,10 +234,7 @@ function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, 
       <LinearGradient colors={['transparent', 'rgba(0,0,0,0.65)']} locations={[0.4, 1]} style={StyleSheet.absoluteFill} />
 
       <View className="absolute inset-x-0 top-0 flex-row items-start justify-between p-3">
-        <View className="flex-row items-center gap-1">
-          <StatusBadge status={book.status} />
-          <FormatBadges formats={book.formats} />
-        </View>
+        <StatusBadge status={book.status} />
         <ScoreBadge ratings={ratings} />
       </View>
 
@@ -252,11 +248,11 @@ function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, 
               {authorLine}
             </Text>
           )}
-          {!!played && <Text className="text-[11px] text-neutral-400">{played}</Text>}
+          {!!lastRead && <Text className="text-[11px] text-neutral-400">{lastRead}</Text>}
         </View>
       </View>
 
-      {!readOnly && !!onLogRead && book.status === 'Library' && (
+      {!readOnly && !!onLogRead && canLogRead(book) && (
         <Pressable
           onPress={() => onLogRead(book)}
           accessibilityLabel={`Mark ${book.title} finished`}

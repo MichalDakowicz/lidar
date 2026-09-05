@@ -10,14 +10,14 @@ import { useLibraryPrefs, type StatusFilter } from '@/store/libraryPrefs';
 
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'Library', label: 'Library' },
-  { value: 'Wishlist', label: 'Wishlist' },
-  { value: 'Pre-order', label: 'Pre-order' },
+  { value: 'Readlist', label: 'Readlist' },
+  { value: 'Reading', label: 'Reading' },
+  { value: 'Read', label: 'Read' },
 ];
 
 /**
- * Every way to narrow the library, in one sheet: status, format, author,
- * genre, year, then sort. The legacy web app spread these across a popover, a
+ * Every way to narrow the library, in one sheet: status, author, genre, year,
+ * then sort. The legacy web app spread these across a popover, a
  * combobox and a second popover; as one sheet they narrow the single
  * virtualized grid instead of re-bucketing it.
  */
@@ -29,7 +29,7 @@ export const LibraryFilterSheet = forwardRef<BottomSheetModal>(function LibraryF
   // measures rather than to a fraction of the screen. The snap point stays as
   // the ceiling for narrow screens where the chips wrap onto more rows, and the
   // starting estimate keeps the first open from visibly resizing once measured.
-  const [contentHeight, setContentHeight] = useState(470);
+  const [contentHeight, setContentHeight] = useState(410);
 
   return (
     <Sheet ref={ref} snapPoints={['80%']} contentHeight={contentHeight}>
@@ -42,8 +42,6 @@ export const LibraryFilterSheet = forwardRef<BottomSheetModal>(function LibraryF
         </View>
 
         <ChoiceRow title="Status" options={STATUS_OPTIONS} value={prefs.statusFilter} onChange={prefs.setStatusFilter} />
-
-        <FacetFilterRow title="Format" facets={facets.formats} selected={prefs.selectedFormats} onToggle={prefs.toggleFormat} />
 
         <FacetFilterRow
           title="Author"

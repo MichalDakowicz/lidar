@@ -27,7 +27,7 @@ type LibrarySectionProps = {
 };
 
 /**
- * One rail above the main grid (Recently played, Wishlist). A lone book
+ * One rail above the main grid (Recently finished, Readlist). A lone book
  * renders as a plain full-width banner; two or more go through the carousel,
  * shrunk a touch so the next one peeks in and the row reads as scrollable.
  */

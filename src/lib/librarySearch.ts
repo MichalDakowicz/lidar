@@ -3,12 +3,12 @@ import type { Book } from '@/types/book';
 
 type SearchableBook = Pick<
   Book,
-  'title' | 'subtitle' | 'authors' | 'genres' | 'publishedDate' | 'publisher' | 'series' | 'edition' | 'isbn13' | 'isbn10'
+  'title' | 'subtitle' | 'authors' | 'genres' | 'publishedDate' | 'publisher' | 'series' | 'isbn13' | 'isbn10'
 >;
 
 /**
  * What the library search box matches: title and subtitle, author, genre,
- * publisher, series, publication year, the edition note — and the ISBN, which
+ * publisher, series, publication year — and the ISBN, which
  * matters more here than the equivalent did in the sibling apps. Scanning a
  * book you already own should find its row, and the scanner types the number
  * straight into this box.
@@ -28,7 +28,6 @@ export function bookMatchesSearchQuery(book: SearchableBook, query: string): boo
   const publisherMatch = !!book.publisher && book.publisher.toLowerCase().includes(lower);
   const seriesMatch = !!book.series && book.series.toLowerCase().includes(lower);
   const yearMatch = !!book.publishedDate && book.publishedDate.startsWith(trimmed);
-  const editionMatch = !!book.edition && book.edition.toLowerCase().includes(lower);
 
   const digits = cleanIsbn(trimmed);
   const isbnMatch = digits.length >= 6 && (book.isbn13?.includes(digits) || book.isbn10?.includes(digits) || false);
@@ -41,7 +40,6 @@ export function bookMatchesSearchQuery(book: SearchableBook, query: string): boo
     publisherMatch ||
     seriesMatch ||
     yearMatch ||
-    editionMatch ||
     isbnMatch
   );
 }

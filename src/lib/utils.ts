@@ -56,9 +56,3 @@ export function formatPublishedDate(publishedDate: string | null | undefined, pr
   }
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
-
-/** Money as typed, without pretending to know the user's currency. */
-export function formatPrice(price: number | null | undefined): string {
-  if (price == null) return '';
-  return price.toFixed(2).replace(/\.00$/, '');
-}

@@ -6,9 +6,9 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { useToast } from '@/components/ui/Toast';
-import { FormatStatusPicker } from '@/features/books/add/FormatStatusPicker';
+import { StatusPicker } from '@/features/books/add/StatusPicker';
 import { DetailHero } from '@/features/books/detail/DetailHero';
-import { EditionDetails } from '@/features/books/detail/EditionDetails';
+import { BookDetails } from '@/features/books/detail/BookDetails';
 import { ReadHistory } from '@/features/books/detail/ReadHistory';
 import { ProgressPanel } from '@/features/books/detail/ProgressPanel';
 import { useBookDetail } from '@/features/books/detail/useBookDetail';
@@ -24,12 +24,12 @@ type BookDetailScreenProps = {
 };
 
 /**
- * One screen for a release, owned or not — the same unification Radar applies
- * to films. Both routes render the same hero, rating editor and track list;
- * ownership only adds the shelf controls (status, formats, edition details,
- * reads) and swaps the header CTA.
+ * One screen for a book, tracked or not — the same unification Radar applies to
+ * films. Both routes render the same hero and rating editor; a book that is on
+ * your shelf also gets the reading controls (status, progress, reads, notes)
+ * and a different header CTA.
  *
- * Removing a record leaves you right here in the not-owned state, so it can be
+ * Removing a book leaves you right here in the untracked state, so it can be
  * put back with one tap, and the rating you gave it stays either way.
  */
 export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
@@ -50,16 +50,16 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
         title="Book not found"
         description={
           detail.unresolved
-            ? 'This release is not on your shelf and Google Books has no record of it.'
+            ? 'This book is not on your shelf and no catalogue has a record of it.'
             : 'Try opening it again from your library.'
         }
       />
     );
   }
 
-  const owned = !!book;
+  const tracked = !!book;
 
-  const action = owned ? (
+  const action = tracked ? (
     <View className="flex-row items-center gap-2">
       <Pressable
         onPress={() => setConfirmRemove(true)}
@@ -123,19 +123,14 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
               coverUrl: display.coverUrl,
               publishedDate: display.publishedDate,
             }}
-            note={owned ? undefined : 'You can rate this without adding it — the score is kept against the release.'}
+            note={tracked ? undefined : 'You can rate this without adding it — the score is kept against the book.'}
           />
 
-          {owned && form && (
+          {tracked && form && (
             <>
               <View className="gap-4">
                 <Text className="text-sm font-bold uppercase tracking-widest text-muted-foreground">On your shelf</Text>
-                <FormatStatusPicker
-                  status={form.status}
-                  formats={form.formats}
-                  onStatusChange={(status) => editForm.update({ status })}
-                  onToggleFormat={editForm.toggleFormat}
-                />
+                <StatusPicker status={form.status} onStatusChange={(status) => editForm.update({ status })} />
               </View>
 
               <ProgressPanel
@@ -156,7 +151,7 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
                 onRemoveRead={detail.removeRead}
               />
 
-              <EditionDetails form={form} issues={editForm.issues} onChange={editForm.update} />
+              <BookDetails form={form} onChange={editForm.update} />
             </>
           )}
 
@@ -176,7 +171,7 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
         </View>
       </ScrollView>
 
-      {owned && form && editForm.dirty && (
+      {tracked && form && editForm.dirty && (
         <Pressable
           onPress={async () => {
             const saved = await editForm.save();

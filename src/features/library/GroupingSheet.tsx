@@ -11,7 +11,6 @@ const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: 'author', label: 'Author' },
   { value: 'year', label: 'Year' },
   { value: 'genre', label: 'Genre' },
-  { value: 'format', label: 'Format' },
   { value: 'status', label: 'Status' },
 ];
 

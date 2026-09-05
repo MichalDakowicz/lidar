@@ -104,8 +104,6 @@ export function useBooks() {
 
     await logActivity(user.id, { id: inserted.id, bookKey: key, title: inserted.title }, 'added', {
       status: inserted.status,
-      format: inserted.formats[0],
-      formats: inserted.formats,
     });
     queryClient.invalidateQueries({ queryKey });
     return inserted;
@@ -121,7 +119,7 @@ export function useBooks() {
     if (error) throw error;
 
     // `silent` is for writes the user did not ask for as an event — a drag to
-    // reorder, the last-played mirror — which would otherwise fill the feed.
+    // reorder, the last-read mirror — which would otherwise fill the feed.
     if (current && !options.silent) {
       const target = { id: bookId, bookKey: current.bookKey, title: current.title };
       if (updates.status && updates.status !== current.status) {
@@ -129,10 +127,6 @@ export function useBooks() {
           oldStatus: current.status,
           newStatus: updates.status,
         });
-      } else if (updates.formats) {
-        const gained = updates.formats.filter((format) => !current.formats.includes(format));
-        if (gained.length > 0) await logActivity(user.id, target, 'format_added', { format: gained[0], formats: gained });
-        else await logActivity(user.id, target, 'updated', {});
       } else if (Object.keys(updates).length > 0) {
         await logActivity(user.id, target, 'updated', {});
       }

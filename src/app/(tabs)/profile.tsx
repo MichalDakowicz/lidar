@@ -23,7 +23,7 @@ import { useNavBarSpace } from '@/hooks/useNavBarSpace';
 import { useProfile } from '@/hooks/useProfile';
 import { MAX_W } from '@/hooks/useResponsive';
 import { useReads } from '@/hooks/useReads';
-import { isOwned } from '@/lib/bookStatus';
+import { isStarted } from '@/lib/bookStatus';
 import { ratingDistribution } from '@/lib/ratingDistribution';
 import { publicShelfUrl } from '@/lib/shelfLink';
 import { nowPlaying, recentlyAdded, shelfStats, topRated } from '@/lib/shelfSummary';
@@ -69,12 +69,12 @@ function ProfileScreen() {
   // every pass for no benefit. The screen is remounted on tab reload anyway.
   const [mountedAt] = useState(() => Date.now());
 
-  const owned = useMemo(() => books.filter(isOwned), [books]);
+  const started = useMemo(() => books.filter(isStarted), [books]);
   const neglected = useMemo(() => {
     const cutoff = mountedAt - NEGLECTED_DAYS * 86_400_000;
-    return owned.filter((book) => !book.lastReadAt || Date.parse(book.lastReadAt) < cutoff);
-  }, [owned, mountedAt]);
-  const pickPool = pickRequest?.scope === 'neglected' ? neglected : owned;
+    return started.filter((book) => !book.lastReadAt || Date.parse(book.lastReadAt) < cutoff);
+  }, [started, mountedAt]);
+  const pickPool = pickRequest?.scope === 'neglected' ? neglected : started;
 
   // Presented from an effect, not from the press handler: the sheet starts its
   // reel the moment it opens, so the new pool has to be committed as a prop
@@ -137,7 +137,7 @@ function ProfileScreen() {
             belowTopRated={
               <View className="gap-6">
                 <ReadPromptCard
-                  libraryCount={owned.length}
+                  libraryCount={started.length}
                   neglectedCount={neglected.length}
                   onPick={(scope) => setPickRequest((previous) => ({ scope, nonce: (previous?.nonce ?? 0) + 1 }))}
                 />

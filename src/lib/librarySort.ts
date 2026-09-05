@@ -3,10 +3,10 @@ import type { Book } from '@/types/book';
 // Library sort comparators. Each is written in canonical ascending form and
 // the direction is applied on top, so the toolbar arrow can flip any sort.
 // SORT_DEFAULT_DIR keeps the order each sort reads best in when first picked:
-// newest / highest / most-recent first for the date and score sorts, A-Z and
-// cheapest first for the rest.
+// newest / highest / most-recent first for the date and score sorts, A-Z for
+// the rest.
 
-export type SortBy = 'custom' | 'dateAdded' | 'title' | 'author' | 'publishedDate' | 'rating' | 'lastRead' | 'price';
+export type SortBy = 'custom' | 'dateAdded' | 'title' | 'author' | 'publishedDate' | 'rating' | 'lastRead';
 export type SortDir = 'asc' | 'desc';
 
 export const SORT_DEFAULT_DIR: Record<SortBy, SortDir> = {
@@ -17,7 +17,6 @@ export const SORT_DEFAULT_DIR: Record<SortBy, SortDir> = {
   publishedDate: 'desc',
   rating: 'desc',
   lastRead: 'desc',
-  price: 'desc',
 };
 
 export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
@@ -28,7 +27,6 @@ export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'publishedDate', label: 'Published' },
   { value: 'rating', label: 'Rating' },
   { value: 'lastRead', label: 'Last read' },
-  { value: 'price', label: 'Price paid' },
 ];
 
 function time(value: string | null | undefined): number {
@@ -38,7 +36,7 @@ function time(value: string | null | undefined): number {
 }
 
 /**
- * Shelf order. An book that has never been dragged has no customOrder, and
+ * Shelf order. A book that has never been dragged has no customOrder, and
  * falls back to the negated add time so it sorts where "newest first" would put
  * it — the same rule the legacy web app used, so an existing shelf keeps the
  * order it was left in.
@@ -76,8 +74,6 @@ function compareAscending(a: Book, b: Book, sortBy: SortBy, context: SortContext
       return context.scoreFor(a) - context.scoreFor(b);
     case 'lastRead':
       return time(a.lastReadAt) - time(b.lastReadAt);
-    case 'price':
-      return (a.pricePaid ?? 0) - (b.pricePaid ?? 0);
     case 'title':
     default:
       return a.title.localeCompare(b.title);

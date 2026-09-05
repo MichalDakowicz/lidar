@@ -19,8 +19,8 @@ type AddSearchResultsProps = {
 
 /**
  * Search hits as pickable rows. Tapping the row opens the book page (where it
- * can be rated whether or not it is owned); tapping the + puts it straight on
- * the shelf with the draft's status and formats.
+ * can be rated whether or not it is on your shelf); tapping the + puts it
+ * straight on the shelf with the draft's status.
  *
  * There is no "search is not configured" state here as there is in Sonar's
  * equivalent: Google Books and Open Library both answer without credentials.

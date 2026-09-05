@@ -101,9 +101,10 @@ export function useReads() {
           last_read_at: forward ? finishedAt : undefined,
           current_page: null,
           progress_updated_at: null,
-          // Only 'Reading' graduates. A wishlist book you borrowed and
-          // finished is still not on your shelf.
-          status: book.status === 'Reading' ? 'Library' : undefined,
+          // Finishing it is what makes it read, whatever it was before — a
+          // readlist book you sat down with in one evening included. Only a
+          // row already marked Read needs no write.
+          status: book.status === 'Read' ? undefined : 'Read',
         }),
       )
       .eq('id', book.id);

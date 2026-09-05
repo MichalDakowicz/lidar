@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useBooks } from '@/hooks/useBooks';
 import { fetchVolume, lookupIsbn } from '@/lib/googleBooks';
 import { goBackOrHome } from '@/lib/utils';
-import type { Book, Format } from '@/types/book';
+import type { Book } from '@/types/book';
 
 import { buildBookPayload, fromBook, hasIssues, isDirty, validate, type BookForm, type FormIssues } from './bookForm';
 
@@ -34,18 +34,6 @@ export function useEditBookForm(book: Book | undefined) {
 
   const update = (patch: Partial<BookForm>) => setForm((current) => (current ? { ...current, ...patch } : current));
 
-  const toggleFormat = (format: Format) =>
-    setForm((current) =>
-      current
-        ? {
-            ...current,
-            formats: current.formats.includes(format)
-              ? current.formats.filter((entry) => entry !== format)
-              : [...current.formats, format],
-          }
-        : current,
-    );
-
   const addAuthor = (name: string) => {
     const clean = name.trim();
     if (!clean) return;
@@ -57,8 +45,8 @@ export function useEditBookForm(book: Book | undefined) {
 
   /**
    * Re-pull the catalogue fields. Only facts about the edition are overwritten
-   * — status, formats, notes, edition details and the rating are the user's and
-   * are never touched by a refresh.
+   * — status, notes, quotes and the rating are the user's and are never touched
+   * by a refresh.
    *
    * The ISBN is tried before the volume id: a book added by scanning has no
    * volume id at all, and an ISBN lookup also reaches Open Library, which is
@@ -112,7 +100,7 @@ export function useEditBookForm(book: Book | undefined) {
   };
 
   // No navigation here: the detail screen decides where the user lands after a
-  // removal (it keeps them on the release so it can be added straight back).
+  // removal (it keeps them on the book so it can be added straight back).
   const remove = async () => {
     if (!book) return;
     setIsSaving(true);
@@ -127,7 +115,6 @@ export function useEditBookForm(book: Book | undefined) {
     form,
     issues,
     update,
-    toggleFormat,
     addAuthor,
     removeAuthor,
     refreshMetadata,

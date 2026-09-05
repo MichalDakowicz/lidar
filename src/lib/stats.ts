@@ -1,4 +1,4 @@
-import { isOwned } from '@/lib/bookStatus';
+import { isStarted } from '@/lib/bookStatus';
 import { summarizeReads, topSpun, type ReadSummary } from '@/lib/reads';
 import type { Book, BookRating, Read } from '@/types/book';
 
@@ -6,25 +6,23 @@ import type { Book, BookRating, Read } from '@/types/book';
 // the legacy Stats.jsx useMemo, which computed all of this inline inside the
 // screen; the screen now only lays out what this returns.
 //
-// "Library" everywhere means status === 'Library': a wishlist entry is a
-// plan and must not inflate what you own, what it cost, or the format split.
+// "Shelf" everywhere means a book you have actually opened — read, reading or
+// put down. A readlist entry is a plan and must not inflate the counts.
 
 export type CountSlice = { name: string; count: number; percent: number };
 export type DecadeSlice = { decade: string; count: number };
 
 export type LibraryStats = {
+  /** Books opened: read + reading + did not finish. Excludes the readlist. */
   totalBooks: number;
-  wishlistCount: number;
-  preOrderCount: number;
+  readCount: number;
+  readingCount: number;
+  readlistCount: number;
+  dnfCount: number;
   uniqueAuthors: number;
-  formats: CountSlice[];
   topAuthors: CountSlice[];
   topGenres: CountSlice[];
-  topStores: CountSlice[];
   decades: DecadeSlice[];
-  totalValue: number;
-  averagePrice: number | null;
-  mostExpensive: { book: Book; price: number }[];
   /** Read log rollups, already scoped to the chosen period by the caller. */
   reads: ReadSummary;
   mostSpun: { book: Book; count: number }[];
@@ -58,22 +56,16 @@ export type StatsInput = {
 };
 
 export function computeStats({ books, reads, ratings, scoreOf }: StatsInput): LibraryStats {
-  const library = books.filter(isOwned);
-  const total = library.length;
+  const shelf = books.filter(isStarted);
+  const total = shelf.length;
 
-  const formats = new Map<string, number>();
   const authors = new Map<string, number>();
   const genres = new Map<string, number>();
-  const stores = new Map<string, number>();
   const decades = new Map<number, number>();
-  const priced: { book: Book; price: number }[] = [];
-  let totalValue = 0;
 
-  for (const book of library) {
-    for (const format of book.formats) bump(formats, format);
+  for (const book of shelf) {
     for (const author of book.authors) bump(authors, author);
     for (const genre of book.genres) bump(genres, genre);
-    if (book.storeName) bump(stores, book.storeName);
 
     if (book.publishedDate && book.publishedDate.length >= 4) {
       const year = parseInt(book.publishedDate.slice(0, 4), 10);
@@ -81,11 +73,6 @@ export function computeStats({ books, reads, ratings, scoreOf }: StatsInput): Li
         const decade = Math.floor(year / 10) * 10;
         decades.set(decade, (decades.get(decade) ?? 0) + 1);
       }
-    }
-
-    if (book.pricePaid != null && book.pricePaid > 0) {
-      totalValue += book.pricePaid;
-      priced.push({ book, price: book.pricePaid });
     }
   }
 
@@ -110,19 +97,16 @@ export function computeStats({ books, reads, ratings, scoreOf }: StatsInput): Li
 
   return {
     totalBooks: total,
-    wishlistCount: books.filter((book) => book.status === 'Wishlist').length,
-    preOrderCount: books.filter((book) => book.status === 'Pre-order').length,
+    readCount: books.filter((book) => book.status === 'Read').length,
+    readingCount: books.filter((book) => book.status === 'Reading').length,
+    readlistCount: books.filter((book) => book.status === 'Readlist').length,
+    dnfCount: books.filter((book) => book.status === 'Did not finish').length,
     uniqueAuthors: authors.size,
-    formats: toSlices(formats, total),
     topAuthors: toSlices(authors, total, 5),
     topGenres: toSlices(genres, total, 5),
-    topStores: toSlices(stores, total, 5),
     decades: [...decades].sort((a, b) => a[0] - b[0]).map(([decade, count]) => ({ decade: `${decade}s`, count })),
-    totalValue: Math.round(totalValue * 100) / 100,
-    averagePrice: priced.length === 0 ? null : Math.round((totalValue / priced.length) * 100) / 100,
-    mostExpensive: priced.sort((a, b) => b.price - a.price).slice(0, 5),
     reads: readSummary,
-    mostSpun: topSpun(library, readSummary, 5),
+    mostSpun: topSpun(shelf, readSummary, 5),
     ratedCount,
     averageRating: ratedCount === 0 ? null : Math.round((ratingTotal / ratedCount) * 10) / 10,
     bestRated: scoredBooks.sort((a, b) => b.score - a.score || a.book.title.localeCompare(b.book.title)).slice(0, 5),

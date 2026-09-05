@@ -6,14 +6,13 @@ import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { BottomSheetTextInput, Sheet, type BottomSheetModal } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import { AddSearchResults } from '@/features/books/add/AddSearchResults';
-import { FormatStatusPicker } from '@/features/books/add/FormatStatusPicker';
+import { StatusPicker } from '@/features/books/add/StatusPicker';
 import { useBookSearch } from '@/features/books/add/useBookSearch';
 import { DEFAULT_DRAFT, useQuickAdd, type QuickAddDraft } from '@/features/books/add/useQuickAdd';
 import { useIsbnScannerStore } from '@/store/isbnScanner';
 import { authorList } from '@/lib/bookKey';
 import type { BookResult } from '@/lib/googleBooks';
 import { COLORS } from '@/theme/colors';
-import type { Format } from '@/types/book';
 
 /**
  * Add a book from anywhere: mounted once by the tabs layout, opened by the nav
@@ -26,9 +25,8 @@ import type { Format } from '@/types/book';
  * search returns whichever printing Google ranked highest, which is rarely the
  * one on your shelf.
  *
- * The status/format picker sits above the results because it applies to
- * whatever you pick next, and the defaults (Library, Paperback) are what most
- * adds want.
+ * The status picker sits above the results because it applies to whatever you
+ * pick next, and the default — the readlist — is what most adds want.
  */
 export const QuickAddSheet = forwardRef<BottomSheetModal>(function QuickAddSheet(_props, ref) {
   const router = useRouter();
@@ -42,14 +40,6 @@ export const QuickAddSheet = forwardRef<BottomSheetModal>(function QuickAddSheet
   const presentScanner = useIsbnScannerStore((s) => s.present);
 
   const dismiss = () => (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
-
-  const toggleFormat = (format: Format) =>
-    setDraft((current) => ({
-      ...current,
-      formats: current.formats.includes(format)
-        ? current.formats.filter((entry) => entry !== format)
-        : [...current.formats, format],
-    }));
 
   const handleAdd = async (found: BookResult) => {
     try {
@@ -122,12 +112,7 @@ export const QuickAddSheet = forwardRef<BottomSheetModal>(function QuickAddSheet
           />
         </View>
 
-        <FormatStatusPicker
-          status={draft.status}
-          formats={draft.formats}
-          onStatusChange={(status) => setDraft((current) => ({ ...current, status }))}
-          onToggleFormat={toggleFormat}
-        />
+        <StatusPicker status={draft.status} onStatusChange={(status) => setDraft({ status })} />
 
         <AddSearchResults
           results={results}

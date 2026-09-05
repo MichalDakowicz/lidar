@@ -1,10 +1,10 @@
 import { Image } from 'expo-image';
-import { Disc3 } from 'lucide-react-native';
+import { BookOpen } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
 type CoverImageProps = {
   uri: string | null;
-  /** Wishlist and pre-order covers are dimmed — you do not have it yet. */
+  /** Readlist covers are dimmed — you have not opened it yet. */
   dimmed?: boolean;
   /** Crossfade length. 0 for rapid source swaps (the random-pick reel). */
   transitionMs?: number;
@@ -13,15 +13,15 @@ type CoverImageProps = {
 };
 
 /**
- * Book artwork, or the record fallback when a release has none. Absolutely
- * positioned so every caller controls the aspect box itself — covers are square
- * in a grid but get cropped to 16:9 in a featured banner.
+ * Book artwork, or a fallback glyph when the catalogue has no jacket. Absolutely
+ * positioned so every caller controls the aspect box itself — a cover fills its
+ * tile in the grid but gets cropped to 16:9 in a featured banner.
  */
 export function CoverImage({ uri, dimmed, transitionMs = 200, iconSize = 32 }: CoverImageProps) {
   if (!uri) {
     return (
       <View className="absolute inset-0 items-center justify-center bg-neutral-800">
-        <Disc3 size={iconSize} color="#52525b" />
+        <BookOpen size={iconSize} color="#52525b" />
       </View>
     );
   }

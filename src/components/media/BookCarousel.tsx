@@ -7,7 +7,7 @@ import { useIsDesktop, useMeasuredWidth } from '@/hooks/useResponsive';
 import type { Book, Ratings } from '@/types/book';
 
 // Horizontal row of cards — the section primitive used everywhere a shelf runs
-// sideways (Recently played, Wishlist, a friend's rails, Discover rows).
+// sideways (Recently finished, Readlist, a friend's rails, Browse rows).
 //
 // Deliberately not virtualized: every caller caps its row at a couple of dozen
 // items, and a FlashList mounted inside another list's header can settle at one

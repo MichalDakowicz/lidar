@@ -2,6 +2,20 @@
 
 See `UPDATE-schema.md` for how to write these.
 
+## 0.2.0 — Unreleased
+
+### Changed
+- Books are tracked by reading, not owning: Readlist, Reading, Read and Did not finish
+- Library rail is now Readlist, holding what you mean to read next
+- Stats count books you have opened, and break out readlist, reading and unfinished
+- Finishing a book marks it Read whatever it was before, including straight off the readlist
+
+### Removed
+- Formats are gone — no more Hardcover, Paperback, Ebook or Audiobook on a book
+- Book page no longer asks what you paid, where you bought it, or the edition
+- Library filters drop Format, and sorting drops Price paid
+- Stats drop the format split, where books came from, and what you spent
+
 ## 0.1.0 — Unreleased
 
 ### Added

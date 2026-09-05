@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import type { QuickAddDraft } from '@/features/books/add/useQuickAdd';
 
 type IsbnScannerState = {
-  /** Opens the scanner, carrying the caller's status/format draft into it. */
+  /** Opens the scanner, carrying the caller's status draft into it. */
   present: ((draft?: QuickAddDraft) => void) | null;
   setPresent: (present: ((draft?: QuickAddDraft) => void) | null) => void;
 };
@@ -16,7 +16,7 @@ type IsbnScannerState = {
  *
  * The draft rides along in the call rather than being read from a store,
  * because it belongs to whoever opened the scanner: adding from the Quick-Add
- * sheet should honour the status and formats picked there.
+ * sheet should honour the status picked there.
  */
 export const useIsbnScannerStore = create<IsbnScannerState>((set) => ({
   present: null,

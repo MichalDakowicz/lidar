@@ -38,7 +38,7 @@ type IsbnScannerSheetProps = {
  * → `lookupIsbn` (Google Books, then Open Library) → one confirmation card with
  * an Add button. It stops at a card rather than adding on sight because a
  * mis-scan of the shelf next to the one you meant would otherwise be silent,
- * and because the status/format draft is worth seeing before it is written.
+ * and because the status draft is worth seeing before it is written.
  *
  * The camera is native-only. `expo-camera` renders a preview on web but its
  * barcode scanning depends on a `BarcodeDetector` most desktop browsers do not
@@ -67,7 +67,7 @@ export const IsbnScannerSheet = forwardRef<BottomSheetModal, IsbnScannerSheetPro
 
   const { book: found, loading, notFound } = useIsbnLookup(isbn);
 
-  const owned = found ? findByKey(found.bookKey) : null;
+  const onShelf = found ? findByKey(found.bookKey) : null;
 
   const reset = useCallback(() => {
     setIsbn(null);
@@ -145,7 +145,7 @@ export const IsbnScannerSheet = forwardRef<BottomSheetModal, IsbnScannerSheetPro
             loading={loading}
             notFound={notFound}
             found={found}
-            owned={owned}
+            onShelf={onShelf}
             pending={!!found && pendingKey === found.bookKey}
             onAdd={handleAdd}
             onAgain={reset}
@@ -253,13 +253,13 @@ type ScanResultProps = {
   loading: boolean;
   notFound: boolean;
   found: BookResult | null;
-  owned: Book | null;
+  onShelf: Book | null;
   pending: boolean;
   onAdd: () => void;
   onAgain: () => void;
 };
 
-function ScanResult({ isbn, loading, notFound, found, owned, pending, onAdd, onAgain }: ScanResultProps) {
+function ScanResult({ isbn, loading, notFound, found, onShelf, pending, onAdd, onAgain }: ScanResultProps) {
   return (
     <View className="gap-4">
       <View className="flex-row items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5">
@@ -314,10 +314,10 @@ function ScanResult({ isbn, loading, notFound, found, owned, pending, onAdd, onA
             </View>
           </View>
 
-          {owned ? (
+          {onShelf ? (
             <View className="flex-row items-center justify-center gap-2 rounded-full border border-border py-3">
               <Check size={16} color={COLORS.accent} />
-              <Text className="font-medium text-foreground">Already on your shelf ({owned.status})</Text>
+              <Text className="font-medium text-foreground">Already on your shelf ({onShelf.status})</Text>
             </View>
           ) : (
             <Pressable

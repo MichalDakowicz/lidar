@@ -1,4 +1,4 @@
-import type { Book, BookStatus, Format } from '@/types/book';
+import type { Book, BookStatus } from '@/types/book';
 
 /** One filter option, with how many books it would match. */
 export type Facet = { value: string; count: number };
@@ -7,8 +7,6 @@ export type LibraryFacets = {
   authors: Facet[];
   genres: Facet[];
   years: Facet[];
-  formats: Facet[];
-  stores: Facet[];
 };
 
 function tally(values: Iterable<string>, counts: Map<string, number>) {
@@ -26,22 +24,18 @@ function toFacets(counts: Map<string, number>, order: 'alpha' | 'desc-value' | '
 }
 
 /**
- * Every filter dimension, derived from the books the user actually owns — so
+ * Every filter dimension, derived from the books actually on the shelf — so
  * there is never a chip that matches nothing. Years sort newest first, authors
- * and genres alphabetically, formats and stores by how common they are.
+ * and genres alphabetically.
  */
 export function libraryFacets(books: Book[]): LibraryFacets {
   const authors = new Map<string, number>();
   const genres = new Map<string, number>();
   const years = new Map<string, number>();
-  const formats = new Map<string, number>();
-  const stores = new Map<string, number>();
 
   for (const book of books) {
     tally(book.authors, authors);
     tally(book.genres, genres);
-    tally(book.formats, formats);
-    if (book.storeName) tally([book.storeName], stores);
     if (book.publishedDate && book.publishedDate.length >= 4) tally([book.publishedDate.slice(0, 4)], years);
   }
 
@@ -49,8 +43,6 @@ export function libraryFacets(books: Book[]): LibraryFacets {
     authors: toFacets(authors, 'alpha'),
     genres: toFacets(genres, 'alpha'),
     years: toFacets(years, 'desc-value'),
-    formats: toFacets(formats, 'count'),
-    stores: toFacets(stores, 'count'),
   };
 }
 
@@ -76,16 +68,12 @@ export function matchesYearFilter(book: Book, selected: string[]): boolean {
   return !!book.publishedDate && selected.includes(book.publishedDate.slice(0, 4));
 }
 
-export function matchesFormatFilter(book: Book, selected: string[]): boolean {
-  return selected.length === 0 || book.formats.some((format) => selected.includes(format));
-}
-
 export function matchesStatusFilter(book: Book, filter: BookStatus | 'all'): boolean {
   return filter === 'all' || book.status === filter;
 }
 
 /** Group key for one book under the chosen dimension. */
-export type GroupBy = 'none' | 'author' | 'year' | 'genre' | 'format' | 'status';
+export type GroupBy = 'none' | 'author' | 'year' | 'genre' | 'status';
 
 export function groupKeyFor(book: Book, groupBy: GroupBy): string {
   switch (groupBy) {
@@ -95,8 +83,6 @@ export function groupKeyFor(book: Book, groupBy: GroupBy): string {
       return book.publishedDate ? book.publishedDate.slice(0, 4) : 'Unknown year';
     case 'genre':
       return book.genres[0] || 'No genre';
-    case 'format':
-      return (book.formats[0] as Format | undefined) ?? 'Digital';
     case 'status':
       return book.status;
     default:
