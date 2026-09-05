@@ -4,6 +4,12 @@
 It says what Lidar is, what state it is in, what is verified, what is not, and what to do
 next, in order. Update it as work lands — it is the handover, not a changelog.
 
+> **Next release is planned, not started.** `TODO.md` is the work order for 0.2.0 —
+> re-cutting Lidar to follow Radar rather than Sonar (no ownership, rectangular covers,
+> Browse instead of the rating page, a readlist, page-based reading streaks, a top 4, and
+> Polish ISBN coverage). Read it before picking up any feature work; this file only
+> describes 0.1.0 as it stands.
+
 Last updated: 2026-09-05. Version `0.1.0`, unreleased. **The app is up:** the schema is
 applied, the release APK is installed and running on the phone, and the web build is live
 at https://lidar-shelf.web.app. Nothing in it has been used against real data yet.
