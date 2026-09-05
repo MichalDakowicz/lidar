@@ -4,7 +4,8 @@
 It says what Lidar is, what state it is in, what is verified, what is not, and what to do
 next, in order. Update it as work lands — it is the handover, not a changelog.
 
-Last updated: 2026-09-05. Version `0.1.0`, unreleased, nothing built to a device yet.
+Last updated: 2026-09-05. Version `0.1.0`, unreleased. The web bundle builds; nothing
+has been built to a device yet, and the schema has not been applied.
 
 ---
 
@@ -48,7 +49,7 @@ Everything below is committed, and `npm test`, `npx tsc --noEmit` and `npm run l
 all clean (117 tests, 0 errors, 0 warnings) as of the last commit.
 
 ### Repo and tooling
-- `git init` done, one commit on `main`, no remote yet.
+- `git init` done, commits on `main`, no remote yet.
 - `package.json`, `app.json` (`com.michaldakowicz.lidar`, scheme `lidar`, version `0.1.0`,
   `versionCode` 1), `babel/metro/tailwind/tsconfig/eslint`, `plugins/withGradleMemory`,
   `scripts/generate-icons.mjs`, `.gitignore`, `.gitattributes`, `firebase.json`.
@@ -118,45 +119,28 @@ Renames worth knowing: `albums→books`, `spins→reads`, `artist→authors`,
 
 ## 3. State: what is NOT done — in the order to do it
 
-### Step 1 — `.env` (blocks everything; needs the user)
-`.env` does not exist. Create it from `.env.example` with the **same two values Radar and
-Sonar use**:
+### Step 1 — `.env` — DONE
+`.env` exists, carrying the same `EXPO_PUBLIC_SUPABASE_URL` and
+`EXPO_PUBLIC_SUPABASE_ANON_KEY` as `../radar/.env`. Gitignored.
+`EXPO_PUBLIC_GOOGLE_BOOKS_KEY` is deliberately blank — search works without it.
 
-```sh
-cp .env.example .env
-```
+### Step 2 — apply the schema (needs the user; one paste) — NOT DONE, blocks everything
+`supabase/schema.sql` has never been run. Radar's schema is already live on that
+project, so the prerequisite check will pass. Ask the user to open **Supabase Dashboard
+→ SQL Editor → New query → paste `supabase/schema.sql` → Run**, and to say whether it
+errored. Nothing in the app works before this: every query hits a table that does not
+exist, and the first symptom will be an empty Library that never stops loading.
 
-Then copy `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` out of
-`../radar/.env` (both are gitignored, so read them, do not guess).
-`EXPO_PUBLIC_GOOGLE_BOOKS_KEY` stays blank — search works without it.
-
-### Step 2 — apply the schema (needs the user; one paste)
-`supabase/schema.sql` has never been run. Radar's schema is already live on that project,
-so the prerequisite check will pass. Ask the user to open **Supabase Dashboard → SQL
-Editor → New query → paste `supabase/schema.sql` → Run**, and to say whether it errored.
-Nothing in the app works before this: every query hits a table that does not exist.
-
-### Step 3 — Firebase (the project exists; it is not linked here)
-The user has confirmed the Firebase project is **created and ready, just not initialised
-in this repo**. `.firebaserc` is gitignored and absent. Ask the user for the project id
-(Radar's is `radar-watchlist`, Sonar's is `sonar-tracker`, so it is probably something
-like `lidar-library` — **ask, do not assume**), then:
-
-```sh
-firebase use --add        # or write .firebaserc by hand
-```
-
-`.firebaserc` shape:
-
-```json
-{ "projects": { "default": "<project-id>" } }
-```
-
-`firebase.json` is already correct (serves `dist/`, SPA rewrite, cache headers). If the
-CLI is not authenticated, tell the user to run `! firebase login` — do not work around it.
+### Step 3 — Firebase — DONE
+`.firebaserc` points at **`lidar-shelf`** (the project the user had already created;
+Radar is `radar-watchlist`, Sonar is `sonar-tracker`). The CLI is authenticated —
+`firebase projects:list` works. `firebase.json` serves `dist/` with an SPA rewrite.
+`npm run build:web` has been run once and exported cleanly; `firebase deploy` has not.
 
 ### Step 4 — first build to the phone
-Never built. `adb devices` to confirm a device, then:
+Never built. A device is attached but reported **`unauthorized`** — the user has to
+accept the USB debugging prompt on the phone before anything installs. Confirm with
+`adb devices` (it should say `device`, not `unauthorized`), then:
 
 ```sh
 npx expo prebuild -p android
