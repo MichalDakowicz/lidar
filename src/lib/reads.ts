@@ -37,28 +37,6 @@ export function topSpun(books: Book[], summary: ReadSummary, limit = 5): { book:
     .slice(0, limit);
 }
 
-/**
- * The newest read per book, as a list of books — "recently played" on the
- * library screen. Books whose rows are gone are skipped: the row is what
- * the section links to.
- */
-export function recentlyPlayed(books: Book[], reads: Read[], limit = 20): Book[] {
-  const byId = new Map(books.map((book) => [book.id, book]));
-  const seen = new Set<string>();
-  const out: Book[] = [];
-
-  for (const read of reads) {
-    if (!read.bookId || seen.has(read.bookId)) continue;
-    const book = byId.get(read.bookId);
-    if (!book) continue;
-    seen.add(read.bookId);
-    out.push(book);
-    if (out.length >= limit) break;
-  }
-
-  return out;
-}
-
 /** Reads inside a window, for the period-scoped stats. */
 export function readsSince(reads: Read[], from: number): Read[] {
   return reads.filter((read) => new Date(read.finishedAt).getTime() >= from);

@@ -43,7 +43,7 @@ function LibraryScreen() {
   const router = useRouter();
   const { show } = useToast();
   const { books, loading, error } = useBooks();
-  const { reads, logRead } = useReads();
+  const { logRead } = useReads();
   const { ratingFor, scoreFor } = useBookRatings();
   const navBarSpace = useNavBarSpace();
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,7 +51,6 @@ function LibraryScreen() {
   const prefs = useLibraryPrefs();
   const filters = useLibraryFilters({
     books,
-    reads,
     searchQuery,
     statusFilter: prefs.statusFilter,
     selectedAuthors: prefs.selectedAuthors,
@@ -115,14 +114,6 @@ function LibraryScreen() {
 
   const sections = (
     <>
-      <LibrarySection
-        title="Recently finished"
-        books={filters.recentlyPlayed}
-        ratingsFor={ratingsFor}
-        onPress={openBook}
-        onLogRead={handleLogRead}
-        variant="cover"
-      />
       <LibrarySection
         title="Readlist"
         books={filters.readlist}

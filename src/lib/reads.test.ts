@@ -1,4 +1,4 @@
-import { listeningStreak, localDateKey, recentlyPlayed, readsPerDay, summarizeReads, topSpun } from './reads';
+import { listeningStreak, localDateKey, readsPerDay, summarizeReads, topSpun } from './reads';
 import type { Book, Read } from '@/types/book';
 
 function read(bookId: string | null, finishedAt: string, id = `${bookId}-${finishedAt}`): Read {
@@ -63,14 +63,6 @@ describe('topSpun', () => {
     const books = [book('a'), book('b'), book('c')];
     const summary = summarizeReads([read('a', at(3)), read('a', at(2)), read('b', at(1))]);
     expect(topSpun(books, summary).map((entry) => entry.book.id)).toEqual(['a', 'b']);
-  });
-});
-
-describe('recentlyPlayed', () => {
-  it('lists each book once, newest play first', () => {
-    const books = [book('a'), book('b')];
-    const played = recentlyPlayed(books, [read('b', at(9)), read('a', at(8)), read('b', at(2))]);
-    expect(played.map((entry) => entry.id)).toEqual(['b', 'a']);
   });
 });
 

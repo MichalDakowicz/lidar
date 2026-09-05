@@ -12,13 +12,11 @@ import {
 import { isStarted } from '@/lib/bookStatus';
 import { bookMatchesSearchQuery } from '@/lib/librarySearch';
 import { compareBooks, type SortBy, type SortDir } from '@/lib/librarySort';
-import { recentlyPlayed } from '@/lib/reads';
-import type { Book, Read } from '@/types/book';
+import type { Book } from '@/types/book';
 import type { StatusFilter } from '@/store/libraryPrefs';
 
 export type LibraryFilters = {
-  /** The rails above the main list. */
-  recentlyPlayed: Book[];
+  /** The one rail above the main list. */
   readlist: Book[];
   /** Everything the filters allow, minus what the rails already showed. */
   mainBooks: Book[];
@@ -32,7 +30,6 @@ export type LibraryFilters = {
 
 export type LibraryFilterInput = {
   books: Book[];
-  reads: Read[];
   searchQuery: string;
   statusFilter: StatusFilter;
   selectedAuthors: string[];
@@ -51,7 +48,6 @@ export type LibraryFilterInput = {
  */
 export function useLibraryFilters({
   books,
-  reads,
   searchQuery,
   statusFilter,
   selectedAuthors,
@@ -62,14 +58,9 @@ export function useLibraryFilters({
   groupBy,
   scoreFor,
 }: LibraryFilterInput): LibraryFilters {
-  // The rails answer "what have I finished lately" and "what is next",
-  // so they are not narrowed by the filter chips — only by the search box, or
-  // searching would leave two rails of non-matches at the top of the results.
-  const playedRail = useMemo(() => {
-    const rail = recentlyPlayed(books, reads, 12);
-    return searchQuery.trim() ? rail.filter((book) => bookMatchesSearchQuery(book, searchQuery)) : rail;
-  }, [books, reads, searchQuery]);
-
+  // The rail answers "what is next", so it is not narrowed by the filter chips
+  // — only by the search box, or searching would leave a rail of non-matches at
+  // the top of the results.
   const readlistRail = useMemo(() => {
     const rail = books
       .filter((book) => book.status === 'Readlist')
@@ -110,7 +101,6 @@ export function useLibraryFilters({
   const readPool = useMemo(() => filtered.filter(isStarted), [filtered]);
 
   return {
-    recentlyPlayed: playedRail,
     readlist: readlistRail,
     mainBooks,
     groups,

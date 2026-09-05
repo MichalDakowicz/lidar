@@ -5,8 +5,8 @@ is needed.** `STATUS.md` says where the app stands today; this says where it is 
 in what order. Tick items off here as they land, and move anything finished into
 `STATUS.md` §2.
 
-Written 2026-09-05, before any of it was coded. **Item 1 is done** (2026-09-05);
-everything from Item 2 down is still untouched.
+Written 2026-09-05, before any of it was coded. **Items 1, 2 and 3 are done**
+(2026-09-05); Items 4-9 are still untouched.
 
 ---
 
@@ -126,7 +126,22 @@ File moves: `FormatStatusPicker.tsx` -> `StatusPicker.tsx`, `EditionDetails.tsx`
   `format` key), the retired-column documentation in `normalizeBook`/`dataTransfer`, the
   prefs migration, and unrelated helpers (`formatIsbn`, Open Library's `format=json`).
 
-### Item 2 — Rectangular covers `feat/rectangular-covers`
+### Item 2 — Rectangular covers `feat/rectangular-covers` — **DONE 2026-09-05**
+
+Radar's values throughout: `aspect-[2/3]` tiles, its column table (Sonar's had one extra
+column per step), its carousel widths (176/140), its gradient stops, and `aspect-[2/3]
+w-28` on the detail hero. Row cards get a portrait `h-28 w-20` thumbnail.
+
+Beyond the plan: the **Library tab icon was a vinyl record** (`Disc3`), as were every
+placeholder on the ratings tab and the public shelf's Library tab. All now book glyphs.
+The ratings board's covers were made 2:3 as well — that tab dies in Item 5, but leaving
+one screen of squares behind reads as a bug until it does. Also fixed a stale Sonar path:
+the Ratings tab claimed `/release`, which does not exist here, so `/edition` lit no tab.
+
+Letterboxing is implemented in `CoverImage` by measuring the jacket on load: within 0.08
+of 2:3 it crops (the Google Books case, free), otherwise it is drawn whole over a blurred
+copy of itself. The measurement is keyed by uri because FlashList recycles cells.
+### Item 2 — Rectangular covers `feat/rectangular-covers` (original plan)
 
 - Port Radar's poster geometry into `BookCard.tsx`, `BookGrid.tsx`, `CoverImage.tsx`,
   `BookCarousel.tsx`. Radar's card is the reference — read
@@ -138,10 +153,11 @@ File moves: `FormatStatusPicker.tsx` -> `StatusPicker.tsx`, `EditionDetails.tsx`
 - **Acceptance:** side-by-side screenshot of Radar's Library and Lidar's Library at the
   same width looks like the same app.
 
-### Item 3 — Remove the Recently finished rail `chore/drop-recent-rail`
+### Item 3 — Remove the Recently finished rail `chore/drop-recent-rail` — **DONE 2026-09-05**
 
-Small. `src/app/(tabs)/index.tsx` — drop the rail and its `useMemo`. Check whether
-`BookCarousel` still has a caller; delete it if not.
+Rail and its `useMemo` gone, and `useLibraryFilters` no longer takes `reads` at all.
+`BookCarousel` kept — Stats and the profile shelf still use it. `lib/reads.recentlyPlayed`
+had no other caller and was deleted with its test.
 
 ### Item 4 — Readlist `feat/readlist`
 

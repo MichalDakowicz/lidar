@@ -15,6 +15,7 @@ See `UPDATE-schema.md` for how to write these.
 - Finishing a book marks it Read whatever it was before, including straight off the readlist
 
 ### Removed
+- Library drops the Recently finished rail — the shelf itself is the answer
 - Formats are gone — no more Hardcover, Paperback, Ebook or Audiobook on a book
 - Book page no longer asks what you paid, where you bought it, or the edition
 - Library filters drop Format, and sorting drops Price paid
