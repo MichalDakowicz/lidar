@@ -69,6 +69,11 @@ export type Book = {
   notes: string;
   favoriteQuotes: string;
 
+  /**
+   * First page of the story, past the front matter. Null means page 1. Every
+   * page sum counts from here — see lib/pages.
+   */
+  startPage: number | null;
   /** Live bookmark. The read log is the history; this is where you are now. */
   currentPage: number | null;
   progressUpdatedAt: string | null;

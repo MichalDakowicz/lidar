@@ -18,6 +18,7 @@ function book(id: string, title = id): Book {
     series: '',
     seriesIndex: null,
     description: '',
+    startPage: null,
     currentPage: null,
     progressUpdatedAt: null,
     bookKey: `manual|${id}`,

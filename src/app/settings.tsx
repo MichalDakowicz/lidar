@@ -11,6 +11,7 @@ import { DataTools } from '@/features/settings/DataTools';
 import { ImportExportSheet } from '@/features/settings/ImportExportSheet';
 import { PrivacyControl } from '@/features/settings/PrivacyControl';
 import { SettingsSection } from '@/features/settings/SettingsSection';
+import { StreakResetControl } from '@/features/settings/StreakResetControl';
 import { ThemeControl } from '@/features/settings/ThemeControl';
 import { WeeklyGoalControl } from '@/features/settings/WeeklyGoalControl';
 import { NestedHeader } from '@/features/social/NestedHeader';
@@ -62,6 +63,7 @@ export default function Settings() {
               Kept on this device. A week that clears the goal keeps your streak alive, so a night off
               costs nothing.
             </Text>
+            <StreakResetControl />
           </SettingsSection>
 
           <SettingsSection icon={<Database size={18} color={MUTED} />} title="Data">

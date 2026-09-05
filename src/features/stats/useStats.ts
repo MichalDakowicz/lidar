@@ -35,12 +35,15 @@ export function useStats({
   ratings,
   period,
   weeklyGoal,
+  streakSince = null,
 }: {
   books: Book[];
   reads: Read[];
   ratings: BookRating[];
   period: StatsPeriodId;
   weeklyGoal: number;
+  /** Streak reset (store/streakEpoch): earlier reads stay, the habit restarts. */
+  streakSince?: string | null;
 }): StatsBundle {
   const scopedReads = useMemo(() => scopeReadsToPeriod(reads, periodStart(period)), [reads, period]);
 
@@ -57,7 +60,7 @@ export function useStats({
   // `book_progress` is not written yet (TODO item 7), so the second argument is
   // empty and every page here comes from a finished book. When the page tracker
   // lands, its rows go in there and nothing else on this screen changes.
-  const daily = useMemo(() => dailyPages(reads), [reads]);
+  const daily = useMemo(() => dailyPages(reads, [], streakSince), [reads, streakSince]);
   const streak = useMemo(() => currentStreak(daily, weeklyGoal), [daily, weeklyGoal]);
   const longest = useMemo(() => longestStreak(daily, weeklyGoal), [daily, weeklyGoal]);
   const week = useMemo(() => weekShortfall(daily, weeklyGoal), [daily, weeklyGoal]);

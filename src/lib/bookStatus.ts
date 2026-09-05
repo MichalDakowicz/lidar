@@ -1,3 +1,4 @@
+import { progressRatio } from '@/lib/pages';
 import type { Book, BookStatus } from '@/types/book';
 
 /**
@@ -81,10 +82,8 @@ export function isStarted(book: Book): boolean {
  * How far through the book you are, 0–1, or null when there is nothing to draw
  * a bar from. Guarded against a `current_page` past the page count, which an
  * edition mismatch makes easy (the hardcover you logged against the paperback's
- * page total).
+ * page total), and measured from `start_page` so front matter is not progress.
  */
 export function readingProgress(book: Book): number | null {
-  if (!book.pageCount || book.pageCount <= 0) return null;
-  if (book.currentPage == null || book.currentPage <= 0) return null;
-  return Math.min(book.currentPage / book.pageCount, 1);
+  return progressRatio(book);
 }

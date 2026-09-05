@@ -14,6 +14,7 @@ function book(overrides: Partial<Book> = {}): Book {
     series: '',
     seriesIndex: null,
     description: '',
+    startPage: null,
     currentPage: null,
     progressUpdatedAt: null,
     bookKey: 'manual:ursula-k-le-guin|the-dispossessed',
@@ -73,5 +74,53 @@ describe('isDirty', () => {
     expect(isDirty({ ...fromBook(row), notes: 'the wall is the whole book' }, row)).toBe(true);
     expect(isDirty({ ...fromBook(row), status: 'Readlist' }, row)).toBe(true);
     expect(isDirty({ ...fromBook(row), authors: ['Ursula K. Le Guin', 'Someone Else'] }, row)).toBe(true);
+  });
+});
+
+describe('page fields', () => {
+  const form = () => fromBook(book());
+
+  it('carries the page count and start page out of the book as text', () => {
+    const f = fromBook(book({ pageCount: 384, startPage: 17 }));
+    expect(f.pageCount).toBe('384');
+    expect(f.startPage).toBe('17');
+  });
+
+  it('leaves an unknown page count blank rather than 0', () => {
+    const f = fromBook(book({ pageCount: null, startPage: null }));
+    expect(f.pageCount).toBe('');
+    expect(f.startPage).toBe('');
+  });
+
+  it('writes a blank field back as null, not 0', () => {
+    const payload = buildBookPayload({ ...form(), pageCount: '', startPage: '' });
+    expect(payload.pageCount).toBeNull();
+    expect(payload.startPage).toBeNull();
+  });
+
+  it('writes what was typed', () => {
+    const payload = buildBookPayload({ ...form(), pageCount: '384', startPage: '17' });
+    expect(payload.pageCount).toBe(384);
+    expect(payload.startPage).toBe(17);
+  });
+
+  it('refuses a story that starts after the last page', () => {
+    expect(validate({ ...form(), pageCount: '384', startPage: '400' }).startPage).toBe(
+      'The story cannot start after page 384',
+    );
+  });
+
+  it('accepts a story that starts on the last page', () => {
+    expect(validate({ ...form(), pageCount: '384', startPage: '384' }).startPage).toBeUndefined();
+  });
+
+  it('refuses something that is not a page number', () => {
+    expect(validate({ ...form(), startPage: 'x' }).startPage).toBeDefined();
+    expect(validate({ ...form(), pageCount: '0' }).pageCount).toBeDefined();
+  });
+
+  it('is dirty when only the start page moved', () => {
+    const original = book({ pageCount: 384, startPage: null });
+    expect(isDirty({ ...fromBook(original), startPage: '17' }, original)).toBe(true);
   });
 });

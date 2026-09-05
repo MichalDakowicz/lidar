@@ -10,6 +10,9 @@ export type BookForm = {
   authors: string[];
   coverUrl: string;
   publishedDate: string;
+  /** Kept as typed text so a half-deleted number does not become 0 mid-edit. */
+  pageCount: string;
+  startPage: string;
   url: string;
   status: BookStatus;
   notes: string;
@@ -22,6 +25,8 @@ export function fromBook(book: Book): BookForm {
     authors: book.authors,
     coverUrl: book.coverUrl ?? '',
     publishedDate: book.publishedDate ?? '',
+    pageCount: book.pageCount != null ? String(book.pageCount) : '',
+    startPage: book.startPage != null ? String(book.startPage) : '',
     url: book.url,
     status: book.status,
     notes: book.notes,
@@ -29,11 +34,34 @@ export function fromBook(book: Book): BookForm {
   };
 }
 
-export type FormIssues = { title?: string };
+export type FormIssues = { title?: string; pageCount?: string; startPage?: string };
+
+/** A blank field is "unknown", not zero. Anything else has to be a real page. */
+function pageNumber(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 export function validate(form: BookForm): FormIssues {
   const issues: FormIssues = {};
   if (!form.title.trim()) issues.title = 'A book needs a title';
+
+  const pages = pageNumber(form.pageCount);
+  const start = pageNumber(form.startPage);
+
+  if (form.pageCount.trim() && (pages == null || pages < 1)) {
+    issues.pageCount = 'Pages has to be a number';
+  }
+  if (form.startPage.trim() && (start == null || start < 1)) {
+    issues.startPage = 'The first page has to be a number';
+  } else if (start != null && pages != null && start > pages) {
+    // Not a warning: a start past the end would make the book negative pages
+    // long, and lib/pages would have to paper over it on every read.
+    issues.startPage = `The story cannot start after page ${pages}`;
+  }
+
   return issues;
 }
 
@@ -53,6 +81,8 @@ export function buildBookPayload(form: BookForm): Partial<Book> {
     authors: form.authors,
     coverUrl: form.coverUrl.trim() || null,
     publishedDate: form.publishedDate.trim() || null,
+    pageCount: pageNumber(form.pageCount),
+    startPage: pageNumber(form.startPage),
     url: form.url.trim(),
     status: form.status,
     notes: form.notes,
@@ -68,6 +98,8 @@ export function isDirty(form: BookForm, book: Book): boolean {
     form.authors.join(' ') !== original.authors.join(' ') ||
     form.coverUrl !== original.coverUrl ||
     form.publishedDate !== original.publishedDate ||
+    form.pageCount !== original.pageCount ||
+    form.startPage !== original.startPage ||
     form.url !== original.url ||
     form.status !== original.status ||
     form.notes !== original.notes ||

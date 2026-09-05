@@ -117,6 +117,7 @@ function coerceBook(item: Record<string, unknown>, index: number, errors: string
     coverUrl: typeof item.coverUrl === 'string' ? item.coverUrl : null,
     publishedDate: typeof item.publishedDate === 'string' ? item.publishedDate : null,
     pageCount: numberOrUndefined(item.pageCount) ?? null,
+    startPage: numberOrUndefined(item.startPage) ?? null,
     genres: Array.isArray(item.genres) ? item.genres.map(String) : [],
     status: importedStatus(item.status, lastReadAt),
     url: typeof item.url === 'string' ? item.url : '',

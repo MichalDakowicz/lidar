@@ -25,6 +25,7 @@ function book(overrides: Partial<Book> = {}): Book {
     status: 'Read',
     notes: '',
     favoriteQuotes: '',
+    startPage: null,
     currentPage: null,
     progressUpdatedAt: null,
     customOrder: null,

@@ -34,6 +34,11 @@ type StatsViewProps = {
    * somebody else's numbers is the default.
    */
   weeklyGoal?: number;
+  /**
+   * Streak reset (store/streakEpoch). Omitted on a friend's shelf for the same
+   * reason as the goal: it is this device's reset, not theirs.
+   */
+  streakSince?: string | null;
 };
 
 /** Radar's section heading: a real title, not a caption on a card. */
@@ -60,9 +65,10 @@ export function StatsView({
   onOpenBook,
   onOpenPeriod,
   weeklyGoal = DEFAULT_WEEKLY_PAGES,
+  streakSince = null,
 }: StatsViewProps) {
   const navBarSpace = useNavBarSpace();
-  const bundle = useStats({ books, reads, ratings, period, weeklyGoal });
+  const bundle = useStats({ books, reads, ratings, period, weeklyGoal, streakSince });
   const { stats, distribution, streak, longestStreak, weekNeeded, weekPages } = bundle;
 
   if (books.length === 0 && ratings.length === 0) {

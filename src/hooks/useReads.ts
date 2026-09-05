@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { booksQueryKey } from '@/hooks/useBooks';
 import { normalizeRead, type ReadRow } from '@/lib/normalizeBook';
+import { countablePages } from '@/lib/pages';
 import { summarizeReads } from '@/lib/reads';
 import { stripUndefined } from '@/lib/stripUndefined';
 import { supabase } from '@/lib/supabase';
@@ -84,8 +85,10 @@ export function useReads() {
         cover_url: book.coverUrl,
         finished_at: finishedAt,
         // Snapshotted, so a re-read of a different edition still counts the
-        // right number of pages toward the year's total.
-        page_count: book.pageCount,
+        // right number of pages toward the year's total — and snapshotted as
+        // *countable* pages, past the front matter, because that is the number
+        // the streak and the calendar add up (lib/pages).
+        page_count: countablePages(book),
       }),
     );
     if (error) throw error;
@@ -116,7 +119,7 @@ export function useReads() {
       book_key: book.bookKey,
       book_title: book.title,
       type: 'finished_read',
-      details: { finishedAt, pageCount: book.pageCount },
+      details: { finishedAt, pageCount: countablePages(book) },
     });
     if (activityError) console.error('Failed to log read activity', activityError);
 

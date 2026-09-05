@@ -89,6 +89,11 @@ create table if not exists public.books (
   store_name    text,
   price_paid    numeric,
   edition       text,
+  -- The first page of the story. Front matter, a foreword and a translator's
+  -- note are pages you did not read, and a 384-page book that opens on 17 is
+  -- 368 pages of reading — so this is the floor every page sum counts from, and
+  -- the floor the progress bar starts at. Null means "starts on page 1".
+  start_page    int,
   -- Where you are in it right now. The read log below is the history; this is
   -- the live bookmark, so the Library can show a progress bar without pulling
   -- every read row.
@@ -251,6 +256,26 @@ begin
   end if;
 
   alter table public.books alter column status set default 'Readlist';
+end $$;
+
+-- 0.2.0 — where the story starts.
+--
+-- Books rarely open on page 1. Counting a 384-page book that begins on 17 as
+-- 384 pages read inflates every page total and every streak day it lands on.
+-- Null keeps the old behaviour (start at 1), so no existing row changes meaning.
+alter table public.books add column if not exists start_page int;
+
+-- A start page past the end is not a start page. Guarded so a re-run is a no-op.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conrelid = 'public.books'::regclass and conname = 'books_start_page_check'
+  ) then
+    alter table public.books
+      add constraint books_start_page_check
+      check (start_page is null or start_page >= 1);
+  end if;
 end $$;
 
 -- Retired in 0.2.0 and deliberately NOT dropped: this file never drops a

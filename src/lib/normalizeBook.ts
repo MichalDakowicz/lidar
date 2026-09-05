@@ -27,6 +27,7 @@ export type BookRow = {
   status: string | null;
   notes: string | null;
   favorite_quotes: string | null;
+  start_page: number | null;
   current_page: number | null;
   progress_updated_at: string | null;
   custom_order: number | null;
@@ -89,6 +90,7 @@ export function normalizeBook(row: BookRow): Book {
     status: normalizeStatus(row.status),
     notes: row.notes ?? '',
     favoriteQuotes: row.favorite_quotes ?? '',
+    startPage: row.start_page,
     currentPage: row.current_page,
     progressUpdatedAt: row.progress_updated_at,
     customOrder: row.custom_order,
@@ -122,6 +124,7 @@ const FIELD_MAP: Record<string, string> = {
   status: 'status',
   notes: 'notes',
   favoriteQuotes: 'favorite_quotes',
+  startPage: 'start_page',
   currentPage: 'current_page',
   progressUpdatedAt: 'progress_updated_at',
   customOrder: 'custom_order',
@@ -130,7 +133,7 @@ const FIELD_MAP: Record<string, string> = {
 };
 
 /** Columns Postgres rejects an empty string for — a blank form field is null. */
-const NULL_ON_EMPTY = new Set(['page_count', 'series_index', 'current_page']);
+const NULL_ON_EMPTY = new Set(['page_count', 'series_index', 'current_page', 'start_page']);
 
 export function toBookRow(book: Partial<Book>): Record<string, unknown> {
   const row: Record<string, unknown> = {};

@@ -152,7 +152,7 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
                 onRemoveRead={detail.removeRead}
               />
 
-              <BookDetails form={form} onChange={editForm.update} />
+              <BookDetails form={form} onChange={editForm.update} issues={editForm.issues} />
             </>
           )}
 

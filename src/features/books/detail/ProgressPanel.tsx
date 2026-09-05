@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { countablePages, firstPage, pagesReadAt, progressRatio } from '@/lib/pages';
 import { COLORS } from '@/theme/colors';
 import type { Book } from '@/types/book';
 
@@ -38,10 +39,15 @@ export function ProgressPanel({ book, onSetPage, onFinish }: ProgressPanelProps)
     setDraft(book.currentPage ? String(book.currentPage) : '');
   }
 
+  // `total` is the last page number the reader types against; `countable` is
+  // how many pages that actually is once the front matter is skipped, and it is
+  // the number the bar and the streak agree on (lib/pages).
   const total = book.pageCount ?? null;
+  const countable = countablePages(book);
+  const start = firstPage(book);
   const current = Number.parseInt(draft, 10);
   const valid = Number.isFinite(current) && current >= 0 && (!total || current <= total);
-  const ratio = total && book.currentPage ? Math.min(book.currentPage / total, 1) : 0;
+  const ratio = progressRatio(book) ?? 0;
 
   const commit = () => {
     if (!valid) {
@@ -67,11 +73,14 @@ export function ProgressPanel({ book, onSetPage, onFinish }: ProgressPanelProps)
           <Text className="text-xs text-muted-foreground">
             {book.currentPage ? `Page ${book.currentPage} of ${total}` : `${total} pages`}
             {ratio > 0 ? ` · ${Math.round(ratio * 100)}%` : ''}
+            {start > 1 && countable
+              ? ` · ${pagesReadAt(book, book.currentPage).toLocaleString()} of ${countable.toLocaleString()} read, from page ${start}`
+              : ''}
           </Text>
         </View>
       ) : (
         <Text className="text-xs text-muted-foreground">
-          No page count on this edition — set one in the details below to get a progress bar.
+          No page count on this edition — set Pages in the details below to get a progress bar.
         </Text>
       )}
 

@@ -36,6 +36,7 @@ export function toDiscoveryBook(result: BookResult): Book {
     status: 'Readlist',
     notes: '',
     favoriteQuotes: '',
+    startPage: null,
     currentPage: null,
     progressUpdatedAt: null,
     customOrder: null,

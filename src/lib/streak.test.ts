@@ -71,6 +71,29 @@ describe('dailyPages', () => {
     const daily = dailyPages([read(at('2026-06-01'), 100)], [{ recordedAt: at('2026-06-01'), pages: 45 }]);
     expect(daily['2026-06-01']).toBe(145);
   });
+
+  it('leaves out everything before a streak reset', () => {
+    const reads = [read(at('2026-06-01'), 320, { id: 'old' }), read(at('2026-09-01'), 288, { id: 'new' })];
+    const daily = dailyPages(reads, [], at('2026-08-01'));
+    expect(daily['2026-06-01']).toBeUndefined();
+    expect(daily['2026-09-01']).toBe(288);
+  });
+
+  it('keeps a read finished exactly on the reset', () => {
+    const daily = dailyPages([read(at('2026-08-01'), 200)], [], at('2026-08-01'));
+    expect(daily['2026-08-01']).toBe(200);
+  });
+
+  it('cuts bookmark moves off at the reset too', () => {
+    const daily = dailyPages([], [{ recordedAt: at('2026-06-01'), pages: 45 }], at('2026-08-01'));
+    expect(daily).toEqual({});
+  });
+
+  it('counts everything when there is no reset, or the reset is unparseable', () => {
+    const reads = [read(at('2026-06-01'), 320)];
+    expect(dailyPages(reads, [], null)['2026-06-01']).toBe(320);
+    expect(dailyPages(reads, [], 'not a date')['2026-06-01']).toBe(320);
+  });
 });
 
 describe('currentStreak', () => {

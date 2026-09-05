@@ -61,14 +61,26 @@ export type PageEntry = { recordedAt: string; pages: number };
  * A book with no page count contributes nothing rather than a guess. Re-reads
  * are separate rows and each carries its own `pageCount`, so re-reading a
  * different edition counts that edition's length, not the first one's.
+ *
+ * `since` is the streak reset (store/streakEpoch): anything finished before it
+ * is left out of the habit surfaces and out of nothing else. The read is still
+ * a read, still on the shelf, still in the year's page total — the calendar
+ * simply starts drawing from the day you asked it to.
  */
-export function dailyPages(reads: Read[], progress: PageEntry[] = []): Record<string, number> {
+export function dailyPages(
+  reads: Read[],
+  progress: PageEntry[] = [],
+  since: string | null = null,
+): Record<string, number> {
   const daily: Record<string, number> = {};
+  const floor = since ? Date.parse(since) : NaN;
+  const cutoff = Number.isNaN(floor) ? null : floor;
 
   const add = (at: string, pages: number) => {
     if (!pages || pages <= 0) return;
     const parsed = Date.parse(at);
     if (Number.isNaN(parsed)) return;
+    if (cutoff !== null && parsed < cutoff) return;
     const key = dateKey(parsed);
     daily[key] = (daily[key] ?? 0) + pages;
   };

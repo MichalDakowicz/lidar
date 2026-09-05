@@ -17,6 +17,8 @@ See `UPDATE-schema.md` for how to write these.
 - Masterpieces on Stats: every book you have rated a perfect 5
 - Browse tab: search any book, and rows built from the authors and subjects you read
 - Add a book straight from a Browse row or a search result, without opening it
+- Set which page a book's story starts on, so front matter stops counting as pages read
+- Restart the reading streak from today in Settings, keeping every book you have read
 
 ### Changed
 - Sign-in screen names both siblings, Radar and Sonar, as the same account
