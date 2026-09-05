@@ -4,8 +4,9 @@
 It says what Lidar is, what state it is in, what is verified, what is not, and what to do
 next, in order. Update it as work lands — it is the handover, not a changelog.
 
-Last updated: 2026-09-05. Version `0.1.0`, unreleased. The web bundle builds; nothing
-has been built to a device yet, and the schema has not been applied.
+Last updated: 2026-09-05. Version `0.1.0`, unreleased. **The app is up:** the schema is
+applied, the release APK is installed and running on the phone, and the web build is live
+at https://lidar-shelf.web.app. Nothing in it has been used against real data yet.
 
 ---
 
@@ -71,7 +72,10 @@ all clean (117 tests, 0 errors, 0 warnings) as of the last commit.
   publication. Opens with a prerequisite check against Radar's shared tables.
 - `docs/shared-database.md` — the three-app contract, the `book_key` table, why ratings
   have no FK.
-- **NOT YET RUN against the live project.** See §3.
+- **Applied.** All six tables answer through PostgREST on the shared project. Two of
+  them (`book_ratings`, `book_activity_reactions`) have composite primary keys and no
+  `id` column, so a `?select=id` probe 400s on those — that is the schema being right,
+  not wrong; probe with `?select=*`.
 
 ### The book domain (hand-written, not ported)
 - `src/types/book.ts` — `Book`, `BookRating`, `Read`, `BookActivityEvent`, `Format`,
@@ -89,7 +93,7 @@ all clean (117 tests, 0 errors, 0 warnings) as of the last commit.
 - `src/lib/formats.ts`, `bookStatus.ts` (incl. `readingProgress`), `ratings.ts` (facets:
   prose / plot / characters / replay).
 
-### The barcode scanner — done, unverified on hardware
+### The barcode scanner — built and installed, camera not yet pointed at a book
 - `src/features/books/add/IsbnScannerSheet.tsx` — `CameraView` with
   `barcodeTypes: ['ean13','ean8','upc_a']`, a 1.5 s re-scan lock, torch toggle, permission
   states, a typed-ISBN fallback, and a confirmation card that says "already on your shelf"
@@ -124,43 +128,48 @@ Renames worth knowing: `albums→books`, `spins→reads`, `artist→authors`,
 `EXPO_PUBLIC_SUPABASE_ANON_KEY` as `../radar/.env`. Gitignored.
 `EXPO_PUBLIC_GOOGLE_BOOKS_KEY` is deliberately blank — search works without it.
 
-### Step 2 — apply the schema (needs the user; one paste) — NOT DONE, blocks everything
-`supabase/schema.sql` has never been run. Radar's schema is already live on that
-project, so the prerequisite check will pass. Ask the user to open **Supabase Dashboard
-→ SQL Editor → New query → paste `supabase/schema.sql` → Run**, and to say whether it
-errored. Nothing in the app works before this: every query hits a table that does not
-exist, and the first symptom will be an empty Library that never stops loading.
+### Step 2 — apply the schema — DONE
+Run by the user through the SQL Editor. Verified from here: `books`, `book_reads`,
+`book_ratings`, `book_activity`, `book_activity_reactions` and `book_activity_comments`
+all answer on the shared project.
 
 ### Step 3 — Firebase — DONE
-`.firebaserc` points at **`lidar-shelf`** (the project the user had already created;
-Radar is `radar-watchlist`, Sonar is `sonar-tracker`). The CLI is authenticated —
-`firebase projects:list` works. `firebase.json` serves `dist/` with an SPA rewrite.
-`npm run build:web` has been run once and exported cleanly; `firebase deploy` has not.
+`.firebaserc` points at **`lidar-shelf`** (Radar is `radar-watchlist`, Sonar is
+`sonar-tracker`). Deployed; hosting is live at **https://lidar-shelf.web.app**.
 
-### Step 4 — first build to the phone
-Never built. A device is attached but reported **`unauthorized`** — the user has to
-accept the USB debugging prompt on the phone before anything installs. Confirm with
-`adb devices` (it should say `device`, not `unauthorized`), then:
+### Step 4 — first build to the phone — DONE
+Release APK built and installed, app launched and confirmed alive (`adb shell pidof`
+returns a pid, `ReactNativeJS: Running "main"` and no `AndroidRuntime:E`).
+
+**Build with a JDK 21, not the machine default.** The default `JAVA_HOME` here is
+Temurin 25, which fails the CMake configure tasks. The working invocation is:
 
 ```sh
 npx expo prebuild -p android
-npx expo run:android --device
+cd android
+JAVA_HOME="C:\Program Files\Android\Android Studio\jbr" ./gradlew assembleRelease
+mv app/build/outputs/apk/release/app-release.apk \
+   app/build/outputs/apk/release/lidar-v<version>.apk
+adb install -r app/build/outputs/apk/release/lidar-v<version>.apk
 ```
 
-Expect the first prebuild to be slow. Note the JDK caveat in
-`plugins/withGradleMemory.js`: build with a JDK 21, not 24+.
+That JBR is JDK 21.0.8. A full release build takes about five minutes.
 
-### Step 5 — verify the scanner on real hardware
-This is the one feature that cannot be checked from a keyboard, and the whole app is named
-after it. On the device: open Add → Scan the barcode → point at a real book. Check
-(a) the permission prompt appears, (b) a book resolves, (c) a non-book barcode says "That
-barcode is not an ISBN", (d) the torch works, (e) a book already on the shelf reports so.
-If `onBarcodeScanned` never fires, the first thing to check is that this is a dev build
-and not Expo Go — `expo-camera`'s native module is not in the Go binary.
+### Step 5 — verify the scanner on real hardware — NOT DONE, the last real unknown
+This is the one feature that cannot be checked from a keyboard, and the app is named
+after it. The binary on the phone is a release build, so `expo-camera`'s native module
+is present and the Expo Go caveat does not apply.
 
-### Step 6 — deploy web, then release
-`npm run deploy:web` once the phone build passes. Then the release checklist in
-`CLAUDE.md`.
+On the device: open Add → Scan the barcode → point at a real book. Check
+(a) the permission prompt appears, (b) a book resolves, (c) a non-book barcode says
+"That barcode is not an ISBN", (d) the torch works, (e) a book already on the shelf
+reports so. If `onBarcodeScanned` never fires on a release build, check the camera
+permission was actually granted rather than dismissed.
+
+### Step 6 — first real use, then release
+Sign in (same Google account as Radar and Sonar — it should already know you), add a
+few books, and see whether the ported screens hold up against real rows. Then the
+release checklist in `CLAUDE.md`.
 
 ---
 
@@ -201,6 +210,8 @@ Ordered by how much they matter. None of these block a build.
 - **Bash heredocs in this repo's tooling are fragile.** Several multi-line `cat > file
   <<'EOF'` calls failed with "unexpected EOF while looking for matching quote" on content
   that was perfectly valid. Write files with the Write tool, or with a `node` script.
+- **Build with the Android Studio JBR (JDK 21), not the default JDK 25.** The CMake
+  configure tasks fail on 24+. See §3 step 4 for the exact command.
 - **Do not type a `\u`-escape into a regex through an editor that normalises it.** The
   combining-mark range in `bookKey.ts` had to be written by a node script building the
   backslash with `String.fromCharCode(92)`.
