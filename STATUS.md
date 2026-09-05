@@ -9,6 +9,15 @@ next, in order. Update it as work lands — it is the handover, not a changelog.
 > Ratings, Radar's stats with a page streak, Biblioteka Narodowa as an ISBN source);
 > Items 4, 7 and 8 have not started. **Google Books is 429ing anonymous requests from
 > this network — set `EXPO_PUBLIC_GOOGLE_BOOKS_KEY` before judging any lookup failure.**
+>
+> **Landed outside the work order (2026-09-05):** `books.start_page` and `lib/pages`, and
+> a streak reset. Both matter to Item 7 — the page tracker's progress bar floors at
+> `firstPage(book)`, not at 0, and `countablePages` is the number its deltas add up to.
+> The reset is a cut-off in `store/streakEpoch` (MMKV, per device), never a delete:
+> `dailyPages(reads, progress, since)` filters, so every read keeps its row and its
+> pages. `book_reads.page_count` now snapshots *countable* pages; rows written before
+> this keep whatever they were logged with, and setting a start page does not rewrite
+> them.
 > `TODO.md` is
 > re-cutting Lidar to follow Radar rather than Sonar (no ownership, rectangular covers,
 > Browse instead of the rating page, a readlist, page-based reading streaks, a top 4, and
@@ -16,8 +25,9 @@ next, in order. Update it as work lands — it is the handover, not a changelog.
 > file still describes 0.1.0 except where §2 says otherwise.
 
 Last updated: 2026-09-05. Version `0.2.0`, unreleased. **The app is up:** the schema is
-applied, the release APK is installed and running on the phone, and the web build is live
-at https://lidar-shelf.web.app. Nothing in it has been used against real data yet.
+applied (including the `start_page` migration, verified against PostgREST), the release
+APK is installed and running on the phone, and the web build is live at
+https://lidar-shelf.web.app.
 
 ---
 
