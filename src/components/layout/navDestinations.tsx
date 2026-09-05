@@ -1,5 +1,5 @@
 import { type Href } from 'expo-router';
-import { BarChart3, CircleUserRound, Disc3, Star, Users } from 'lucide-react-native';
+import { BarChart3, CircleUserRound, LibraryBig, Star, Users } from 'lucide-react-native';
 import { type ReactNode } from 'react';
 
 // The five destinations, in bar order. Two consumers read this list and they
@@ -26,7 +26,7 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     href: '/',
     label: 'Library',
     tabName: 'index',
-    icon: (color, size) => <Disc3 color={color} size={size} />,
+    icon: (color, size) => <LibraryBig color={color} size={size} />,
     isActive: (pathname) => pathname === '/',
   },
   {
@@ -34,9 +34,10 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     label: 'Ratings',
     tabName: 'ratings',
     icon: (color, size) => <Star color={color} size={size} />,
-    // A release page is opened from the board or from its search, so it belongs
-    // to this tab — it is also the only route where an unowned book is edited.
-    isActive: (pathname) => pathname.startsWith('/ratings') || pathname.startsWith('/release'),
+    // An edition page is opened from the board or from its search, so it
+    // belongs to this tab — it is also the only route where a book you do not
+    // track is edited.
+    isActive: (pathname) => pathname.startsWith('/ratings') || pathname.startsWith('/edition'),
   },
   {
     href: '/stats',

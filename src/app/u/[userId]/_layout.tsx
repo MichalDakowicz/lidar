@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { BarChart3, Disc3, Users } from 'lucide-react-native';
+import { BarChart3, LibraryBig, Users } from 'lucide-react-native';
 
 import { PublicHeader } from '@/components/layout/PublicHeader';
 import { COLORS } from '@/theme/colors';
@@ -25,7 +25,7 @@ export default function PublicShelfLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Library', tabBarIcon: ({ color, size }) => <Disc3 color={color} size={size} /> }}
+        options={{ title: 'Library', tabBarIcon: ({ color, size }) => <LibraryBig color={color} size={size} /> }}
       />
       <Tabs.Screen
         name="stats"

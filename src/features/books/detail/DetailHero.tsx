@@ -63,7 +63,7 @@ export function DetailHero({
         </Pressable>
 
         <View className="flex-row items-end gap-4 pt-6">
-          <View className="h-32 w-32 overflow-hidden rounded-lg bg-neutral-900 shadow-2xl">
+          <View className="aspect-[2/3] w-28 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 shadow-2xl">
             <CoverImage uri={coverUrl} iconSize={30} />
           </View>
           <View className="min-w-0 flex-1 gap-1.5 pb-1">

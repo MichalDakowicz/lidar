@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Disc3, ExternalLink, Trash2 } from 'lucide-react-native';
+import { BookOpen, ExternalLink, Trash2 } from 'lucide-react-native';
 import { forwardRef } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -60,12 +60,12 @@ export const DropSheet = forwardRef<BottomSheetModal, DropSheetProps>(function D
         ) : (
           <>
             <View className="flex-row items-center gap-3">
-              <View className="h-16 w-16 overflow-hidden rounded-md bg-secondary">
+              <View className="h-24 w-16 overflow-hidden rounded-md bg-secondary">
                 {target.coverUrl ? (
-                  <Image source={{ uri: target.coverUrl }} style={{ width: 64, height: 64 }} contentFit="cover" transition={120} />
+                  <Image source={{ uri: target.coverUrl }} style={{ width: 64, height: 96 }} contentFit="cover" transition={120} />
                 ) : (
                   <View className="h-full w-full items-center justify-center">
-                    <Disc3 size={22} color={COLORS.mutedDeep} />
+                    <BookOpen size={22} color={COLORS.mutedDeep} />
                   </View>
                 )}
               </View>

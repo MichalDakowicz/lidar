@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
-import { Music, Trash2 } from 'lucide-react-native';
+import { BookOpen, Trash2 } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -53,7 +53,7 @@ export default function History() {
           <LoadingState label="Loading your history…" />
         ) : reads.length === 0 ? (
           <EmptyState
-            icon={<Music size={40} color={COLORS.mutedDeep} />}
+            icon={<BookOpen size={40} color={COLORS.mutedDeep} />}
             title="Nothing logged yet"
             description="Finish a book from its card, or open it and log a read."
           />

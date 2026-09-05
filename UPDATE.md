@@ -5,6 +5,10 @@ See `UPDATE-schema.md` for how to write these.
 ## 0.2.0 — Unreleased
 
 ### Changed
+- Covers are rectangular, the shape a book jacket actually is, everywhere in the app
+- Library fits fewer, larger covers across the grid, so a title is readable at a glance
+- An odd-shaped cover is shown whole against a blur instead of having its title cropped off
+- Library tab icon is a bookshelf, not a vinyl record
 - Books are tracked by reading, not owning: Readlist, Reading, Read and Did not finish
 - Library rail is now Readlist, holding what you mean to read next
 - Stats count books you have opened, and break out readlist, reading and unfinished

@@ -51,10 +51,11 @@ export function BookCarousel({
 
   if (books.length === 0) return null;
 
-  // Featured banners page one at a time; cover rows scroll freely. Covers can
-  // afford to be bigger with a mouse — 132px is a thumb-sized target.
+  // Featured banners page one at a time; cover rows scroll freely. Radar's
+  // widths, because these are Radar's 2:3 tiles now — 140px is a thumb-sized
+  // target, and a mouse can afford the wider one.
   const isFeatured = cardVariant === 'featured';
-  const itemWidth = cardWidth ?? (isDesktop ? 168 : 132);
+  const itemWidth = cardWidth ?? (isDesktop ? 176 : 140);
   const snapInterval = isFeatured ? itemWidth + GAP : undefined;
   const contentWidth = books.length * (itemWidth + GAP) - GAP + EDGE_PADDING * 2;
   const scrollable = contentWidth > rowWidth + 4 && offset + rowWidth < contentWidth - 4;

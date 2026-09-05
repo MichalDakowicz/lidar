@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Disc3, Star } from 'lucide-react-native';
+import { BookOpen, Star } from 'lucide-react-native';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { personalScore } from '@/lib/personalScore';
@@ -36,7 +36,7 @@ export function RatingSearchRow({ release, ratings, onPress }: RatingSearchRowPr
           <Image source={{ uri: release.coverUrl }} style={{ width: 56, height: 56 }} contentFit="cover" transition={120} />
         ) : (
           <View className="h-full w-full items-center justify-center">
-            <Disc3 size={20} color={COLORS.mutedDeep} />
+            <BookOpen size={20} color={COLORS.mutedDeep} />
           </View>
         )}
       </View>

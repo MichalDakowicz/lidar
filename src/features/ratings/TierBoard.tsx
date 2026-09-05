@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Disc3 } from 'lucide-react-native';
+import { BookOpen } from 'lucide-react-native';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { personalScore } from '@/lib/personalScore';
@@ -8,7 +8,8 @@ import { authorsToDisplayString } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
 import type { BookRating } from '@/types/book';
 
-const COVER = 84;
+const COVER = 72;
+const COVER_H = Math.round(COVER * 1.5);
 
 type TierBoardProps = {
   ratings: BookRating[];
@@ -48,7 +49,7 @@ function Row({ row, onPick, onSearch }: { row: TierRow; onPick: (rating: BookRat
   return (
     <View
       className="flex-row overflow-hidden rounded-2xl border border-border"
-      style={{ backgroundColor: tier.tint, minHeight: COVER + 20 }}
+      style={{ backgroundColor: tier.tint, minHeight: COVER_H + 20 }}
     >
       <View className="w-12 items-center justify-center" style={{ backgroundColor: tier.color }}>
         <Text className="text-2xl font-black text-black/80">{tier.label}</Text>
@@ -77,11 +78,11 @@ function Cover({ rating, onPress }: { rating: BookRating; onPress: () => void })
 
   return (
     <Pressable onPress={onPress} className="active:opacity-70" style={{ width: COVER }}>
-      <View className="overflow-hidden rounded-md bg-neutral-900" style={{ width: COVER, height: COVER }}>
+      <View className="overflow-hidden rounded-md bg-neutral-900" style={{ width: COVER, height: COVER_H }}>
         {rating.coverUrl ? (
           <Image
             source={{ uri: rating.coverUrl }}
-            style={{ width: COVER, height: COVER }}
+            style={{ width: COVER, height: COVER_H }}
             contentFit="cover"
             transition={120}
             cachePolicy="memory-disk"
@@ -89,7 +90,7 @@ function Cover({ rating, onPress }: { rating: BookRating; onPress: () => void })
           />
         ) : (
           <View className="h-full w-full items-center justify-center">
-            <Disc3 size={24} color={COLORS.mutedDeep} />
+            <BookOpen size={24} color={COLORS.mutedDeep} />
           </View>
         )}
         {score != null && (

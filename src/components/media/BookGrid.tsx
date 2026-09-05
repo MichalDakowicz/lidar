@@ -8,17 +8,18 @@ import { useNavBarSpace } from '@/hooks/useNavBarSpace';
 import { BREAKPOINTS, useMeasuredWidth } from '@/hooks/useResponsive';
 import type { Book, Ratings } from '@/types/book';
 
-// The three size presets, ported from the legacy web app's gridClasses. Book
-// art is square, so a row fits one more column than Radar's poster grid does at
-// the same width.
+// The three size presets. These are Radar's poster columns exactly: covers are
+// 2:3 here as well now, so a row fits the same number of them at a given width.
+// Sonar's table had one extra column per step, which was right for square
+// sleeves and squeezes a jacket to an unreadable sliver.
 export type GridSize = 'compact' | 'normal' | 'large';
 
 type ColumnSteps = { base: number; sm?: number; md?: number; lg?: number; xl?: number; '2xl'?: number; '3xl'?: number; '4xl'?: number };
 
 const COLUMN_TABLE: Record<GridSize, ColumnSteps> = {
-  compact: { base: 3, sm: 4, md: 5, lg: 7, xl: 8, '2xl': 10, '3xl': 12, '4xl': 14 },
-  normal: { base: 2, md: 3, lg: 5, xl: 6, '2xl': 7, '3xl': 9, '4xl': 10 },
-  large: { base: 1, sm: 2, md: 3, lg: 4, xl: 5, '2xl': 6, '3xl': 7, '4xl': 8 },
+  compact: { base: 3, sm: 4, md: 5, lg: 6, xl: 7, '2xl': 9, '3xl': 11, '4xl': 13 },
+  normal: { base: 2, md: 3, lg: 4, xl: 5, '2xl': 7, '3xl': 8, '4xl': 9 },
+  large: { base: 1, sm: 2, md: 3, lg: 4, xl: 5, '2xl': 5, '3xl': 6, '4xl': 7 },
 };
 
 // Widest first: the first step the container is at least as wide as wins.
@@ -66,7 +67,7 @@ type BookGridProps = {
 
 /**
  * The one virtualized container for a wall of covers: the library in grid or
- * list view, Discover's results, a friend's shelf. One list for both view modes
+ * list view, Browse's results, a friend's shelf. One list for both view modes
  * (`variant` picks the card), so there is no second copy of the layout maths.
  */
 export function BookGrid({
@@ -121,7 +122,7 @@ export function BookGrid({
         }
         ListFooterComponent={ListFooterComponent}
         ListEmptyComponent={
-          ListEmptyComponent ?? <EmptyState title="Nothing here yet" description="Add an book to start your shelf." />
+          ListEmptyComponent ?? <EmptyState title="Nothing here yet" description="Add a book to start your shelf." />
         }
         onEndReached={onEndReached}
         renderItem={({ item }) => (

@@ -78,13 +78,13 @@ function CoverCard({
 
   return (
     // zIndex so the hover lift renders over its neighbours instead of under them.
-    <View className="gap-1.5" style={hovered ? { zIndex: 10 } : undefined}>
+    <View className="gap-1" style={hovered ? { zIndex: 10 } : undefined}>
       <Pressable
         {...bind}
         onPress={() => onPress?.(book)}
-        // Square, not 2:3: book art is square, and a poster crop would cut the
-        // sleeve. This is the one shape difference from Radar's card.
-        className="relative aspect-square overflow-hidden rounded-md bg-neutral-900"
+        // 2:3, the same tile Radar's posters get. A book jacket is a portrait,
+        // not a sleeve — the square this inherited from Sonar was album art.
+        className="relative aspect-[2/3] overflow-hidden rounded-md bg-neutral-900"
         style={[
           { cursor: 'pointer' },
           webTransition('transform'),
@@ -94,8 +94,8 @@ function CoverCard({
       >
         <CoverImage uri={book.coverUrl} dimmed={isDimmed(book)} transitionMs={coverTransitionMs} />
         <LinearGradient
-          colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.15)', 'transparent']}
-          locations={[0, 0.3, 0.6]}
+          colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.2)', 'transparent']}
+          locations={[0, 0.25, 0.55]}
           style={StyleSheet.absoluteFill}
         />
 
@@ -121,7 +121,7 @@ function CoverCard({
           </>
         )}
 
-        <View className="absolute inset-x-0 top-0 flex-row items-start justify-between gap-1.5 p-2">
+        <View className="absolute inset-x-0 top-0 flex-row items-start justify-between gap-1.5 p-2.5">
           <StatusBadge status={book.status} />
           {!!year && <Text className="text-[10px] font-medium text-neutral-300">{year}</Text>}
         </View>
@@ -172,15 +172,15 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
       onPress={() => onPress?.(book)}
       style={[{ cursor: 'pointer' }, webTransition('background-color'), hovered ? { backgroundColor: 'hsl(0 0% 16%)' } : null]}
       className={cn(
-        'flex-row items-center gap-3 rounded-xl border-l-4 p-3',
+        'flex-row gap-3 rounded-xl border-l-4 p-3',
         highlighted ? 'border-l-primary bg-neutral-800' : 'border-l-transparent bg-neutral-900',
       )}
     >
-      <View className="h-16 w-16 overflow-hidden rounded-md bg-neutral-800">
-        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book)} iconSize={20} />
+      <View className="h-28 w-20 overflow-hidden rounded-lg bg-neutral-800">
+        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book)} iconSize={22} />
       </View>
 
-      <View className="min-w-0 flex-1 gap-1">
+      <View className="min-w-0 flex-1 justify-center gap-1">
         <Text numberOfLines={1} className="text-base font-bold text-foreground">
           {book.title}
         </Text>
@@ -272,7 +272,7 @@ function CompactCard({ book, ratings, onPress, highlighted = false }: BookCardPr
     <Pressable
       {...bind}
       onPress={() => onPress?.(book)}
-      className="relative aspect-square overflow-hidden rounded-md bg-neutral-900"
+      className="relative aspect-[2/3] overflow-hidden rounded-md bg-neutral-900"
       style={[
         { cursor: 'pointer' },
         webTransition('transform'),

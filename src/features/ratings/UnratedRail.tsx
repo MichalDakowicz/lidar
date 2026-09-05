@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Disc3 } from 'lucide-react-native';
+import { BookOpen } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -10,7 +10,8 @@ import { COLORS } from '@/theme/colors';
 import type { Book, BookRating } from '@/types/book';
 import type { RateTarget } from '@/hooks/useBookRatings';
 
-const COVER = 96;
+const COVER = 84;
+const COVER_H = Math.round(COVER * 1.5);
 const LIMIT = 24;
 
 type UnratedRailProps = {
@@ -63,11 +64,11 @@ export function UnratedRail({ books, ratingFor, onPick }: UnratedRailProps) {
             className="active:opacity-70"
             style={{ width: COVER }}
           >
-            <View className="overflow-hidden rounded-md bg-neutral-900" style={{ width: COVER, height: COVER }}>
+            <View className="overflow-hidden rounded-md bg-neutral-900" style={{ width: COVER, height: COVER_H }}>
               {book.coverUrl ? (
                 <Image
                   source={{ uri: book.coverUrl }}
-                  style={{ width: COVER, height: COVER }}
+                  style={{ width: COVER, height: COVER_H }}
                   contentFit="cover"
                   transition={120}
                   cachePolicy="memory-disk"
@@ -75,7 +76,7 @@ export function UnratedRail({ books, ratingFor, onPick }: UnratedRailProps) {
                 />
               ) : (
                 <View className="h-full w-full items-center justify-center">
-                  <Disc3 size={26} color={COLORS.mutedDeep} />
+                  <BookOpen size={26} color={COLORS.mutedDeep} />
                 </View>
               )}
             </View>
