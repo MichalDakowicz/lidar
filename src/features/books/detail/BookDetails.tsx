@@ -2,6 +2,7 @@ import { Text, TextInput, View } from 'react-native';
 
 import { COLORS } from '@/theme/colors';
 
+import { CoverPicker } from './CoverPicker';
 import type { BookForm } from '../edit/bookForm';
 
 type BookDetailsProps = {
@@ -42,8 +43,9 @@ function Field({
 
 /**
  * The part of a book that is yours rather than the catalogue's: the passages
- * you keep coming back to, your notes, and the two links the catalogue may have
- * got wrong.
+ * you keep coming back to, your notes, the link, and the cover — which for a
+ * Polish book is always yours to supply, because neither Polish catalogue
+ * publishes jacket art.
  *
  * Nothing here is about owning a copy — no price, no store, no edition number.
  * Lidar tracks reading, so what it asks about is the reading.
@@ -75,12 +77,22 @@ export function BookDetails({ form, onChange }: BookDetailsProps) {
         placeholder="https://books.google.com/…"
       />
 
-      <Field
-        label="Cover image URL"
-        value={form.coverUrl}
-        onChangeText={(coverUrl) => onChange({ coverUrl })}
-        placeholder="https://…"
-      />
+      <View className="gap-2">
+        <Field
+          label="Cover"
+          value={form.coverUrl.startsWith('data:') ? 'Your own photo' : form.coverUrl}
+          onChangeText={(coverUrl) => onChange({ coverUrl })}
+          placeholder="https://… or pick a photo below"
+        />
+        {/* Neither Polish catalogue publishes jacket art, so a book found there
+            has no cover to show until someone supplies one. Until then the grid
+            draws one from the title — see components/media/GeneratedCover. */}
+        <CoverPicker
+          hasCover={!!form.coverUrl.trim()}
+          onPicked={(coverUrl) => onChange({ coverUrl })}
+          onCleared={() => onChange({ coverUrl: '' })}
+        />
+      </View>
     </View>
   );
 }

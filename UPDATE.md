@@ -6,6 +6,8 @@ See `UPDATE-schema.md` for how to write these.
 
 ### Added
 - Scanning a Polish book now checks Biblioteka Narodowa and e-ISBN, which Google misses
+- A book no catalogue has a jacket for gets a cover drawn from its title, not a blank square
+- Put your own photo on a book's cover from the book page
 - Scan card says which catalogue answered, so a wrong record is traceable
 - A scan no catalogue knows can be added by hand keeping its ISBN, so a later rating finds it
 - Reading streak counts pages a week, so a long novel keeps it alive as well as a short one

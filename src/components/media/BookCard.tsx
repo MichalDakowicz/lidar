@@ -99,7 +99,12 @@ function CoverCard({
           hovered ? { transform: [{ scale: 1.035 }] } : null,
         ]}
       >
-        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} transitionMs={coverTransitionMs} />
+        <CoverImage
+          uri={book.coverUrl}
+          dimmed={isDimmed(book, showStatus)}
+          transitionMs={coverTransitionMs}
+          generateFor={book}
+        />
         <LinearGradient
           colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.2)', 'transparent']}
           locations={[0, 0.25, 0.55]}
@@ -191,7 +196,7 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
       )}
     >
       <View className="h-28 w-20 overflow-hidden rounded-lg bg-neutral-800">
-        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} iconSize={22} />
+        <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} iconSize={22} generateFor={book} />
       </View>
 
       <View className="min-w-0 flex-1 justify-center gap-1">
@@ -294,7 +299,7 @@ function CompactCard({ book, ratings, onPress, highlighted = false, showStatus =
         hovered ? { transform: [{ scale: 1.04 }], zIndex: 10 } : null,
       ]}
     >
-      <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} iconSize={22} />
+      <CoverImage uri={book.coverUrl} dimmed={isDimmed(book, showStatus)} iconSize={22} generateFor={book} />
       <View className="absolute left-1.5 top-1.5 flex-row items-center gap-1">
         {showStatus && <StatusBadge status={book.status} size={11} />}
         <ScoreBadge ratings={ratings} />

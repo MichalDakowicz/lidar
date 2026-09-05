@@ -1,7 +1,9 @@
 import { Image, type ImageLoadEventData } from 'expo-image';
 import { BookOpen } from 'lucide-react-native';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+
+import { GeneratedCover } from '@/components/media/GeneratedCover';
 
 /** How far off 2:3 a jacket can be before it is letterboxed instead of cropped. */
 const CROP_TOLERANCE = 0.08;
@@ -15,10 +17,17 @@ type CoverImageProps = {
   transitionMs?: number;
   /** Icon size for the no-artwork fallback. */
   iconSize?: number;
+  /**
+   * Enough to draw a cover for a book that has none. Optional because the
+   * banner and hero backdrops crop to shapes that text would not survive; those
+   * callers leave it off and get the glyph.
+   */
+  generateFor?: { bookKey: string; title: string; authors: string[] };
 };
 
 /**
- * Book artwork, or a fallback glyph when the catalogue has no jacket.
+ * Book artwork; or a cover generated from the book's own details when the
+ * catalogue has no jacket, which is every Polish record — see GeneratedCover.
  * Absolutely positioned so every caller controls the aspect box itself — a
  * cover fills its 2:3 tile in the grid but gets cropped to 16:9 in a banner.
  *
@@ -34,16 +43,33 @@ type CoverImageProps = {
  * blurred copy of itself, which fills the tile without a letterbox reading as a
  * rendering bug.
  */
-export function CoverImage({ uri, dimmed, transitionMs = 200, iconSize = 32 }: CoverImageProps) {
+export function CoverImage({ uri, dimmed, transitionMs = 200, iconSize = 32, generateFor }: CoverImageProps) {
+  // Measured rather than passed down: the same component fills a 60px carousel
+  // thumbnail and a 200px grid card, and the generated cover's type has to scale
+  // with whichever box it landed in.
+  const [width, setWidth] = useState(0);
+  const onLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
   // Keyed by uri, not a bare number: FlashList recycles a cell for the next
   // book, and a ratio left over from the previous jacket would letterbox (or
   // crop) the new one on the strength of the old one's shape.
   const [measured, setMeasured] = useState<{ uri: string; ratio: number } | null>(null);
 
   if (!uri) {
+    if (!generateFor) {
+      return (
+        <View className="absolute inset-0 items-center justify-center bg-neutral-800">
+          <BookOpen size={iconSize} color="#52525b" />
+        </View>
+      );
+    }
     return (
-      <View className="absolute inset-0 items-center justify-center bg-neutral-800">
-        <BookOpen size={iconSize} color="#52525b" />
+      <View className="absolute inset-0" onLayout={onLayout} style={{ opacity: dimmed ? 0.65 : 1 }}>
+        <GeneratedCover
+          bookKey={generateFor.bookKey}
+          title={generateFor.title}
+          authors={generateFor.authors}
+          width={width || undefined}
+        />
       </View>
     );
   }

@@ -11,6 +11,8 @@ import { authorsToDisplayString, formatPublishedDate, goBackOrHome } from '@/lib
 import type { Ratings } from '@/types/book';
 
 type DetailHeroProps = {
+  /** Identity of the edition — the seed for a generated cover. */
+  bookKey: string;
   title: string;
   authors: string[];
   coverUrl: string | null;
@@ -28,6 +30,7 @@ type DetailHeroProps = {
  * cover from looking broken.
  */
 export function DetailHero({
+  bookKey,
   title,
   authors,
   coverUrl,
@@ -45,7 +48,7 @@ export function DetailHero({
   return (
     <View className="relative">
       <View className="absolute inset-0 overflow-hidden">
-        <CoverImage uri={coverUrl} iconSize={64} />
+        <CoverImage uri={coverUrl} iconSize={64} generateFor={{ bookKey, title, authors }} />
         <LinearGradient
           colors={['rgba(0,0,0,0.35)', 'rgba(9,9,11,0.85)', 'rgb(9,9,11)']}
           locations={[0, 0.6, 1]}
@@ -64,7 +67,7 @@ export function DetailHero({
 
         <View className="flex-row items-end gap-4 pt-6">
           <View className="aspect-[2/3] w-28 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 shadow-2xl">
-            <CoverImage uri={coverUrl} iconSize={30} />
+            <CoverImage uri={coverUrl} iconSize={30} generateFor={{ bookKey, title, authors }} />
           </View>
           <View className="min-w-0 flex-1 gap-1.5 pb-1">
             <Text numberOfLines={3} className="text-2xl font-bold leading-tight text-white">

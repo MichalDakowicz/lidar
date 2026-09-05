@@ -1,4 +1,6 @@
 import { Image } from 'expo-image';
+
+import { GeneratedCover } from '@/components/media/GeneratedCover';
 import { BookOpen, Check, Plus } from 'lucide-react-native';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
@@ -69,9 +71,7 @@ export function AddSearchResults({
               {found.coverUrl ? (
                 <Image source={{ uri: found.coverUrl }} style={{ width: 52, height: 76 }} contentFit="cover" transition={120} />
               ) : (
-                <View className="h-full w-full items-center justify-center">
-                  <BookOpen size={20} color={COLORS.mutedDeep} />
-                </View>
+                <GeneratedCover bookKey={found.bookKey} title={found.title} authors={found.authors} width={52} />
               )}
             </View>
 

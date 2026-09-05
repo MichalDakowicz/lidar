@@ -579,7 +579,15 @@ Notes for whoever touches it next:
 - ONIX codes that matter: `ProductIDType` 15 = ISBN-13 / 02 = ISBN-10, `TitleType` 01 is
   the distinctive title, `ContributorRole` A01 is the author (B06 is a translator and is
   skipped), `PublishingDateRole` 01 is publication, `ExtentType` 00/11 is the page count.
-- No cover art here either, so `bookMetadata` borrows one from Google or Open Library.
+- No cover art here either, so `bookMetadata` borrows one from Google or Open Library —
+  and **for a Polish book that borrow almost always fails too**: Open Library's cover API
+  404s on all three ISBNs and Google is rate-limited. Verified there is nothing to fetch:
+  zero `CollateralDetail` / `SupportingResource` across every product in the e-ISBN
+  sample, and no 856 or URL field on the BN record. These are bibliographic registers,
+  not shop listings. So a coverless book now draws its own cover
+  (`components/media/GeneratedCover`, seeded off `bookKey`) and the book page offers a
+  photo picker (`features/books/detail/CoverPicker`) storing a 320px JPEG data URI in
+  `books.cover_url`, the same inline trick `profiles.pfp` uses.
 - React Native has no DOMParser, so `providers/onix.ts` is a purpose-built tag scanner
   over a single `<Product>`, not an XML parser, and says so. 10 tests against the
   recorded Camus response.

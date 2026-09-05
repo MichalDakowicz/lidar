@@ -1,9 +1,10 @@
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { Image } from 'expo-image';
-import { BookOpen, Camera, Check, Flashlight, Keyboard, PenLine, Plus, RotateCcw } from 'lucide-react-native';
+import { Camera, Check, Flashlight, Keyboard, PenLine, Plus, RotateCcw } from 'lucide-react-native';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 
+import { GeneratedCover } from '@/components/media/GeneratedCover';
 import { BottomSheetTextInput, Sheet, type BottomSheetModal } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import { useIsbnLookup } from '@/features/books/add/useBookSearch';
@@ -319,9 +320,9 @@ function ScanResult({ isbn, loading, notFound, found, onShelf, pending, onAdd, o
               {found.coverUrl ? (
                 <Image source={{ uri: found.coverUrl }} style={{ width: 80, height: 112 }} contentFit="cover" transition={120} />
               ) : (
-                <View className="h-full w-full items-center justify-center">
-                  <BookOpen size={20} color={COLORS.mutedDeep} />
-                </View>
+                // Neither Polish catalogue ships jacket art, so this is the
+                // usual outcome for a Polish scan, not an error.
+                <GeneratedCover bookKey={found.bookKey} title={found.title} authors={found.authors} width={80} />
               )}
             </View>
 

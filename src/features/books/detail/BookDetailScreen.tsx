@@ -102,6 +102,7 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
         keyboardShouldPersistTaps="handled"
       >
         <DetailHero
+          bookKey={display.bookKey}
           title={display.title}
           authors={display.authors}
           coverUrl={display.coverUrl}
