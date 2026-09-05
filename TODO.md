@@ -5,7 +5,8 @@ is needed.** `STATUS.md` says where the app stands today; this says where it is 
 in what order. Tick items off here as they land, and move anything finished into
 `STATUS.md` §2.
 
-Written 2026-09-05, before any of it was coded. Nothing below has been started.
+Written 2026-09-05, before any of it was coded. **Item 1 is done** (2026-09-05);
+everything from Item 2 down is still untouched.
 
 ---
 
@@ -38,17 +39,19 @@ These are settled — do not re-litigate them, just build them.
 | Page tracking | User types one number, app decides the rest. See §7. |
 | ISBN sources | **Target Poland specifically** — Biblioteka Narodowa first, behind the existing `lookupIsbn` boundary. See §9. |
 
-## 2. Open questions — ask the user before building the item
+## 2. Open questions
 
-1. **Does the tier board die or move?** Decided: the *page* is removed. If the user wants
-   to keep tiers, they belong as a grouping on the Library, not a tab. Ask once, briefly,
-   when starting §5.
-2. **Top 4 storage** — two options in §3. Pick one with the user; the recommendation is
-   the new column.
-3. **The failing ISBNs** — §9 cannot be started without three to five real ISBNs that
-   come back "not in either catalogue" today. Ask for them first; they are the test cases.
-   (Everything recommended in §9 is free and keyless, so there is no paid decision to make
-   unless the Polish sources fall short.)
+1. ~~**Does the tier board die or move?**~~ **Answered 2026-09-05: it dies entirely.**
+   Delete `TierBoard`, `DropSheet`, `UnratedRail`, `RatingSearchRow` and `lib/tiers.ts`
+   with the tab. Rating a book stays, on the book page only. No tier grouping on the
+   Library.
+2. ~~**Top 4 storage**~~ **Answered 2026-09-05: option A**, a new `book_favorites jsonb`
+   column on `public.user_settings`. `docs/shared-database.md` has to be updated in the
+   same PR as Item 8.
+3. **The failing ISBNs** — still open, and §9 cannot be started without them. Three to
+   five real ISBNs that come back "not in either catalogue" today. Ask for them first;
+   they are the test cases. (Everything recommended in §9 is free and keyless, so there
+   is no paid decision to make unless the Polish sources fall short.)
 
 ---
 
@@ -81,9 +84,25 @@ same reason Radar's is: it has to render with no `books` row behind it.
 
 Each is a branch and a PR. Do them in this order — later ones assume earlier ones.
 
-### Item 1 — Strip ownership `feat/drop-ownership`
+### Item 1 — Strip ownership `feat/drop-ownership` — **DONE 2026-09-05**
 
 The foundation; everything else is easier once this is gone.
+
+Landed as described, plus three things the plan did not anticipate:
+
+- `hooks/useReads.ts` was writing the retired `'Library'` status when a read was logged.
+  Finishing a book now sets `Read` whatever it was before, so a readlist book read in one
+  sitting lands in the right place.
+- `store/libraryPrefs.ts` needed a real `migrate`, not a bare version bump: a bump alone
+  throws the persisted blob away and takes view mode, card size and sort with it. It now
+  drops `selectedFormats`, renames `wishlistCollapsed` to `readlistCollapsed`, and resets
+  a retired status filter / group-by / sort.
+- `features/books/edit/bookForm.ts` was joining with a literal NUL byte
+  (`authors.join('\0')`), which made the file read as binary to `grep` and `file`. Fixed
+  to a space while the file was open.
+
+File moves: `FormatStatusPicker.tsx` -> `StatusPicker.tsx`, `EditionDetails.tsx` ->
+`BookDetails.tsx`, `FormatBadges.tsx` -> `StatusBadges.tsx` (status half only).
 
 - Schema (`supabase/schema.sql`, COLUMN MIGRATIONS section — **never edit a `create
   table`**, the create is skipped on a live database):
@@ -102,6 +121,10 @@ The foundation; everything else is easier once this is gone.
   to `BookDetails.tsx` while you are in there.
 - **Acceptance:** `npm test`, `npx tsc --noEmit`, `npm run lint` clean; no string
   "Hardcover"/"Paperback"/"format" survives `grep -rn` in `src/`.
+  **Met:** 111 tests pass, 0 type errors, 0 lint warnings. The only surviving "format"
+  strings are the legacy-import fixture (deliberate — an old export still carries a bare
+  `format` key), the retired-column documentation in `normalizeBook`/`dataTransfer`, the
+  prefs migration, and unrelated helpers (`formatIsbn`, Open Library's `format=json`).
 
 ### Item 2 — Rectangular covers `feat/rectangular-covers`
 
