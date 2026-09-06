@@ -21,7 +21,6 @@ type BookCarouselProps = {
   cardWidth?: number;
   ratingsFor?: (book: Book) => Ratings | null;
   onPress?: (book: Book) => void;
-  onLogRead?: (book: Book) => void;
   onAdd?: (book: Book) => void;
   isAdded?: (book: Book) => boolean;
   highlightedId?: string | null;
@@ -41,7 +40,6 @@ export function BookCarousel({
   cardWidth,
   ratingsFor,
   onPress,
-  onLogRead,
   onAdd,
   isAdded,
   highlightedId,
@@ -94,7 +92,6 @@ export function BookCarousel({
                 variant={cardVariant}
                 ratings={ratingsFor?.(book) ?? null}
                 onPress={onPress}
-                onLogRead={onLogRead}
                 onAdd={onAdd}
                 isAdded={isAdded?.(book)}
                 highlighted={highlightedId === book.id}

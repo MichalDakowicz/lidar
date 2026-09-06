@@ -3,18 +3,24 @@ import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { BookmarkModeToggle } from '@/features/books/detail/BookmarkModeToggle';
 import { PageMoveReceipt } from '@/features/books/detail/PageMoveReceipt';
+import { PageSpanFields } from '@/features/books/detail/PageSpanFields';
 import { countablePages, firstPage, pagesReadAt, progressRatio } from '@/lib/pages';
 import { displayPage, planPageMove, type BookmarkMode } from '@/lib/progress';
 import { formatRelativeTime } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
 import type { Book } from '@/types/book';
 
+import type { BookForm, FormIssues } from '../edit/bookForm';
+
 type ProgressPanelProps = {
   book: Book;
+  /** How the reader types a bookmark (Settings → Reading). */
   mode: BookmarkMode;
-  onModeChange: (mode: BookmarkMode) => void;
+  /** The edit form, for the two numbers the counter is measured against. */
+  form: BookForm;
+  onFormChange: (patch: Partial<BookForm>) => void;
+  issues?: FormIssues;
   onSetPage: (move: { page: number | null; pages: number }) => Promise<void> | void;
   onFinish: () => Promise<void> | void;
 };
@@ -38,8 +44,21 @@ type ProgressPanelProps = {
  * Saving writes two rows: the bookmark on the book, and the ledger row those
  * pages land on (public.book_progress). The ledger is what the streak and the
  * calendar add up — a bookmark alone cannot answer "how many pages this week".
+ *
+ * The length of the book and the page its story starts on sit directly above
+ * the counter, because they are what the counter is measured against. Which
+ * number the reader types — the page finished, or the next one — is one fact
+ * about a person rather than about a book, so it lives in Settings → Reading.
  */
-export function ProgressPanel({ book, mode, onModeChange, onSetPage, onFinish }: ProgressPanelProps) {
+export function ProgressPanel({
+  book,
+  mode,
+  form,
+  onFormChange,
+  issues,
+  onSetPage,
+  onFinish,
+}: ProgressPanelProps) {
   const saved = displayPage(book.currentPage, mode);
   const [draft, setDraft] = useState(saved == null ? '' : String(saved));
   const [saving, setSaving] = useState(false);
@@ -97,23 +116,30 @@ export function ProgressPanel({ book, mode, onModeChange, onSetPage, onFinish }:
         </View>
       ) : (
         <Text className="text-xs text-muted-foreground">
-          No page count on this edition — set Pages in the details below to get a progress bar.
+          No page count on this edition — fill in Pages below to get a progress bar.
         </Text>
       )}
 
+      <PageSpanFields form={form} onChange={onFormChange} issues={issues} />
+
+      {/* The pair is the whole interaction, so the two halves are the same
+          width and the same height: a zero flex basis makes them equal whatever
+          either one is holding. */}
       <View className="flex-row items-end gap-2">
-        <View className="flex-1 gap-1.5">
-          <Text className="text-[11px] uppercase tracking-wider text-muted-foreground">Last saved</Text>
-          <View className="flex-row items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 opacity-70">
-            <Lock size={14} color={COLORS.mutedDeep} />
-            <Text className="flex-1 text-sm text-muted-foreground">{saved == null ? 'Not started' : saved}</Text>
+        <View className="min-w-0 flex-1 gap-1.5" style={{ flexBasis: 0 }}>
+          <Text className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Last saved</Text>
+          <View className="h-11 flex-row items-center gap-2 rounded-lg border border-border bg-background px-3 opacity-70">
+            <Lock size={15} color={COLORS.mutedDeep} />
+            <Text numberOfLines={1} className="flex-1 text-sm text-muted-foreground">
+              {saved == null ? 'Not started' : saved}
+            </Text>
           </View>
         </View>
 
-        <View className="flex-1 gap-1.5">
-          <Text className="text-[11px] uppercase tracking-wider text-muted-foreground">Now on page</Text>
-          <View className="flex-row items-center gap-2 rounded-xl border border-border bg-secondary px-3 py-2.5">
-            <BookOpen size={16} color={COLORS.muted} />
+        <View className="min-w-0 flex-1 gap-1.5" style={{ flexBasis: 0 }}>
+          <Text className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Now on page</Text>
+          <View className="h-11 flex-row items-center gap-2 rounded-lg border border-border bg-secondary px-3">
+            <BookOpen size={15} color={COLORS.muted} />
             <TextInput
               value={draft}
               onChangeText={setDraft}
@@ -125,14 +151,11 @@ export function ProgressPanel({ book, mode, onModeChange, onSetPage, onFinish }:
               className="flex-1 text-sm text-foreground"
               accessibilityLabel="New page"
             />
-            {total ? <Text className="text-xs text-muted-foreground">/ {total}</Text> : null}
           </View>
         </View>
       </View>
 
       <PageMoveReceipt move={move} lastSaved={lastSaved} total={total} />
-
-      <BookmarkModeToggle mode={mode} onChange={onModeChange} />
 
       <View className="flex-row items-center gap-2">
         <Pressable

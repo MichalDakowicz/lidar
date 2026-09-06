@@ -111,7 +111,7 @@ export const RandomReadSheet = forwardRef<BottomSheetModal, RandomReadSheetProps
                   className="items-center rounded-full border border-border py-3 active:opacity-80"
                   style={{ opacity: spinning ? 0.5 : 1 }}
                 >
-                  <Text className="font-medium text-foreground">Log it as playing now</Text>
+                  <Text className="font-medium text-foreground">Mark it finished</Text>
                 </Pressable>
               )}
 
@@ -121,7 +121,7 @@ export const RandomReadSheet = forwardRef<BottomSheetModal, RandomReadSheetProps
                 className="flex-row items-center justify-center gap-2 py-2 active:opacity-70"
               >
                 <Shuffle size={15} color={COLORS.muted} />
-                <Text className="text-sm text-muted-foreground">{spinning ? 'Readning…' : 'Draw again'}</Text>
+                <Text className="text-sm text-muted-foreground">{spinning ? 'Drawing…' : 'Draw again'}</Text>
               </Pressable>
             </View>
           </>

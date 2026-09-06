@@ -41,7 +41,6 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
   const navBarSpace = useNavBarSpace();
   const { show } = useToast();
   const bookmarkMode = useBookmarkMode((state) => state.mode);
-  const setBookmarkMode = useBookmarkMode((state) => state.setMode);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
   const { book, display } = detail;
@@ -159,7 +158,9 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
               <ProgressPanel
                 book={book}
                 mode={bookmarkMode}
-                onModeChange={setBookmarkMode}
+                form={form}
+                onFormChange={editForm.update}
+                issues={editForm.issues}
                 onSetPage={detail.setPage}
                 onFinish={async () => {
                   await detail.logRead();
@@ -169,7 +170,7 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
 
               <ReadHistory reads={detail.reads} undated={book.undatedReads} onRemoveRead={detail.removeRead} />
 
-              <BookDetails form={form} onChange={editForm.update} issues={editForm.issues} />
+              <BookDetails form={form} onChange={editForm.update} />
             </>
           )}
 

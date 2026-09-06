@@ -10,6 +10,7 @@ import { CardSizeControl } from '@/features/settings/CardSizeControl';
 import { DataTools } from '@/features/settings/DataTools';
 import { ImportExportSheet } from '@/features/settings/ImportExportSheet';
 import { PrivacyControl } from '@/features/settings/PrivacyControl';
+import { BookmarkModeControl } from '@/features/settings/BookmarkModeControl';
 import { SettingsSection } from '@/features/settings/SettingsSection';
 import { StreakResetControl } from '@/features/settings/StreakResetControl';
 import { ThemeControl } from '@/features/settings/ThemeControl';
@@ -62,6 +63,11 @@ export default function Settings() {
             <Text className="text-xs text-muted-foreground">
               Kept on this device. A week that clears the goal keeps your streak alive, so a night off
               costs nothing.
+            </Text>
+            <BookmarkModeControl />
+            <Text className="text-xs text-muted-foreground">
+              The book page fills the field from the page you last saved — this says whether that
+              number is the page you finished or the one you will open on.
             </Text>
             <StreakResetControl />
           </SettingsSection>

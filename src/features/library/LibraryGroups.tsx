@@ -14,7 +14,6 @@ type LibraryGroupsProps = {
   gridSize: GridSize;
   ratingsFor?: (book: Book) => Ratings | null;
   onPress: (book: Book) => void;
-  onLogRead?: (book: Book) => void;
   highlightedId?: string | null;
 };
 
@@ -33,7 +32,6 @@ export function LibraryGroups({
   gridSize,
   ratingsFor,
   onPress,
-  onLogRead,
   highlightedId,
 }: LibraryGroupsProps) {
   const { width, onLayout } = useMeasuredWidth();
@@ -61,7 +59,6 @@ export function LibraryGroups({
                   variant={isList ? 'row' : 'cover'}
                   ratings={ratingsFor?.(book) ?? null}
                   onPress={onPress}
-                  onLogRead={onLogRead}
                   highlighted={highlightedId === book.id}
                 />
               </View>

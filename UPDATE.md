@@ -21,7 +21,7 @@ See `UPDATE-schema.md` for how to write these.
 - Restart the reading streak from today in Settings, keeping every book you have read
 - Saving a page now counts towards the streak and the calendar, not just the progress bar
 - Progress panel shows the last saved page beside the new one, with the pages the move is worth
-- Say whether you type the page you finished or the one you will read next, remembered per device
+- Settings says whether you type the page you finished or the one you will read next
 - Times finished on the book page, with a count for books you read before you tracked them
 
 ### Changed
@@ -37,12 +37,14 @@ See `UPDATE-schema.md` for how to write these.
 - Stats count books you have opened, and break out readlist, reading and unfinished
 - Finishing a book marks it Read whatever it was before, including straight off the readlist
 - Read history is logged from the times-finished box, so a finish is recorded in one place
+- A book's length and the page its story starts on sit with the page counter, not under your notes
 
 ### Removed
 - Ratings tab and its S-F tier board are gone — rate a book on the book page instead
 - Library drops the Recently finished rail — the shelf itself is the answer
 - Formats are gone — no more Hardcover, Paperback, Ebook or Audiobook on a book
 - Book page no longer asks what you paid, where you bought it, or the edition
+- Covers lose the play button — finishing a book is the times-finished box on the book page
 - Library filters drop Format, and sorting drops Price paid
 - Stats drop the format split, where books came from, and what you spent
 - Stats drop the daily reads strip, replaced by the reading calendar

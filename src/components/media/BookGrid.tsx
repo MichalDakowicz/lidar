@@ -51,7 +51,6 @@ type BookGridProps = {
   /** Rating lookup by book key — the card shows the user's own score. */
   ratingsFor?: (book: Book) => Ratings | null;
   onPress?: (book: Book) => void;
-  onLogRead?: (book: Book) => void;
   onAdd?: (book: Book) => void;
   isAdded?: (book: Book) => boolean;
   highlightedId?: string | null;
@@ -78,7 +77,6 @@ export function BookGrid({
   variant = 'cover',
   ratingsFor,
   onPress,
-  onLogRead,
   onAdd,
   isAdded,
   highlightedId,
@@ -135,7 +133,6 @@ export function BookGrid({
               variant={variant}
               ratings={ratingsFor?.(item) ?? null}
               onPress={onPress}
-              onLogRead={onLogRead}
               onAdd={onAdd}
               isAdded={isAdded?.(item)}
               highlighted={highlightedId === item.id}

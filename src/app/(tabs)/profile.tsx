@@ -133,7 +133,6 @@ function ProfileScreen() {
             recent={recent}
             ratingsFor={ratingsFor}
             onOpenBook={openBook}
-            onLogRead={handleLogRead}
             belowTopRated={
               <View className="gap-6">
                 <ReadPromptCard

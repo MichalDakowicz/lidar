@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Check, Play, Plus, StickyNote } from 'lucide-react-native';
+import { Check, Plus, StickyNote } from 'lucide-react-native';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -21,8 +21,6 @@ export type BookCardProps = {
   /** The user's own rating for this book, looked up by book key. */
   ratings?: Ratings | null;
   onPress?: (book: Book) => void;
-  /** Log a finished read straight from the card. */
-  onLogRead?: (book: Book) => void;
   /** Browse: add a book the shelf does not have yet. */
   onAdd?: (book: Book) => void;
   isAdded?: boolean;
@@ -61,16 +59,10 @@ function isDimmed(book: Book, showStatus: boolean) {
   return showStatus && book.status === 'Readlist';
 }
 
-/** Finishing is only offered for a book you have actually started. */
-function canLogRead(book: Book) {
-  return book.status !== 'Readlist';
-}
-
 function CoverCard({
   book,
   ratings,
   onPress,
-  onLogRead,
   onAdd,
   isAdded = false,
   highlighted = false,
@@ -138,15 +130,6 @@ function CoverCard({
           {!!year && <Text className="text-[10px] font-medium text-neutral-300">{year}</Text>}
         </View>
 
-        {!readOnly && !!onLogRead && canLogRead(book) && (
-          <Pressable
-            onPress={() => onLogRead(book)}
-            accessibilityLabel={`Mark ${book.title} finished`}
-            className="absolute bottom-2 right-2 rounded-full bg-primary/90 p-2"
-          >
-            <Play size={12} color="#fff" fill="#fff" />
-          </Pressable>
-        )}
         {!readOnly && canAdd && (
           <Pressable
             onPress={() => onAdd?.(book)}
@@ -180,7 +163,7 @@ function CoverCard({
   );
 }
 
-function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readOnly = false, showStatus = true }: BookCardProps) {
+function RowCard({ book, ratings, onPress, highlighted = false, readOnly = false, showStatus = true }: BookCardProps) {
   const authorLine = authorsToDisplayString(book.authors);
   const year = publishedYear(book.publishedDate);
   const { hovered, bind } = useHover();
@@ -211,16 +194,6 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
 
       <View className="items-end gap-1">
         {showStatus && <StatusBadge status={book.status} size={15} />}
-        {!readOnly && !!onLogRead && canLogRead(book) && (
-          <Pressable
-            onPress={() => onLogRead(book)}
-            accessibilityLabel={`Mark ${book.title} finished`}
-            hitSlop={8}
-            className="rounded-full bg-primary/15 p-2"
-          >
-            <Play size={14} color={COLORS.accent} fill={COLORS.accent} />
-          </Pressable>
-        )}
       </View>
     </Pressable>
   );
@@ -232,7 +205,7 @@ function RowCard({ book, ratings, onPress, onLogRead, highlighted = false, readO
  * list of tiles, and the banner is what makes a section feel like a shelf
  * rather than more grid.
  */
-function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, readOnly = false, showStatus = true }: BookCardProps) {
+function FeaturedCard({ book, ratings, onPress, highlighted = false, readOnly = false, showStatus = true }: BookCardProps) {
   const authorLine = authorsToDisplayString(book.authors);
   const lastRead = formatRelativeTime(book.lastReadAt);
 
@@ -271,15 +244,6 @@ function FeaturedCard({ book, ratings, onPress, onLogRead, highlighted = false, 
         </View>
       </View>
 
-      {!readOnly && !!onLogRead && canLogRead(book) && (
-        <Pressable
-          onPress={() => onLogRead(book)}
-          accessibilityLabel={`Mark ${book.title} finished`}
-          className="absolute bottom-4 right-4 rounded-full bg-primary p-3"
-        >
-          <Play size={16} color="#fff" fill="#fff" />
-        </Pressable>
-      )}
     </Pressable>
   );
 }

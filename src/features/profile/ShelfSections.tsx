@@ -11,7 +11,6 @@ type ShelfSectionsProps = {
   recent: Book[];
   ratingsFor?: (book: Book) => Ratings | null;
   onOpenBook: (book: Book) => void;
-  onLogRead?: (book: Book) => void;
   /** Owner-only blocks slot in between the rails. */
   belowTopRated?: ReactNode;
   belowNowPlaying?: ReactNode;
@@ -31,7 +30,6 @@ export function ShelfSections({
   recent,
   ratingsFor,
   onOpenBook,
-  onLogRead,
   belowTopRated,
   belowNowPlaying,
 }: ShelfSectionsProps) {
@@ -47,7 +45,6 @@ export function ShelfSections({
             cardVariant="cover"
             ratingsFor={ratingsFor}
             onPress={onOpenBook}
-            onLogRead={onLogRead}
           />
         </View>
       )}
@@ -62,7 +59,6 @@ export function ShelfSections({
             cardVariant="cover"
             ratingsFor={ratingsFor}
             onPress={onOpenBook}
-            onLogRead={onLogRead}
           />
         </View>
       )}
@@ -77,7 +73,6 @@ export function ShelfSections({
             cardVariant="cover"
             ratingsFor={ratingsFor}
             onPress={onOpenBook}
-            onLogRead={onLogRead}
           />
         </View>
       )}

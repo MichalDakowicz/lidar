@@ -10,7 +10,6 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { LoadingState } from '@/components/ui/LoadingState';
 import type { BottomSheetModal } from '@/components/ui/Sheet';
-import { useToast } from '@/components/ui/Toast';
 import { LibraryFilterSheet } from '@/features/library/LibraryFilterSheet';
 import { LibraryGroups } from '@/features/library/LibraryGroups';
 import { LibrarySection } from '@/features/library/LibrarySection';
@@ -22,7 +21,6 @@ import { useBooks } from '@/hooks/useBooks';
 import { useNavBarSpace } from '@/hooks/useNavBarSpace';
 import { MAX_W } from '@/hooks/useResponsive';
 import { useScrollToTopOnChange } from '@/hooks/useScrollToTopOnChange';
-import { useReads } from '@/hooks/useReads';
 import { useLibraryPrefs } from '@/store/libraryPrefs';
 import { withTabReload } from '@/store/tabReload';
 import type { Book } from '@/types/book';
@@ -41,9 +39,7 @@ export default withTabReload(LibraryScreen, 'index', () => useLibraryPrefs.getSt
 
 function LibraryScreen() {
   const router = useRouter();
-  const { show } = useToast();
   const { books, loading, error } = useBooks();
-  const { logRead } = useReads();
   const { ratingFor, scoreFor } = useBookRatings();
   const navBarSpace = useNavBarSpace();
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,15 +81,6 @@ function LibraryScreen() {
 
   const openBook = (book: Book) => router.push({ pathname: '/book/[bookId]', params: { bookId: book.id } });
   const ratingsFor = (book: Book) => ratingFor(book.bookKey)?.ratings ?? null;
-
-  const handleLogRead = async (book: Book) => {
-    try {
-      await logRead(book);
-      show(`Read logged for ${book.title}`);
-    } catch (readError) {
-      show(readError instanceof Error ? readError.message : 'Could not log that read');
-    }
-  };
 
   if (loading) {
     return (
@@ -158,7 +145,6 @@ function LibraryScreen() {
               gridSize={prefs.gridSize}
               ratingsFor={ratingsFor}
               onPress={openBook}
-              onLogRead={handleLogRead}
             />
           </ScrollView>
         ) : (
@@ -169,7 +155,6 @@ function LibraryScreen() {
             size={prefs.gridSize}
             ratingsFor={ratingsFor}
             onPress={openBook}
-            onLogRead={handleLogRead}
             ListHeaderComponent={sections}
             ListEmptyComponent={emptyState}
           />
