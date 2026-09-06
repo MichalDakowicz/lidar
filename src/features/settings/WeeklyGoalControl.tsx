@@ -17,6 +17,12 @@ import { SettingLabel } from './SettingsSection';
  * height beside it, ±10 full height on the outside, so a nudge and a jump are
  * different targets rather than the same button pressed a different number of
  * times.
+ *
+ * The row is sized from the smallest target rather than from the look: a half
+ * height box still has to be a box a thumb can hit, so the halves are 46pt tall
+ * and 48 wide, and everything else — the tall steppers, the field — is built up
+ * from that. Four 48pt columns and their gaps leave the field about 96pt on a
+ * 360pt phone, which is why the steppers are not wider than they are.
  */
 export function WeeklyGoalControl() {
   const { weeklyPages, setWeeklyPages } = useReadingGoal();
@@ -50,14 +56,14 @@ export function WeeklyGoalControl() {
     <>
       <SettingLabel title="Weekly page goal" description="Pages a week to keep your reading streak" />
 
-      <View className="flex-row items-stretch gap-2">
+      <View className="flex-row items-stretch gap-1.5">
         <TallStep label="−10" onPress={() => bump(-10)} accessibilityLabel="Ten pages fewer" />
         <StackedSteps
           top={{ label: '−1', onPress: () => bump(-1), accessibilityLabel: 'One page fewer' }}
           bottom={{ label: '−5', onPress: () => bump(-5), accessibilityLabel: 'Five pages fewer' }}
         />
 
-        <View className="min-w-0 flex-1 justify-center rounded-xl border border-border bg-secondary px-3">
+        <View className="h-24 min-w-0 flex-1 justify-center rounded-xl border border-border bg-secondary px-2">
           <TextInput
             value={draft}
             onChangeText={setDraft}
@@ -67,7 +73,7 @@ export function WeeklyGoalControl() {
             returnKeyType="done"
             selectTextOnFocus
             accessibilityLabel="Pages a week"
-            className="text-center text-lg font-semibold text-foreground"
+            className="text-center text-2xl font-semibold text-foreground"
           />
         </View>
 
@@ -88,28 +94,36 @@ function TallStep({ label, onPress, accessibilityLabel }: Step) {
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      className="h-12 w-12 items-center justify-center rounded-xl border border-border bg-secondary active:opacity-60"
+      className="h-24 w-12 items-center justify-center rounded-xl border border-border bg-secondary active:opacity-60"
     >
-      <Text className="text-sm font-semibold" style={{ color: COLORS.accent }}>
+      <Text className="text-base font-semibold" style={{ color: COLORS.accent }}>
         {label}
       </Text>
     </Pressable>
   );
 }
 
-/** ±1 over ±5: two half-height boxes filling the same slot as a tall one. */
+/**
+ * ±1 over ±5: two half-height boxes filling the same slot as a tall one.
+ *
+ * Half height is the look, not the target — at 96 tall with a 4pt gap each box
+ * is 46, which clears the 44pt a thumb needs. Shrinking the row is what would
+ * break them, so the height is set here rather than left to the contents.
+ */
 function StackedSteps({ top, bottom }: { top: Step; bottom: Step }) {
   return (
-    <View className="h-12 w-11 gap-1">
+    <View className="h-24 w-12 gap-1">
       {[top, bottom].map((step) => (
         <Pressable
           key={step.label}
           onPress={step.onPress}
+          accessibilityRole="button"
           accessibilityLabel={step.accessibilityLabel}
           className="flex-1 items-center justify-center rounded-lg border border-border bg-secondary active:opacity-60"
         >
-          <Text className="text-xs font-semibold text-muted-foreground">{step.label}</Text>
+          <Text className="text-sm font-semibold text-foreground">{step.label}</Text>
         </Pressable>
       ))}
     </View>
