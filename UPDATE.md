@@ -12,7 +12,7 @@ See `UPDATE-schema.md` for how to write these.
 - A scan no catalogue knows can be added by hand keeping its ISBN, so a later rating finds it
 - Reading streak counts pages a week, so a long novel keeps it alive as well as a short one
 - Stats gets a six-month reading calendar, shaded by how much you read each day
-- Weekly page goal in Settings, defaulting to 150
+- Weekly page goal in Settings, defaulting to 150 — typed, with ±1, ±5 and ±10 either side
 - Stats adds pages this year, pages a day, longest book and authors ranked by pages
 - Masterpieces on Stats: every book you have rated a perfect 5
 - Browse tab: search any book, and rows built from the authors and subjects you read

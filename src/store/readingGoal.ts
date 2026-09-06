@@ -17,7 +17,20 @@ import { mmkvStorage } from '@/lib/mmkvStorage';
  * already the shape that write would take.
  */
 export const DEFAULT_WEEKLY_PAGES = 150;
-export const WEEKLY_PAGE_OPTIONS = [50, 100, 150, 250, 400];
+
+/**
+ * The goal is typed rather than picked off a shelf of five numbers, so the
+ * bounds live here: one page a week is the smallest goal that means anything,
+ * and 20 000 is past any human week — both exist to stop a stray keystroke
+ * turning the streak into a number nobody can read.
+ */
+export const MIN_WEEKLY_PAGES = 1;
+export const MAX_WEEKLY_PAGES = 20000;
+
+export function clampWeeklyPages(pages: number): number {
+  if (!Number.isFinite(pages)) return DEFAULT_WEEKLY_PAGES;
+  return Math.min(MAX_WEEKLY_PAGES, Math.max(MIN_WEEKLY_PAGES, Math.round(pages)));
+}
 
 type ReadingGoalState = {
   weeklyPages: number;
@@ -28,7 +41,7 @@ export const useReadingGoal = create<ReadingGoalState>()(
   persist(
     (set) => ({
       weeklyPages: DEFAULT_WEEKLY_PAGES,
-      setWeeklyPages: (weeklyPages) => set({ weeklyPages }),
+      setWeeklyPages: (weeklyPages) => set({ weeklyPages: clampWeeklyPages(weeklyPages) }),
     }),
     { name: 'reading-goal', storage: createJSONStorage(() => mmkvStorage), version: 1 },
   ),
