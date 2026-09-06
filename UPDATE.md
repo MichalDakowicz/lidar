@@ -2,7 +2,7 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 0.2.0 — Unreleased
+## 1.0.0 — 2026-09-06
 
 ### Added
 - Scanning a Polish book now checks Biblioteka Narodowa and e-ISBN, which Google misses
