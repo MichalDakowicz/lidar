@@ -4,14 +4,28 @@
 It says what Lidar is, what state it is in, what is verified, what is not, and what to do
 next, in order. Update it as work lands — it is the handover, not a changelog.
 
-> **0.2.0 is under way.** `TODO.md` is the work order — Items 1, 2, 3, 5, 6 and 9 have
+> **0.2.0 is under way.** `TODO.md` is the work order — Items 1, 2, 3, 5, 6, 7 and 9 have
 > landed (strip ownership, rectangular covers, drop the recent rail, Browse replaces
-> Ratings, Radar's stats with a page streak, Biblioteka Narodowa as an ISBN source);
-> Items 4, 7 and 8 have not started. **Google Books is 429ing anonymous requests from
-> this network — set `EXPO_PUBLIC_GOOGLE_BOOKS_KEY` before judging any lookup failure.**
+> Ratings, Radar's stats with a page streak, the page tracker, Biblioteka Narodowa as an
+> ISBN source); Items 4 and 8 have not started. **Google Books is 429ing anonymous
+> requests from this network — set `EXPO_PUBLIC_GOOGLE_BOOKS_KEY` before judging any
+> lookup failure.**
+>
+> **THE SCHEMA IS ONE RUN BEHIND THE CODE (2026-09-06).** `public.book_progress` and
+> `books.undated_reads` are in `supabase/schema.sql` and are *not* on the live project —
+> both probes 404/400 through PostgREST. Until the file is re-run in the SQL Editor,
+> saving a page moves the bookmark and logs nothing, and stepping the times-finished count
+> fails. Everything else works.
+>
+> **The page tracker (2026-09-06):** every bookmark move writes a `book_progress` row and
+> that ledger is what the streak and the calendar add up. Finishing writes a closing row
+> for the pages between the bookmark and the last page, and `lib/streak.dailyPages` skips
+> a read the ledger already covers — so a tracked book counts its length once, and an
+> imported or just-marked-finished book still counts as a lump. Times finished is Radar's
+> dated-plus-undated rule with the undated half stored on the book row.
 >
 > **Landed outside the work order (2026-09-05):** `books.start_page` and `lib/pages`, and
-> a streak reset. Both matter to Item 7 — the page tracker's progress bar floors at
+> a streak reset. Both matter to the page tracker — the progress bar floors at
 > `firstPage(book)`, not at 0, and `countablePages` is the number its deltas add up to.
 > The reset is a cut-off in `store/streakEpoch` (MMKV, per device), never a delete:
 > `dailyPages(reads, progress, since)` filters, so every read keeps its row and its
@@ -24,10 +38,9 @@ next, in order. Update it as work lands — it is the handover, not a changelog.
 > Polish ISBN coverage). Read it before picking up any feature work; the rest of this
 > file still describes 0.1.0 except where §2 says otherwise.
 
-Last updated: 2026-09-05. Version `0.2.0`, unreleased. **The app is up:** the schema is
-applied (including the `start_page` migration, verified against PostgREST), the release
-APK is installed and running on the phone, and the web build is live at
-https://lidar-shelf.web.app.
+Last updated: 2026-09-06. Version `0.2.0`, unreleased. **The app is up:** the release APK
+is installed and running on the phone and the web build is live at
+https://lidar-shelf.web.app — but the schema is one run behind, see the box above.
 
 ---
 
@@ -68,7 +81,7 @@ Two rules from it that are easy to get wrong: **never self-attribute a commit**,
 ## 2. State: what is DONE
 
 Everything below is committed, and `npm test`, `npx tsc --noEmit` and `npm run lint` are
-all clean (117 tests, 0 errors, 0 warnings) as of the last commit.
+all clean (206 tests, 0 errors, 0 warnings) as of the last commit.
 
 ### Repo and tooling
 - `git init` done, commits on `main` (renamed off git’s default `master`, to match the
@@ -88,16 +101,18 @@ all clean (117 tests, 0 errors, 0 warnings) as of the last commit.
   (`colors.ts` and the `ACCENT` constants in `NavIslands` / `NavDestinationButton`).
 
 ### Database
-- `supabase/schema.sql` written and complete: `books`, `book_reads`, `book_ratings`,
-  `book_activity`, `book_activity_reactions`, `book_activity_comments`, all indexes, RLS
-  in the owner-writes / visible-reads shape, `private.can_view_book_activity`, realtime
-  publication. Opens with a prerequisite check against Radar's shared tables.
+- `supabase/schema.sql` written and complete: `books`, `book_reads`, `book_progress`,
+  `book_ratings`, `book_activity`, `book_activity_reactions`, `book_activity_comments`,
+  all indexes, RLS in the owner-writes / visible-reads shape,
+  `private.can_view_book_activity`, realtime publication. Opens with a prerequisite check
+  against Radar's shared tables.
 - `docs/shared-database.md` — the three-app contract, the `book_key` table, why ratings
   have no FK.
-- **Applied.** All six tables answer through PostgREST on the shared project. Two of
-  them (`book_ratings`, `book_activity_reactions`) have composite primary keys and no
-  `id` column, so a `?select=id` probe 400s on those — that is the schema being right,
-  not wrong; probe with `?select=*`.
+- **Applied up to 2026-09-05.** The six original tables answer through PostgREST on the
+  shared project. `book_progress` and `books.undated_reads` (2026-09-06) do **not** — the
+  file needs re-running. Two tables (`book_ratings`, `book_activity_reactions`) have
+  composite primary keys and no `id` column, so a `?select=id` probe 400s on those — that
+  is the schema being right, not wrong; probe with `?select=*`.
 
 ### The book domain (hand-written, not ported)
 - `src/types/book.ts` — `Book`, `BookRating`, `Read`, `BookActivityEvent`, `Format`,
@@ -206,13 +221,11 @@ Ordered by how much they matter. None of these block a build.
    plenty of code comments in the ported files still say "record", "listen", "sleeve",
    "the legacy Firebase app". Harmless, but it will read as sloppy on the next visit.
    `grep -rniE 'record|sleeve|listen|vinyl|spun' src` finds them.
-2. **Stats are still record-shaped.** `src/lib/stats.ts` and `features/stats/StatsView.tsx`
-   count books and reads correctly, but the *interesting* book stat — pages read in a
-   period — is not computed anywhere, even though `book_reads.page_count` is stored for
-   exactly that. Add it beside the existing counts.
-3. **`ReadHistory` still offers "log a read" as a bare button** with no started/finished
-   dates, while `ProgressPanel` has the real Finished flow. They overlap; decide which one
-   owns logging a read.
+2. ~~**Stats are still record-shaped.**~~ Fixed 2026-09-05: pages this year, pages a day,
+   longest book and authors ranked by pages all land in `lib/stats.ts`.
+3. ~~**`ReadHistory` offers "log a read" as a bare button.**~~ Fixed 2026-09-06: logging a
+   finish lives only in the times-finished box, and `ReadHistory` is the list plus a
+   delete.
 4. **`book_reads.started_at` is written nowhere.** The column exists, `Read.startedAt` is
    in the type, nothing sets it. Either set it when a book moves to `Reading`, or drop it
    from the UI's vocabulary.

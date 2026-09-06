@@ -5,9 +5,9 @@ is needed.** `STATUS.md` says where the app stands today; this says where it is 
 in what order. Tick items off here as they land, and move anything finished into
 `STATUS.md` §2.
 
-Written 2026-09-05, before any of it was coded. **Items 1, 2, 3, 5, 6 and 9 are done**
-(2026-09-05) — 9 partly: see its hit rate below, one open question for the user. Item 4
-(Readlist surfaces), 7 (page tracker) and 8 (top 4) are still untouched.
+Written 2026-09-05, before any of it was coded. **Items 1, 2, 3, 5, 6, 7 and 9 are done**
+— 9 partly: see its hit rate below, one open question for the user; 7 landed 2026-09-06.
+Item 4 (Readlist surfaces) and 8 (top 4) are still untouched.
 
 ---
 
@@ -269,7 +269,38 @@ border.
 - **Acceptance:** co-located `*.test.ts` for the streak maths, including a week that
   straddles a month boundary and a re-read of a different edition.
 
-### Item 7 — The page tracker `feat/page-tracker`
+### Item 7 — The page tracker `feat/page-tracker` — **DONE 2026-09-06**
+
+Built, plus the times-finished half the user asked for in the same pass.
+
+- `public.book_progress` is the ledger (`page`, `pages_delta`, `read_id`, `recorded_at`).
+  Every bookmark move writes a row; `books.current_page` stays the denormalised mirror.
+  **`supabase/schema.sql` has to be re-run** — the table and `books.undated_reads` are not
+  on the live project until it is.
+- `lib/progress.ts` (24 tests) is the pure half: `resolveTypedPage` / `displayPage` for the
+  mode, `pagesGained`, `planPageMove` for the whole field-to-write decision, and
+  `closingMove` for what Finished bills.
+- **Double counting is settled in `lib/streak.dailyPages`, not by trusting one source.**
+  Finishing writes a closing ledger row for the pages between the bookmark and the last
+  page, and a read is skipped when the ledger already has a row in the window since that
+  book's previous finish. So a tracked book counts its length once, an imported or
+  just-marked-finished book still counts as a lump, and a re-read that was never tracked
+  still counts even though the first read was.
+- The panel is two fields, per the user: last saved (uneditable) beside the new page, the
+  receipt line under them, the sticky mode radio (`store/bookmarkMode`), Save and Finished.
+  A backwards move is accepted and priced at zero rather than blocked with a dialog — the
+  receipt says so in amber before it is saved.
+- **Times finished is Radar's** (`../radar/src/lib/watchCounts.ts` and its watched box in
+  `StatusPicker.tsx`): total = dated reads + undated. Lidar stores the *undated* half
+  (`books.undated_reads`) and derives the total, because its dated half is the read log
+  itself, so a stored total would need re-deriving on every insert and delete. `+` on the
+  total logs a dated read now; `-` takes an undated one off first. No absorb rule — Radar
+  absorbs because backfilling a date documents a past watch, and Lidar has no backfill
+  surface, so a deliberate finish always adds one.
+- Gap 3 in `STATUS.md` closed on the way past: `ReadHistory` no longer offers "Log a read",
+  so a finish is recorded in exactly one place.
+
+### Item 7 — The page tracker (original plan)
 
 The feature the user described most precisely — build it exactly as written.
 
