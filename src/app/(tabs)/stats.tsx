@@ -8,6 +8,7 @@ import { LoadingState } from '@/components/ui/LoadingState';
 import { StatsView } from '@/features/stats/StatsView';
 import { useBookRatings } from '@/hooks/useBookRatings';
 import { useBooks } from '@/hooks/useBooks';
+import { useProgress } from '@/hooks/useProgress';
 import { MAX_W } from '@/hooks/useResponsive';
 import { useReads } from '@/hooks/useReads';
 import { useReadingGoal } from '@/store/readingGoal';
@@ -25,6 +26,7 @@ function StatsScreen() {
   const router = useRouter();
   const { books, loading, error } = useBooks();
   const { reads } = useReads();
+  const { progress } = useProgress();
   const { ratings, ratingFor } = useBookRatings();
   const period = useStatsPeriod((s) => s.period);
   const presentPeriod = useStatsPeriodSheet((s) => s.present);
@@ -56,6 +58,7 @@ function StatsScreen() {
           books={books}
           reads={reads}
           ratings={ratings}
+          progress={progress}
           period={period}
           weeklyGoal={weeklyGoal}
           streakSince={streakSince}

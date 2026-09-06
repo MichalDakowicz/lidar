@@ -96,6 +96,53 @@ describe('dailyPages', () => {
   });
 });
 
+// The ledger and the read log both know about pages, and a book tracked page by
+// page then finished would otherwise contribute its whole length twice.
+describe('dailyPages, ledger against read log', () => {
+  it('lets the ledger own a book that was tracked, and counts the read at nothing', () => {
+    const daily = dailyPages(
+      [read(at('2026-06-05'), 320)],
+      [
+        { recordedAt: at('2026-06-01'), pages: 100, bookId: 'b' },
+        { recordedAt: at('2026-06-03'), pages: 140, bookId: 'b' },
+        // What 'Finished' writes: only the pages left between the bookmark and
+        // the last page (lib/progress.closingMove).
+        { recordedAt: at('2026-06-05'), pages: 80, bookId: 'b' },
+      ],
+    );
+    expect(daily['2026-06-01']).toBe(100);
+    expect(daily['2026-06-03']).toBe(140);
+    expect(daily['2026-06-05']).toBe(80);
+    expect(Object.values(daily).reduce((a, b) => a + b, 0)).toBe(320);
+  });
+
+  it('still counts a read with no ledger behind it — an import, or a book just marked finished', () => {
+    const daily = dailyPages(
+      [read(at('2026-06-05'), 320, { bookId: 'untracked' })],
+      [{ recordedAt: at('2026-06-01'), pages: 100, bookId: 'other' }],
+    );
+    expect(daily['2026-06-05']).toBe(320);
+  });
+
+  it('counts a re-read that was never tracked, even though the first read was', () => {
+    const daily = dailyPages(
+      [read(at('2026-06-05'), 320, { id: 'first' }), read(at('2026-09-05'), 320, { id: 'again' })],
+      [{ recordedAt: at('2026-06-05'), pages: 320, bookId: 'b' }],
+    );
+    expect(daily['2026-06-05']).toBe(320);
+    expect(daily['2026-09-05']).toBe(320);
+  });
+
+  it('ignores a ledger row recorded after the read it might have covered', () => {
+    const daily = dailyPages(
+      [read(at('2026-06-05'), 320)],
+      [{ recordedAt: at('2026-07-01'), pages: 40, bookId: 'b' }],
+    );
+    expect(daily['2026-06-05']).toBe(320);
+    expect(daily['2026-07-01']).toBe(40);
+  });
+});
+
 describe('currentStreak', () => {
   const now = new Date('2026-06-03T12:00:00'); // Wednesday
 

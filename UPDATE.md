@@ -19,6 +19,10 @@ See `UPDATE-schema.md` for how to write these.
 - Add a book straight from a Browse row or a search result, without opening it
 - Set which page a book's story starts on, so front matter stops counting as pages read
 - Restart the reading streak from today in Settings, keeping every book you have read
+- Saving a page now counts towards the streak and the calendar, not just the progress bar
+- Progress panel shows the last saved page beside the new one, with the pages the move is worth
+- Say whether you type the page you finished or the one you will read next, remembered per device
+- Times finished on the book page, with a count for books you read before you tracked them
 
 ### Changed
 - Sign-in screen names both siblings, Radar and Sonar, as the same account
@@ -32,6 +36,7 @@ See `UPDATE-schema.md` for how to write these.
 - Library rail is now Readlist, holding what you mean to read next
 - Stats count books you have opened, and break out readlist, reading and unfinished
 - Finishing a book marks it Read whatever it was before, including straight off the readlist
+- Read history is logged from the times-finished box, so a finish is recorded in one place
 
 ### Removed
 - Ratings tab and its S-F tier board are gone — rate a book on the book page instead

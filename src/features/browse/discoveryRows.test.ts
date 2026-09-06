@@ -17,6 +17,7 @@ function book(overrides: Partial<Book> = {}): Book {
     startPage: null,
     currentPage: null,
     progressUpdatedAt: null,
+    undatedReads: 0,
     bookKey: `manual|${overrides.id ?? 'a'}`,
     title: 'A',
     authors: [],

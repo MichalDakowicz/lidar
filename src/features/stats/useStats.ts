@@ -5,7 +5,10 @@ import { ratingDistribution, type RatingDistributionResult } from '@/lib/ratingD
 import { computeStats, type LibraryStats } from '@/lib/stats';
 import { periodStart, scopeReadsToPeriod, type StatsPeriodId } from '@/lib/statsPeriod';
 import { currentStreak, dailyPages, longestStreak, weekShortfall } from '@/lib/streak';
-import type { Book, BookRating, Read } from '@/types/book';
+import type { Book, BookRating, Progress, Read } from '@/types/book';
+
+/** Stable identity, so a caller with no ledger does not re-derive every render. */
+const EMPTY_PROGRESS: Progress[] = [];
 
 export type StatsBundle = {
   stats: LibraryStats;
@@ -33,6 +36,7 @@ export function useStats({
   books,
   reads,
   ratings,
+  progress = EMPTY_PROGRESS,
   period,
   weeklyGoal,
   streakSince = null,
@@ -40,6 +44,8 @@ export function useStats({
   books: Book[];
   reads: Read[];
   ratings: BookRating[];
+  /** The page ledger — every bookmark move, with the day it happened on. */
+  progress?: Progress[];
   period: StatsPeriodId;
   weeklyGoal: number;
   /** Streak reset (store/streakEpoch): earlier reads stay, the habit restarts. */
@@ -57,10 +63,11 @@ export function useStats({
   // The streak reads the whole log, never the window: a run of reading weeks
   // does not restart because you changed the period picker.
   //
-  // `book_progress` is not written yet (TODO item 7), so the second argument is
-  // empty and every page here comes from a finished book. When the page tracker
-  // lands, its rows go in there and nothing else on this screen changes.
-  const daily = useMemo(() => dailyPages(reads, [], streakSince), [reads, streakSince]);
+  // Both sources go in: the ledger, which is where nightly reading lands, and
+  // the read log, which covers a book that was only ever marked finished.
+  // dailyPages settles which of the two owns each book so nothing is counted
+  // twice.
+  const daily = useMemo(() => dailyPages(reads, progress, streakSince), [reads, progress, streakSince]);
   const streak = useMemo(() => currentStreak(daily, weeklyGoal), [daily, weeklyGoal]);
   const longest = useMemo(() => longestStreak(daily, weeklyGoal), [daily, weeklyGoal]);
   const week = useMemo(() => weekShortfall(daily, weeklyGoal), [daily, weeklyGoal]);

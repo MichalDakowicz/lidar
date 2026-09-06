@@ -1,7 +1,7 @@
 import { authorList, bookKey } from '@/lib/bookKey';
 import { normalizeStatus } from '@/lib/bookStatus';
 import { cleanIsbn } from '@/lib/isbn';
-import type { Book, BookRating, Ratings, Read } from '@/types/book';
+import type { Book, BookRating, Progress, Ratings, Read } from '@/types/book';
 
 // Raw shape of a row from public.books (supabase/schema.sql).
 export type BookRow = {
@@ -30,6 +30,7 @@ export type BookRow = {
   start_page: number | null;
   current_page: number | null;
   progress_updated_at: string | null;
+  undated_reads?: number | null;
   custom_order: number | null;
   last_read_at: string | null;
   added_at: string;
@@ -93,6 +94,7 @@ export function normalizeBook(row: BookRow): Book {
     startPage: row.start_page,
     currentPage: row.current_page,
     progressUpdatedAt: row.progress_updated_at,
+    undatedReads: Math.max(0, Math.trunc(row.undated_reads ?? 0)),
     customOrder: row.custom_order,
     lastReadAt: row.last_read_at,
     addedAt: row.added_at,
@@ -127,6 +129,7 @@ const FIELD_MAP: Record<string, string> = {
   startPage: 'start_page',
   currentPage: 'current_page',
   progressUpdatedAt: 'progress_updated_at',
+  undatedReads: 'undated_reads',
   customOrder: 'custom_order',
   lastReadAt: 'last_read_at',
   updatedAt: 'updated_at',
@@ -170,6 +173,32 @@ export function normalizeRead(row: ReadRow): Read {
     startedAt: row.started_at,
     finishedAt: row.finished_at,
     pageCount: row.page_count,
+  };
+}
+
+export type ProgressRow = {
+  id: string;
+  user_id: string;
+  book_id: string | null;
+  book_key: string | null;
+  read_id: string | null;
+  page: number | null;
+  pages_delta: number | null;
+  recorded_at: string;
+};
+
+export function normalizeProgress(row: ProgressRow): Progress {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    bookId: row.book_id,
+    bookKey: row.book_key,
+    readId: row.read_id,
+    page: row.page,
+    // A negative delta is not a thing the app writes; clamping here means a
+    // hand-edited row cannot take pages off a week that was already read.
+    pages: Math.max(0, Math.trunc(row.pages_delta ?? 0)),
+    recordedAt: row.recorded_at,
   };
 }
 

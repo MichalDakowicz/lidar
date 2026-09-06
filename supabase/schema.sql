@@ -145,6 +145,36 @@ create table if not exists public.book_reads (
 create index if not exists book_reads_user_id_finished_at_idx on public.book_reads (user_id, finished_at desc);
 create index if not exists book_reads_book_id_idx             on public.book_reads (book_id);
 
+-- Every forward move of a bookmark, with the day it happened on.
+--
+-- books.current_page is one number and cannot answer "how many pages this
+-- week", which is the question the whole streak is built on: a reader 300 pages
+-- into a 900-page novel has read every night for a month and, without this
+-- table, contributed nothing to a single day. So the bookmark keeps a ledger,
+-- exactly as the read log is the history behind books.last_read_at.
+--
+-- `page` is where the bookmark landed; `pages_delta` is how many pages that
+-- move was worth, computed against the book's start page (lib/pages) and never
+-- negative — a correction backwards is stored as a zero-page move rather than
+-- as pages taken off the week.
+--
+-- read_id ties the closing row that "Finished" writes to the read it belongs
+-- to, so deleting a mistaken read takes its pages with it instead of leaving a
+-- book's last hundred pages on a day the reader is undoing.
+create table if not exists public.book_progress (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  book_id     uuid references public.books(id) on delete cascade,
+  book_key    text,
+  read_id     uuid references public.book_reads(id) on delete cascade,
+  page        int,
+  pages_delta int not null default 0,
+  recorded_at timestamptz not null default now()
+);
+
+create index if not exists book_progress_user_id_recorded_at_idx on public.book_progress (user_id, recorded_at desc);
+create index if not exists book_progress_book_id_idx             on public.book_progress (book_id);
+
 -- Ratings hang off the *book*, not off ownership: rating something you do not
 -- own (a library loan, a friend's copy, a search result) is the point, so this
 -- table has no FK to public.books. An owned book finds its rating by book_key,
@@ -278,6 +308,33 @@ begin
   end if;
 end $$;
 
+-- 0.2.0 — finishes you remember but never logged.
+--
+-- Radar's shape, translated: the number of times a title is finished is the
+-- dated records plus the ones with no date on them (../radar/src/lib/
+-- watchCounts.ts). Radar stores the total and derives the undated half; Lidar
+-- stores the undated half and derives the total, because its dated half is the
+-- read log itself — one row per finish — so a stored total would need
+-- re-deriving on every insert and delete and could drift from the log it is
+-- supposed to describe.
+--
+-- An undated finish counts towards the times-read number and towards the
+-- re-read ranking, and towards no streak and no calendar, because there is no
+-- day to put it on. That is the whole point of it.
+alter table public.books add column if not exists undated_reads int not null default 0;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conrelid = 'public.books'::regclass and conname = 'books_undated_reads_check'
+  ) then
+    alter table public.books
+      add constraint books_undated_reads_check
+      check (undated_reads >= 0);
+  end if;
+end $$;
+
 -- Retired in 0.2.0 and deliberately NOT dropped: this file never drops a
 -- column, an old export may still carry these, and a column nothing writes
 -- costs nothing to keep.
@@ -308,6 +365,7 @@ grant execute on function private.can_view_book_activity(uuid) to authenticated,
 
 alter table public.books                    enable row level security;
 alter table public.book_reads               enable row level security;
+alter table public.book_progress            enable row level security;
 alter table public.book_ratings             enable row level security;
 alter table public.book_activity            enable row level security;
 alter table public.book_activity_reactions  enable row level security;
@@ -329,6 +387,16 @@ create policy book_reads_owner_all on public.book_reads for all
   with check ((select auth.uid()) = user_id);
 drop policy if exists book_reads_visible_read on public.book_reads;
 create policy book_reads_visible_read on public.book_reads for select
+  to anon, authenticated using (private.can_view(user_id));
+
+-- Read-visible like the read log: a friend allowed to see that you finished a
+-- book is allowed to see that you are 200 pages into one.
+drop policy if exists book_progress_owner_all on public.book_progress;
+create policy book_progress_owner_all on public.book_progress for all
+  to authenticated using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+drop policy if exists book_progress_visible_read on public.book_progress;
+create policy book_progress_visible_read on public.book_progress for select
   to anon, authenticated using (private.can_view(user_id));
 
 drop policy if exists book_ratings_owner_all on public.book_ratings;
@@ -380,7 +448,7 @@ do $$
 declare
   t text;
 begin
-  foreach t in array array['books','book_reads','book_ratings','book_activity',
+  foreach t in array array['books','book_reads','book_progress','book_ratings','book_activity',
                            'book_activity_reactions','book_activity_comments'] loop
     if not exists (
       select 1 from pg_publication_tables

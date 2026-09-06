@@ -3,8 +3,10 @@ import { useEffect, useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 import { booksQueryKey } from '@/hooks/useBooks';
+import { progressQueryKey } from '@/hooks/useProgress';
 import { normalizeRead, type ReadRow } from '@/lib/normalizeBook';
 import { countablePages } from '@/lib/pages';
+import { closingMove } from '@/lib/progress';
 import { summarizeReads } from '@/lib/reads';
 import { stripUndefined } from '@/lib/stripUndefined';
 import { supabase } from '@/lib/supabase';
@@ -31,11 +33,13 @@ async function fetchReads(userId: string): Promise<Read[]> {
 }
 
 /**
- * The read log and its two writes. Finishing a book writes two rows: the read
- * itself, and the mirror on the book (books.last_read_at) that a friend's
- * shelf reads without pulling anyone's history. Deleting one re-derives that
- * mirror from what is left, so removing today's entry puts the previous one
- * back.
+ * The read log and its writes. Finishing a book writes the read itself, the
+ * closing row of the page ledger (public.book_progress — the pages between the
+ * bookmark and the last page), and the mirror on the book
+ * (books.last_read_at) that a friend's shelf reads without pulling anyone's
+ * history. Deleting a read re-derives that mirror from what is left, so
+ * removing today's entry puts the previous one back, and takes the ledger row
+ * it wrote with it.
  *
  * Finishing also clears the live bookmark (books.current_page): you are not
  * 300 pages into a book you have closed, and leaving the number behind would
@@ -75,23 +79,49 @@ export function useReads() {
   const logRead = async (book: Book, finishedAt: string = new Date().toISOString()) => {
     if (!user) return;
 
-    const { error } = await supabase.from('book_reads').insert(
-      stripUndefined({
-        user_id: user.id,
-        book_id: book.id,
-        book_key: book.bookKey,
-        title: book.title,
-        authors: book.authors,
-        cover_url: book.coverUrl,
-        finished_at: finishedAt,
-        // Snapshotted, so a re-read of a different edition still counts the
-        // right number of pages toward the year's total — and snapshotted as
-        // *countable* pages, past the front matter, because that is the number
-        // the streak and the calendar add up (lib/pages).
-        page_count: countablePages(book),
-      }),
-    );
+    const { data: inserted, error } = await supabase
+      .from('book_reads')
+      .insert(
+        stripUndefined({
+          user_id: user.id,
+          book_id: book.id,
+          book_key: book.bookKey,
+          title: book.title,
+          authors: book.authors,
+          cover_url: book.coverUrl,
+          finished_at: finishedAt,
+          // Snapshotted, so a re-read of a different edition still counts the
+          // right number of pages toward the year's total — and snapshotted as
+          // *countable* pages, past the front matter, because that is the number
+          // the streak and the calendar add up (lib/pages).
+          page_count: countablePages(book),
+        }),
+      )
+      .select('id')
+      .single();
     if (error) throw error;
+
+    // The closing ledger row: whatever was left between the bookmark and the
+    // last page. A book tracked page by page then finished must not count its
+    // whole length twice, and a book finished in one sitting must not count
+    // none at all — lib/streak prefers the ledger wherever it exists, so the
+    // pages have to land here (lib/progress.closingMove).
+    const closing = closingMove(book);
+    const readId = (inserted as { id: string } | null)?.id ?? null;
+    if (closing.pages > 0) {
+      const { error: ledgerError } = await supabase.from('book_progress').insert(
+        stripUndefined({
+          user_id: user.id,
+          book_id: book.id,
+          book_key: book.bookKey,
+          read_id: readId,
+          page: closing.page,
+          pages_delta: closing.pages,
+          recorded_at: finishedAt,
+        }),
+      );
+      if (ledgerError) console.error('Failed to close the page ledger for this read', ledgerError);
+    }
 
     // Mirror, bookmark and status, in one write. Only move the mirror forward:
     // back-dating a read you forgot to log must not make an older one look
@@ -125,6 +155,7 @@ export function useReads() {
 
     queryClient.invalidateQueries({ queryKey });
     queryClient.invalidateQueries({ queryKey: booksQueryKey(user.id) });
+    queryClient.invalidateQueries({ queryKey: progressQueryKey(user.id) });
   };
 
   const removeRead = async (readId: string) => {
@@ -152,8 +183,11 @@ export function useReads() {
       if (mirrorError) console.error('Failed to update last read', mirrorError);
     }
 
+    // The closing ledger row is gone with it — book_progress.read_id cascades —
+    // so the week that read belonged to loses its pages back.
     queryClient.invalidateQueries({ queryKey });
     queryClient.invalidateQueries({ queryKey: booksQueryKey(user.id) });
+    queryClient.invalidateQueries({ queryKey: progressQueryKey(user.id) });
   };
 
   return {

@@ -11,11 +11,13 @@ import { DetailHero } from '@/features/books/detail/DetailHero';
 import { BookDetails } from '@/features/books/detail/BookDetails';
 import { ReadHistory } from '@/features/books/detail/ReadHistory';
 import { ProgressPanel } from '@/features/books/detail/ProgressPanel';
+import { TimesReadBox } from '@/features/books/detail/TimesReadBox';
 import { useBookDetail } from '@/features/books/detail/useBookDetail';
 import { useEditBookForm } from '@/features/books/edit/useEditBookForm';
 import { RatingEditor } from '@/features/ratings/RatingEditor';
 import { useNavBarSpace } from '@/hooks/useNavBarSpace';
 import { MAX_W, useCenteredContentStyle } from '@/hooks/useResponsive';
+import { useBookmarkMode } from '@/store/bookmarkMode';
 import { COLORS } from '@/theme/colors';
 
 type BookDetailScreenProps = {
@@ -38,6 +40,8 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
   const contentStyle = useCenteredContentStyle(MAX_W.detail);
   const navBarSpace = useNavBarSpace();
   const { show } = useToast();
+  const bookmarkMode = useBookmarkMode((state) => state.mode);
+  const setBookmarkMode = useBookmarkMode((state) => state.setMode);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
   const { book, display } = detail;
@@ -132,10 +136,30 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
               <View className="gap-4">
                 <Text className="text-sm font-bold uppercase tracking-widest text-muted-foreground">On your shelf</Text>
                 <StatusPicker status={form.status} onStatusChange={(status) => editForm.update({ status })} />
+
+                <TimesReadBox
+                  dated={detail.reads.length}
+                  undated={book.undatedReads}
+                  onLogRead={async () => {
+                    await detail.logRead();
+                    show(`Finished ${display.title}`);
+                  }}
+                  onRemoveNewestRead={async () => {
+                    // The log is newest-first, so this is the finish just added
+                    // by mistake — the one anybody stepping down means.
+                    const newest = detail.reads[0];
+                    if (!newest) return;
+                    await detail.removeRead(newest.id);
+                    show('Latest finish removed');
+                  }}
+                  onSetUndated={detail.setUndatedReads}
+                />
               </View>
 
               <ProgressPanel
-                book={detail.book!}
+                book={book}
+                mode={bookmarkMode}
+                onModeChange={setBookmarkMode}
                 onSetPage={detail.setPage}
                 onFinish={async () => {
                   await detail.logRead();
@@ -143,14 +167,7 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
                 }}
               />
 
-              <ReadHistory
-                reads={detail.reads}
-                onLogRead={async () => {
-                  await detail.logRead();
-                  show(`Read logged for ${display.title}`);
-                }}
-                onRemoveRead={detail.removeRead}
-              />
+              <ReadHistory reads={detail.reads} undated={book.undatedReads} onRemoveRead={detail.removeRead} />
 
               <BookDetails form={form} onChange={editForm.update} issues={editForm.issues} />
             </>

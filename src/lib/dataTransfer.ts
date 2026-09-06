@@ -123,6 +123,10 @@ function coerceBook(item: Record<string, unknown>, index: number, errors: string
     url: typeof item.url === 'string' ? item.url : '',
     notes: typeof item.notes === 'string' ? item.notes : '',
     favoriteQuotes: typeof item.favoriteQuotes === 'string' ? item.favoriteQuotes : '',
+    // Finishes with no date on them. An export carries them, so a re-import
+    // must not quietly drop a book's times-finished count back to its dated
+    // half (lib/reads.timesRead).
+    undatedReads: Math.max(0, Math.trunc(numberOrUndefined(item.undatedReads) ?? 0)),
     customOrder: numberOrUndefined(item.customOrder) ?? null,
     lastReadAt,
     addedAt: isoOrUndefined(item.addedAt) ?? new Date().toISOString(),

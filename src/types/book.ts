@@ -78,6 +78,13 @@ export type Book = {
   currentPage: number | null;
   progressUpdatedAt: string | null;
 
+  /**
+   * Finishes you remember but never logged — Radar's undated watches, in books
+   * (../radar/src/lib/watchCounts.ts). They count towards the times-read number
+   * and towards no streak, because there is no day to put them on.
+   */
+  undatedReads: number;
+
   customOrder: number | null;
   /** Mirror of the newest finished read (lib/reads is the source of truth). */
   lastReadAt: string | null;
@@ -97,6 +104,25 @@ export type Read = {
   startedAt: string | null;
   finishedAt: string;
   pageCount: number | null;
+};
+
+/**
+ * One forward move of a bookmark. The ledger behind `Book.currentPage`, exactly
+ * as the read log is the history behind `Book.lastReadAt` — and the only thing
+ * that can answer "how many pages this week" (lib/streak).
+ */
+export type Progress = {
+  id: string;
+  userId: string;
+  bookId: string | null;
+  bookKey: string | null;
+  /** The read this row closes, when it is the one "Finished" wrote. */
+  readId: string | null;
+  /** Where the bookmark landed. Null when the bookmark was cleared. */
+  page: number | null;
+  /** Pages the move was worth. Never negative. */
+  pages: number;
+  recordedAt: string;
 };
 
 export type BookActivityType =

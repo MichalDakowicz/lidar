@@ -44,25 +44,59 @@ export function pagesInWeek(daily: Record<string, number>, start: Date): number 
 }
 
 /**
- * One forward move of a bookmark. Written by the page tracker (TODO item 7,
- * `public.book_progress`); until that lands this is always empty and the streak
- * runs on finished books alone.
+ * One forward move of a bookmark — a row of the page ledger
+ * (`public.book_progress`, written by the page tracker).
  */
-export type PageEntry = { recordedAt: string; pages: number };
+export type PageEntry = { recordedAt: string; pages: number; bookId?: string | null };
+
+/** Every ledger stamp for one book, oldest first. */
+function stampsByBook(progress: PageEntry[]): Map<string, number[]> {
+  const byBook = new Map<string, number[]>();
+  for (const entry of progress) {
+    if (!entry.bookId) continue;
+    const at = Date.parse(entry.recordedAt);
+    if (Number.isNaN(at)) continue;
+    const list = byBook.get(entry.bookId);
+    if (list) list.push(at);
+    else byBook.set(entry.bookId, [at]);
+  }
+  for (const list of byBook.values()) list.sort((a, b) => a - b);
+  return byBook;
+}
+
+/**
+ * Whether the ledger already accounts for a read, so the read must not be
+ * counted a second time.
+ *
+ * The window is everything since the previous finish of the same book: pages
+ * tracked towards *this* read. A re-read logged with no page tracking of its
+ * own therefore still counts as a lump, even though the first read of the same
+ * book was tracked page by page.
+ */
+function ledgerCovers(stamps: number[] | undefined, since: number, until: number): boolean {
+  if (!stamps) return false;
+  return stamps.some((at) => at > since && at <= until);
+}
 
 /**
  * Pages read per local day, from both sources that know about pages.
  *
- * A finished read contributes the whole book on the day it was finished. That
- * is lumpy — 400 pages landing on a Tuesday — but it is the only thing the read
- * log actually knows, and it is honest: the alternative is inventing a reading
- * pace nobody recorded.
+ * The ledger is preferred wherever it exists: a book tracked page by page
+ * contributes on the evenings it was actually read, and the read row that
+ * finishes it adds nothing, because "Finished" already wrote a closing ledger
+ * row for whatever was left (lib/progress.closingMove). Without that rule a
+ * tracked book would count its whole length twice.
+ *
+ * A read with no ledger behind it — imported, or a book simply marked finished
+ * — still contributes its whole page count on the day it was finished. That is
+ * lumpy, 400 pages landing on a Tuesday, but it is the only thing the read log
+ * knows, and the alternative is inventing a reading pace nobody recorded.
  *
  * A book with no page count contributes nothing rather than a guess. Re-reads
  * are separate rows and each carries its own `pageCount`, so re-reading a
  * different edition counts that edition's length, not the first one's.
  *
- * `since` is the streak reset (store/streakEpoch): anything finished before it
+ * `since` is the streak reset (store/streakEpoch): anything recorded before it
  * is left out of the habit surfaces and out of nothing else. The read is still
  * a read, still on the shelf, still in the year's page total — the calendar
  * simply starts drawing from the day you asked it to.
@@ -76,17 +110,33 @@ export function dailyPages(
   const floor = since ? Date.parse(since) : NaN;
   const cutoff = Number.isNaN(floor) ? null : floor;
 
-  const add = (at: string, pages: number) => {
+  const add = (at: number, pages: number) => {
     if (!pages || pages <= 0) return;
-    const parsed = Date.parse(at);
-    if (Number.isNaN(parsed)) return;
-    if (cutoff !== null && parsed < cutoff) return;
-    const key = dateKey(parsed);
+    if (cutoff !== null && at < cutoff) return;
+    const key = dateKey(at);
     daily[key] = (daily[key] ?? 0) + pages;
   };
 
-  for (const read of reads) add(read.finishedAt, read.pageCount ?? 0);
-  for (const entry of progress) add(entry.recordedAt, entry.pages);
+  for (const entry of progress) {
+    const at = Date.parse(entry.recordedAt);
+    if (!Number.isNaN(at)) add(at, entry.pages);
+  }
+
+  const stamps = stampsByBook(progress);
+  // Oldest first, so each read knows where the previous one left off.
+  const ordered = [...reads]
+    .map((read) => ({ read, at: Date.parse(read.finishedAt) }))
+    .filter((entry) => !Number.isNaN(entry.at))
+    .sort((a, b) => a.at - b.at);
+  const previous = new Map<string, number>();
+
+  for (const { read, at } of ordered) {
+    const bookId = read.bookId;
+    const from = bookId ? (previous.get(bookId) ?? Number.NEGATIVE_INFINITY) : Number.NEGATIVE_INFINITY;
+    if (bookId) previous.set(bookId, at);
+    if (bookId && ledgerCovers(stamps.get(bookId), from, at)) continue;
+    add(at, read.pageCount ?? 0);
+  }
 
   return daily;
 }

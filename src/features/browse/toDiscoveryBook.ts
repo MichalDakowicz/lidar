@@ -39,6 +39,7 @@ export function toDiscoveryBook(result: BookResult): Book {
     startPage: null,
     currentPage: null,
     progressUpdatedAt: null,
+    undatedReads: 0,
     customOrder: null,
     lastReadAt: null,
     addedAt: '',

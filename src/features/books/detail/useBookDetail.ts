@@ -4,9 +4,10 @@ import { useBookResult } from '@/features/books/add/useBookSearch';
 import { DEFAULT_DRAFT, useQuickAdd, type QuickAddDraft } from '@/features/books/add/useQuickAdd';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookRatings } from '@/hooks/useBookRatings';
+import { useProgress } from '@/hooks/useProgress';
 import { useReads } from '@/hooks/useReads';
 import { googleIdFromKey } from '@/lib/bookKey';
-import type { Book, Ratings, Read } from '@/types/book';
+import type { Book, Progress, Ratings, Read } from '@/types/book';
 
 export type BookDisplay = {
   bookKey: string;
@@ -31,6 +32,8 @@ export type BookDetail = {
   display: BookDisplay | null;
   ratings: Ratings | null;
   reads: Read[];
+  /** This book's page ledger, newest first — the receipt under the bookmark. */
+  progress: Progress[];
   loading: boolean;
   /** True while the release is known only by a key we cannot resolve. */
   unresolved: boolean;
@@ -38,7 +41,10 @@ export type BookDetail = {
   removeFromShelf: () => Promise<void>;
   logRead: () => Promise<void>;
   removeRead: (readId: string) => Promise<void>;
-  setPage: (page: number | null) => Promise<void>;
+  /** Move the bookmark and record what the move was worth. */
+  setPage: (move: { page: number | null; pages: number }) => Promise<void>;
+  /** Finishes with no date on them (Radar's undated watches, in books). */
+  setUndatedReads: (undatedReads: number) => Promise<void>;
   pending: boolean;
 };
 
@@ -58,6 +64,7 @@ export function useBookDetail({ bookId, bookKey }: { bookId?: string; bookKey?: 
   const { books, loading: booksLoading, updateBook } = useBooks();
   const { ratingFor } = useBookRatings();
   const { reads, logRead, removeRead } = useReads();
+  const { progress, logProgress } = useProgress();
   const { add, remove, pendingKey } = useQuickAdd();
 
   const book = useMemo(() => {
@@ -117,11 +124,17 @@ export function useBookDetail({ bookId, bookKey }: { bookId?: string; bookKey?: 
     [reads, book],
   );
 
+  const bookProgress = useMemo(
+    () => (book ? progress.filter((entry) => entry.bookId === book.id) : []),
+    [progress, book],
+  );
+
   return {
     book,
     display,
     ratings: ratingFor(key)?.ratings ?? null,
     reads: bookReads,
+    progress: bookProgress,
     loading: booksLoading || releaseLoading,
     // A manual key with no Google Books id and no row behind it cannot be drawn —
     // the screen says so instead of rendering an empty hero.
@@ -136,13 +149,26 @@ export function useBookDetail({ bookId, bookKey }: { bookId?: string; bookKey?: 
     removeRead,
     // Moving the bookmark is silent: a feed row per page turn would drown
     // everything else a friend did that week.
-    setPage: async (page: number | null) => {
+    //
+    // Two writes, in this order: the live bookmark on the row, then the ledger
+    // row that says what the move was worth. The bookmark alone cannot answer
+    // "how many pages this week" — that is the whole reason public.book_progress
+    // exists (hooks/useProgress).
+    setPage: async ({ page, pages }: { page: number | null; pages: number }) => {
       if (!book) return;
+      const recordedAt = new Date().toISOString();
       await updateBook(
         book.id,
-        { currentPage: page, progressUpdatedAt: page == null ? null : new Date().toISOString() },
+        { currentPage: page, progressUpdatedAt: page == null ? null : recordedAt },
         { silent: true },
       );
+      await logProgress(book, { page, pages, recordedAt });
+    },
+    // Silent for the same reason: nobody's feed needs "remembered reading this
+    // once, years ago".
+    setUndatedReads: async (undatedReads: number) => {
+      if (!book) return;
+      await updateBook(book.id, { undatedReads: Math.max(0, Math.round(undatedReads)) }, { silent: true });
     },
     pending: !!key && pendingKey === key,
   };

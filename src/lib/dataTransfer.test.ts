@@ -28,6 +28,7 @@ function book(overrides: Partial<Book> = {}): Book {
     startPage: null,
     currentPage: null,
     progressUpdatedAt: null,
+    undatedReads: 0,
     customOrder: null,
     lastReadAt: null,
     addedAt: '2026-01-01T00:00:00.000Z',

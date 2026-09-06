@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { StatsView } from '@/features/stats/StatsView';
 import { usePublicRatings } from '@/hooks/useBookRatings';
+import { usePublicProgress } from '@/hooks/useProgress';
 import { useCanViewUser, usePublicBooks } from '@/hooks/usePublicBooks';
 import { MAX_W } from '@/hooks/useResponsive';
 import { usePublicReads } from '@/hooks/useReads';
@@ -24,6 +25,7 @@ export default function PublicStats() {
   const { canView, loading: viewLoading } = useCanViewUser(userId);
   const { books, loading } = usePublicBooks(canView ? userId : undefined);
   const { reads } = usePublicReads(canView ? userId : undefined);
+  const { progress } = usePublicProgress(canView ? userId : undefined);
   const { ratings, ratingFor } = usePublicRatings(canView ? userId : undefined);
 
   if (viewLoading || (canView && loading)) {
@@ -53,6 +55,7 @@ export default function PublicStats() {
           books={books}
           reads={reads}
           ratings={ratings}
+          progress={progress}
           period="all"
           ratingsFor={(book) => ratingFor(book.bookKey)?.ratings ?? null}
         />

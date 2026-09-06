@@ -15,7 +15,7 @@ import { useNavBarSpace } from '@/hooks/useNavBarSpace';
 import { periodShortLabel, type StatsPeriodId } from '@/lib/statsPeriod';
 import { DEFAULT_WEEKLY_PAGES } from '@/store/readingGoal';
 import { COLORS } from '@/theme/colors';
-import type { Book, BookRating, Ratings, Read } from '@/types/book';
+import type { Book, BookRating, Progress, Ratings, Read } from '@/types/book';
 
 const MUTED = COLORS.muted;
 
@@ -23,6 +23,12 @@ type StatsViewProps = {
   books: Book[];
   reads: Read[];
   ratings: BookRating[];
+  /**
+   * The page ledger. Without it the streak only sees finished books, so a
+   * reader halfway through a long novel shows a streak of zero however many
+   * evenings they have put in.
+   */
+  progress?: Progress[];
   period: StatsPeriodId;
   ratingsFor?: (book: Book) => Ratings | null;
   onOpenBook?: (book: Book) => void;
@@ -60,6 +66,7 @@ export function StatsView({
   books,
   reads,
   ratings,
+  progress,
   period,
   ratingsFor,
   onOpenBook,
@@ -68,7 +75,7 @@ export function StatsView({
   streakSince = null,
 }: StatsViewProps) {
   const navBarSpace = useNavBarSpace();
-  const bundle = useStats({ books, reads, ratings, period, weeklyGoal, streakSince });
+  const bundle = useStats({ books, reads, ratings, progress, period, weeklyGoal, streakSince });
   const { stats, distribution, streak, longestStreak, weekNeeded, weekPages } = bundle;
 
   if (books.length === 0 && ratings.length === 0) {
