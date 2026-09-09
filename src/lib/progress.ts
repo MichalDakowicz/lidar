@@ -108,6 +108,25 @@ export function planPageMove(book: Bookmark, raw: string, mode: BookmarkMode): P
 }
 
 /**
+ * Does a bookmark landing here mean the book is finished?
+ *
+ * The last page is the whole answer: there is nothing left to read past it, so
+ * reaching it *is* finishing, and the app logs the read rather than asking for
+ * a second tap on a button that could only ever say yes. That is why there is
+ * no Finished button on the progress panel any more — the bookmark is the only
+ * thing the reader has to keep honest.
+ *
+ * An edition with no page count has no last page to reach. Those books are
+ * still finished by hand, from the times-finished box, which credits whatever
+ * the ledger has not already counted.
+ */
+export function finishesBook(book: PageSpan, page: number | null): boolean {
+  if (page == null) return false;
+  if (!book.pageCount || book.pageCount <= 0) return false;
+  return page >= book.pageCount;
+}
+
+/**
  * The move that finishing a book makes: from wherever the bookmark is to the
  * last page.
  *

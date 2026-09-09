@@ -1,4 +1,4 @@
-import { closingMove, displayPage, pagesGained, planPageMove, resolveTypedPage } from './progress';
+import { closingMove, displayPage, finishesBook, pagesGained, planPageMove, resolveTypedPage } from './progress';
 import type { Book } from '@/types/book';
 
 type Span = Pick<Book, 'pageCount' | 'startPage' | 'currentPage'>;
@@ -96,6 +96,36 @@ describe('planPageMove', () => {
 
   it('rejects a page before the book begins', () => {
     expect(planPageMove(span({ startPage: 17 }), '3', 'finished').valid).toBe(false);
+  });
+});
+
+describe('finishesBook', () => {
+  it('is the last page and nothing short of it', () => {
+    expect(finishesBook(span(), 384)).toBe(true);
+    expect(finishesBook(span(), 383)).toBe(false);
+  });
+
+  it('holds whichever way the bookmark is typed, because it is asked of the stored page', () => {
+    const move = planPageMove(span({ currentPage: 300 }), '385', 'next');
+    expect(move.valid).toBe(true);
+    expect(finishesBook(span(), move.to)).toBe(true);
+  });
+
+  it('is false for a cleared bookmark — a re-read is not a finish', () => {
+    expect(finishesBook(span(), null)).toBe(false);
+  });
+
+  it('is false for an edition with no length, which has no last page to reach', () => {
+    expect(finishesBook(span({ pageCount: null }), 400)).toBe(false);
+    expect(finishesBook(span({ pageCount: 0 }), 400)).toBe(false);
+  });
+
+  it('bills nothing more once it is true, so the finish cannot double-count', () => {
+    // The save that reaches the last page hands over to logRead, whose closing
+    // row is priced from the bookmark it had before the move.
+    const before = span({ currentPage: 300 });
+    expect(planPageMove(before, '384', 'finished').pages).toBe(84);
+    expect(closingMove(before).pages).toBe(84);
   });
 });
 

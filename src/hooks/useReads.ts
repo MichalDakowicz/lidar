@@ -41,9 +41,10 @@ async function fetchReads(userId: string): Promise<Read[]> {
  * removing today's entry puts the previous one back, and takes the ledger row
  * it wrote with it.
  *
- * Finishing also clears the live bookmark (books.current_page): you are not
- * 300 pages into a book you have closed, and leaving the number behind would
- * draw a full progress bar on a book the shelf already calls finished.
+ * Finishing also parks the live bookmark (books.current_page) on the last page
+ * rather than clearing it: a finished book is a book you read all of, and the
+ * full progress bar is the honest picture. Reset on the progress panel is what
+ * empties it, and that is the gesture that means "I am reading this again".
  */
 export function useReads() {
   const { user } = useAuth();
@@ -132,8 +133,11 @@ export function useReads() {
       .update(
         stripUndefined({
           last_read_at: forward ? finishedAt : undefined,
-          current_page: null,
-          progress_updated_at: null,
+          // Parked on the last page, so the panel reads 100% and Reset has
+          // something to clear when the book comes round again. An edition with
+          // no page count has no last page, so it keeps whatever it had.
+          current_page: book.pageCount ?? undefined,
+          progress_updated_at: book.pageCount ? finishedAt : undefined,
           // Finishing it is what makes it read, whatever it was before — a
           // readlist book you sat down with in one evening included. Only a
           // row already marked Read needs no write.

@@ -9,6 +9,8 @@ type PageMoveReceiptProps = {
   lastSaved: string | null;
   /** Last page of the edition, for the message when the typed page is past it. */
   total: number | null;
+  /** The move lands on the last page, so saving it also logs a finish. */
+  finishes?: boolean;
 };
 
 /**
@@ -19,7 +21,7 @@ type PageMoveReceiptProps = {
  * than finding out at the end of the book that every week was counted a page
  * short.
  */
-export function PageMoveReceipt({ move, lastSaved, total }: PageMoveReceiptProps) {
+export function PageMoveReceipt({ move, lastSaved, total, finishes }: PageMoveReceiptProps) {
   const since = lastSaved ? ` · last saved ${lastSaved.toLowerCase()}` : '';
 
   if (move.beyondEnd) {
@@ -37,14 +39,14 @@ export function PageMoveReceipt({ move, lastSaved, total }: PageMoveReceiptProps
   if (move.backwards) {
     return (
       <Text className="text-xs text-amber-400">
-        {move.from} → {move.to} · behind the saved page, so it is stored as a correction and counts no pages
+        {move.from} → {move.to} · behind the saved page, so it counts no pages. Reading it again? Reset first.
       </Text>
     );
   }
   return (
     <Text className="text-xs" style={{ color: COLORS.accent }}>
       {move.from ?? 0} → {move.to} · {move.pages.toLocaleString()} {move.pages === 1 ? 'page' : 'pages'}
-      {since}
+      {finishes ? ' · finishes the book' : since}
     </Text>
   );
 }

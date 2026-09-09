@@ -161,10 +161,11 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
                 form={form}
                 onFormChange={editForm.update}
                 issues={editForm.issues}
-                onSetPage={detail.setPage}
-                onFinish={async () => {
-                  await detail.logRead();
-                  show(`Finished ${display.title}`);
+                onSetPage={async (move) => {
+                  // Saving the last page is what finishes a book now — there is
+                  // no separate button to press and no way to do both.
+                  const finished = await detail.setPage(move);
+                  if (finished) show(`Finished ${display.title}`);
                 }}
               />
 

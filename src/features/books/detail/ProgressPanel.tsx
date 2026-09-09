@@ -1,12 +1,13 @@
-import { BookOpen, Check, Lock } from 'lucide-react-native';
+import { BookOpen, Lock } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { PageMoveReceipt } from '@/features/books/detail/PageMoveReceipt';
 import { PageSpanFields } from '@/features/books/detail/PageSpanFields';
+import { ProgressActions } from '@/features/books/detail/ProgressActions';
 import { countablePages, firstPage, pagesReadAt, progressRatio } from '@/lib/pages';
-import { displayPage, planPageMove, type BookmarkMode } from '@/lib/progress';
+import { displayPage, finishesBook, planPageMove, type BookmarkMode } from '@/lib/progress';
 import { formatRelativeTime } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
 import type { Book } from '@/types/book';
@@ -22,12 +23,11 @@ type ProgressPanelProps = {
   onFormChange: (patch: Partial<BookForm>) => void;
   issues?: FormIssues;
   onSetPage: (move: { page: number | null; pages: number }) => Promise<void> | void;
-  onFinish: () => Promise<void> | void;
 };
 
 /**
- * Where you are in the book, and the two things you do about it: move the
- * bookmark, or call it finished.
+ * Where you are in the book, and everything you do about it: move the bookmark,
+ * send it to the last page, or clear it for a re-read.
  *
  * This is the panel that has no analogue in the sibling apps — a record is
  * played in one sitting, so Sonar logs a spin and moves on, but a book is
@@ -44,6 +44,8 @@ type ProgressPanelProps = {
  * Saving writes two rows: the bookmark on the book, and the ledger row those
  * pages land on (public.book_progress). The ledger is what the streak and the
  * calendar add up — a bookmark alone cannot answer "how many pages this week".
+ * A save that lands on the last page finishes the book instead, in one write,
+ * so the same pages cannot be counted by both (useBookDetail.setPage).
  *
  * The length of the book and the page its story starts on sit directly above
  * the counter, because they are what the counter is measured against. Which
@@ -57,7 +59,6 @@ export function ProgressPanel({
   onFormChange,
   issues,
   onSetPage,
-  onFinish,
 }: ProgressPanelProps) {
   const saved = displayPage(book.currentPage, mode);
   const [draft, setDraft] = useState(saved == null ? '' : String(saved));
@@ -83,16 +84,25 @@ export function ProgressPanel({
   const move = planPageMove(book, draft, mode);
   const lastSaved = formatRelativeTime(book.progressUpdatedAt);
   const canSave = move.valid && !move.unchanged && !saving;
+  const finishes = move.valid && finishesBook(book, move.to);
 
-  const commit = async () => {
-    if (!canSave) return;
+  const commit = async (override?: { page: number | null; pages: number }) => {
+    if (!override && !canSave) return;
     setSaving(true);
     try {
-      await onSetPage({ page: move.to, pages: move.pages });
+      await onSetPage(override ?? { page: move.to, pages: move.pages });
     } finally {
       setSaving(false);
     }
   };
+
+  // Fills the field instead of saving: in "next page" mode the last page is a
+  // number that does not exist in the book, so it has to be shown and priced
+  // by the receipt before anyone commits to it.
+  const fillLastPage = total ? () => setDraft(String(displayPage(total, mode))) : null;
+  // A re-read starts from nothing. The pages already read stay in the ledger,
+  // so this costs the streak nothing and gives the next pass room to count.
+  const resetBookmark = book.currentPage == null || saving ? null : () => commit({ page: null, pages: 0 });
 
   return (
     <View className="gap-3">
@@ -143,7 +153,7 @@ export function ProgressPanel({
             <TextInput
               value={draft}
               onChangeText={setDraft}
-              onSubmitEditing={commit}
+              onSubmitEditing={() => commit()}
               keyboardType="number-pad"
               returnKeyType="done"
               placeholder={saved == null ? 'Page…' : String(saved)}
@@ -155,30 +165,16 @@ export function ProgressPanel({
         </View>
       </View>
 
-      <PageMoveReceipt move={move} lastSaved={lastSaved} total={total} />
+      <PageMoveReceipt move={move} lastSaved={lastSaved} total={total} finishes={finishes} />
 
-      <View className="flex-row items-center gap-2">
-        <Pressable
-          onPress={commit}
-          disabled={!canSave}
-          accessibilityRole="button"
-          accessibilityLabel="Save the page"
-          className="flex-1 items-center rounded-xl border border-border bg-secondary py-3 active:opacity-70"
-          style={{ opacity: canSave ? 1 : 0.5 }}
-        >
-          <Text className="text-sm font-semibold text-foreground">{saving ? 'Saving…' : 'Save page'}</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => onFinish()}
-          accessibilityRole="button"
-          accessibilityLabel="Mark as finished"
-          className="flex-row items-center gap-1.5 rounded-xl bg-primary px-4 py-3"
-        >
-          <Check size={16} color="#fafafa" strokeWidth={2.5} />
-          <Text className="text-sm font-semibold text-primary-foreground">Finished</Text>
-        </Pressable>
-      </View>
+      <ProgressActions
+        finishes={finishes}
+        canSave={canSave}
+        saving={saving}
+        onSave={() => commit()}
+        onLastPage={fillLastPage}
+        onReset={resetBookmark}
+      />
     </View>
   );
 }

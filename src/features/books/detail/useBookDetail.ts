@@ -7,6 +7,7 @@ import { useBookRatings } from '@/hooks/useBookRatings';
 import { useProgress } from '@/hooks/useProgress';
 import { useReads } from '@/hooks/useReads';
 import { googleIdFromKey } from '@/lib/bookKey';
+import { finishesBook } from '@/lib/progress';
 import type { Book, Progress, Ratings, Read } from '@/types/book';
 
 export type BookDisplay = {
@@ -41,8 +42,11 @@ export type BookDetail = {
   removeFromShelf: () => Promise<void>;
   logRead: () => Promise<void>;
   removeRead: (readId: string) => Promise<void>;
-  /** Move the bookmark and record what the move was worth. */
-  setPage: (move: { page: number | null; pages: number }) => Promise<void>;
+  /**
+   * Move the bookmark and record what the move was worth. Returns true when the
+   * move reached the last page and the book was logged as finished.
+   */
+  setPage: (move: { page: number | null; pages: number }) => Promise<boolean>;
   /** Finishes with no date on them (Radar's undated watches, in books). */
   setUndatedReads: (undatedReads: number) => Promise<void>;
   pending: boolean;
@@ -154,8 +158,16 @@ export function useBookDetail({ bookId, bookKey }: { bookId?: string; bookKey?: 
     // row that says what the move was worth. The bookmark alone cannot answer
     // "how many pages this week" — that is the whole reason public.book_progress
     // exists (hooks/useProgress).
+    // Reaching the last page is finishing, so it takes the finish path instead
+    // of this one: logRead writes the closing ledger row for exactly the pages
+    // between the bookmark and the end, which is the same number this move is
+    // worth. Doing both would count them twice.
     setPage: async ({ page, pages }: { page: number | null; pages: number }) => {
-      if (!book) return;
+      if (!book) return false;
+      if (finishesBook(book, page)) {
+        await logRead(book);
+        return true;
+      }
       const recordedAt = new Date().toISOString();
       await updateBook(
         book.id,
@@ -163,6 +175,7 @@ export function useBookDetail({ bookId, bookKey }: { bookId?: string; bookKey?: 
         { silent: true },
       );
       await logProgress(book, { page, pages, recordedAt });
+      return false;
     },
     // Silent for the same reason: nobody's feed needs "remembered reading this
     // once, years ago".
