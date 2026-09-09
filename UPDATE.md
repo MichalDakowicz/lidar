@@ -5,15 +5,14 @@ See `UPDATE-schema.md` for how to write these.
 ## 1.1.0 — Unreleased
 
 ### Added
-- Reset on a book page clears the bookmark, so a re-read counts from the start again
-- Last page button fills in the final page, reachable however you type a bookmark
+- Reset beside Save page clears the bookmark for a re-read, keeping every page you read
 
 ### Changed
 - Saving the last page finishes the book itself, counting the pages that were left
 - A finished book keeps its progress bar full instead of emptying it
 
 ### Removed
-- The Finished button on the book page — reaching the last page is what finishes a book
+- The Finished button on the book page — the times finished box above it is the one way
 
 ## 1.0.0 — 2026-09-06
 

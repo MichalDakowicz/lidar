@@ -166,6 +166,9 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
                   // no separate button to press and no way to do both.
                   const finished = await detail.setPage(move);
                   if (finished) show(`Finished ${display.title}`);
+                  // Reset is the one action whose whole worry is "did I just
+                  // lose my streak", so it answers before it is asked.
+                  else if (move.page == null) show('Bookmark reset — the pages you read stay counted');
                 }}
               />
 

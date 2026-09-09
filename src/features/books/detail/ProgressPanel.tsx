@@ -26,8 +26,8 @@ type ProgressPanelProps = {
 };
 
 /**
- * Where you are in the book, and everything you do about it: move the bookmark,
- * send it to the last page, or clear it for a re-read.
+ * Where you are in the book, and the two things you do about it: move the
+ * bookmark, or clear it for a re-read.
  *
  * This is the panel that has no analogue in the sibling apps — a record is
  * played in one sitting, so Sonar logs a spin and moves on, but a book is
@@ -96,10 +96,6 @@ export function ProgressPanel({
     }
   };
 
-  // Fills the field instead of saving: in "next page" mode the last page is a
-  // number that does not exist in the book, so it has to be shown and priced
-  // by the receipt before anyone commits to it.
-  const fillLastPage = total ? () => setDraft(String(displayPage(total, mode))) : null;
   // A re-read starts from nothing. The pages already read stay in the ledger,
   // so this costs the streak nothing and gives the next pass room to count.
   const resetBookmark = book.currentPage == null || saving ? null : () => commit({ page: null, pages: 0 });
@@ -172,7 +168,6 @@ export function ProgressPanel({
         canSave={canSave}
         saving={saving}
         onSave={() => commit()}
-        onLastPage={fillLastPage}
         onReset={resetBookmark}
       />
     </View>

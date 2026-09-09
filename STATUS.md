@@ -20,10 +20,11 @@ next, in order. Update it as work lands — it is the handover, not a changelog.
 > bookmark path — `useBookDetail.setPage` sees `lib/progress.finishesBook` and calls
 > `logRead`, which writes the closing ledger row for exactly the pages the move was worth.
 > Doing both would count them twice, which is why the two paths are exclusive rather than
-> sequential. **Last page** fills the field with the final page (the only way to reach it in
-> "next page to read" mode, where the number is one past the end of the book), and **Reset**
-> clears the bookmark for a re-read. Finishing now parks the bookmark on the last page
-> rather than wiping it, so a finished book reads 100% and Reset has something to clear —
+> sequential. The one manual finish left is the times-finished `+` above the panel, which
+> credits whatever the ledger has not counted — deliberately one way, not two. **Reset**,
+> beside Save page, clears the bookmark for a re-read and takes nothing off the ledger: the
+> pages stay read, the streak and the calendar do not move. Finishing parks the bookmark on
+> the last page rather than wiping it, so a finished book reads 100% and Reset has something to clear —
 > a re-read that skips Reset moves the bookmark backwards and counts no pages, which the
 > receipt line says out loud.
 >
@@ -167,8 +168,8 @@ Renames worth knowing: `albums→books`, `spins→reads`, `artist→authors`,
 
 ### New, with no Sonar equivalent
 - `src/features/books/detail/ProgressPanel.tsx` + `ProgressActions.tsx` — the page
-  bookmark, and the three things done to it: Save (which finishes the book when it lands
-  on the last page), Last page, Reset.
+  bookmark, and the two things done to it: Save (which finishes the book when it lands on
+  the last page) and Reset.
 
 ---
 
