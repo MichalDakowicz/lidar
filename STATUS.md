@@ -11,11 +11,21 @@ next, in order. Update it as work lands — it is the handover, not a changelog.
 > requests from this network — set `EXPO_PUBLIC_GOOGLE_BOOKS_KEY` before judging any
 > lookup failure.**
 >
-> **THE SCHEMA IS ONE RUN BEHIND THE CODE (2026-09-06).** `public.book_progress` and
-> `books.undated_reads` are in `supabase/schema.sql` and are *not* on the live project —
-> both probes 404/400 through PostgREST. Until the file is re-run in the SQL Editor,
-> saving a page moves the bookmark and logs nothing, and stepping the times-finished count
-> fails. Everything else works.
+> **The schema is applied (verified 2026-09-09).** `public.book_progress` and
+> `books.undated_reads` both answer 200 through PostgREST. Nothing is pending in the SQL
+> Editor.
+>
+> **Finishing is the last page (2026-09-09, 1.1.0).** There is no Finished button on the
+> book page any more. A save that lands on `pageCount` takes the finish path instead of the
+> bookmark path — `useBookDetail.setPage` sees `lib/progress.finishesBook` and calls
+> `logRead`, which writes the closing ledger row for exactly the pages the move was worth.
+> Doing both would count them twice, which is why the two paths are exclusive rather than
+> sequential. **Last page** fills the field with the final page (the only way to reach it in
+> "next page to read" mode, where the number is one past the end of the book), and **Reset**
+> clears the bookmark for a re-read. Finishing now parks the bookmark on the last page
+> rather than wiping it, so a finished book reads 100% and Reset has something to clear —
+> a re-read that skips Reset moves the bookmark backwards and counts no pages, which the
+> receipt line says out loud.
 >
 > **The page tracker (2026-09-06):** every bookmark move writes a `book_progress` row and
 > that ledger is what the streak and the calendar add up. Finishing writes a closing row
@@ -38,9 +48,9 @@ next, in order. Update it as work lands — it is the handover, not a changelog.
 > Polish ISBN coverage). Read it before picking up any feature work; the rest of this
 > file still describes 0.1.0 except where §2 says otherwise.
 
-Last updated: 2026-09-06. Version `0.2.0`, unreleased. **The app is up:** the release APK
-is installed and running on the phone and the web build is live at
-https://lidar-shelf.web.app — but the schema is one run behind, see the box above.
+Last updated: 2026-09-09. `1.0.0` is released; **`1.1.0` is unreleased and on the phone**
+(`feat/auto-finish-and-reset`). **The app is up:** the release APK is installed and running
+and the web build is live at https://lidar-shelf.web.app.
 
 ---
 
@@ -156,8 +166,9 @@ Renames worth knowing: `albums→books`, `spins→reads`, `artist→authors`,
 `TrackList` → new `ProgressPanel`, `SpinStrip` → `ReadStrip`.
 
 ### New, with no Sonar equivalent
-- `src/features/books/detail/ProgressPanel.tsx` — the page bookmark and the Finished
-  button on the book page.
+- `src/features/books/detail/ProgressPanel.tsx` + `ProgressActions.tsx` — the page
+  bookmark, and the three things done to it: Save (which finishes the book when it lands
+  on the last page), Last page, Reset.
 
 ---
 
