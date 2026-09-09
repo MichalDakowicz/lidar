@@ -2,7 +2,7 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.1.0 — Unreleased
+## 1.1.0 — 2026-09-09
 
 ### Added
 - Reset beside Save page clears the bookmark for a re-read, keeping every page you read
