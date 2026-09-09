@@ -1,4 +1,4 @@
-import { Check, Plus, RefreshCw, Save, Trash2 } from 'lucide-react-native';
+import { Plus, RefreshCw, Save } from 'lucide-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -11,6 +11,7 @@ import { DetailHero } from '@/features/books/detail/DetailHero';
 import { BookDetails } from '@/features/books/detail/BookDetails';
 import { ReadHistory } from '@/features/books/detail/ReadHistory';
 import { ProgressPanel } from '@/features/books/detail/ProgressPanel';
+import { RemoveFromLibrary } from '@/features/books/detail/RemoveFromLibrary';
 import { TimesReadBox } from '@/features/books/detail/TimesReadBox';
 import { useBookDetail } from '@/features/books/detail/useBookDetail';
 import { useEditBookForm } from '@/features/books/edit/useEditBookForm';
@@ -29,7 +30,11 @@ type BookDetailScreenProps = {
  * One screen for a book, tracked or not — the same unification Radar applies to
  * films. Both routes render the same hero and rating editor; a book that is on
  * your shelf also gets the reading controls (status, progress, reads, notes)
- * and a different header CTA.
+ * and, at the very bottom, the way back off it.
+ *
+ * The header carries one action at most, and only the untracked state gets a
+ * big one: "Add to library" is why you opened a book you do not own. Owning it
+ * needs nothing at the top — the shelf controls say so on the way down.
  *
  * Removing a book leaves you right here in the untracked state, so it can be
  * put back with one tap, and the rating you gave it stays either way.
@@ -62,26 +67,20 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
 
   const tracked = !!book;
 
+  // Nothing but the metadata refresh sits in the header of a book you own:
+  // being on the shelf is said by the shelf controls below, and taking it off
+  // is the last thing on the page, not the first (RemoveFromLibrary).
   const action = tracked ? (
-    <View className="flex-row items-center gap-2">
+    book.googleId ? (
       <Pressable
-        onPress={() => setConfirmRemove(true)}
-        className="flex-row items-center gap-2 rounded-full border border-border bg-black/40 px-4 py-2.5 active:opacity-80"
+        onPress={editForm.refreshMetadata}
+        disabled={editForm.isRefreshing}
+        accessibilityLabel="Refresh metadata from Google Books"
+        className="self-start rounded-full border border-border bg-black/40 p-2.5 active:opacity-80"
       >
-        <Check size={16} color={COLORS.accent} />
-        <Text className="text-sm font-semibold text-foreground">On your shelf</Text>
+        {editForm.isRefreshing ? <ActivityIndicator size="small" color={COLORS.muted} /> : <RefreshCw size={16} color={COLORS.muted} />}
       </Pressable>
-      {!!book.googleId && (
-        <Pressable
-          onPress={editForm.refreshMetadata}
-          disabled={editForm.isRefreshing}
-          accessibilityLabel="Refresh metadata from Google Books"
-          className="rounded-full border border-border bg-black/40 p-2.5 active:opacity-80"
-        >
-          {editForm.isRefreshing ? <ActivityIndicator size="small" color={COLORS.muted} /> : <RefreshCw size={16} color={COLORS.muted} />}
-        </Pressable>
-      )}
-    </View>
+    ) : null
   ) : (
     <Pressable
       onPress={async () => {
@@ -191,6 +190,7 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
             </View>
           )}
 
+          {tracked && <RemoveFromLibrary onPress={() => setConfirmRemove(true)} />}
         </View>
       </ScrollView>
 
@@ -224,15 +224,5 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
         }}
       />
     </View>
-  );
-}
-
-/** The trash affordance used by the library's long-press menu. */
-export function RemoveBookButton({ onPress }: { onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} className="flex-row items-center gap-2 px-2 py-2 active:opacity-70">
-      <Trash2 size={16} color={COLORS.danger} />
-      <Text className="text-sm text-red-400">Remove from library</Text>
-    </Pressable>
   );
 }

@@ -10,6 +10,7 @@ See `UPDATE-schema.md` for how to write these.
 ### Changed
 - Saving the last page finishes the book itself, counting the pages that were left
 - A finished book keeps its progress bar full instead of emptying it
+- Removing a book sits at the bottom of the book page instead of on top of the jacket
 
 ### Removed
 - The Finished button on the book page — the times finished box above it is the one way
