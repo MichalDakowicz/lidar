@@ -37,10 +37,13 @@ Consequences worth stating plainly, because they are user-visible:
 
 ## Lidar's publish channel
 
-`user_settings.lidar_streak` and `lidar_streak_updated_at` are Radar's columns by
-ownership — they are added by Radar's `supabase/schema.sql`, because Radar owns the table
-— but **Lidar is the only writer** and Pulsar is the only reader. They are the twin of the
-`current_streak` / `streak_updated_at` pair Radar publishes for itself.
+`user_settings.lidar_streak` and `lidar_streak_updated_at` live on Radar's table, but
+**Lidar is the only writer** and Pulsar the only reader, so Lidar's own
+`supabase/schema.sql` adds them — the one place that file touches a table it does not own.
+Putting them in Radar's file would leave Radar carrying a column it never reads. The
+prerequisite check at the top of the file already guarantees Radar's schema ran first, so
+`user_settings` is there to alter. They are the twin of the `current_streak` /
+`streak_updated_at` pair Radar publishes for itself.
 
 The channel exists because the reading streak cannot be derived by anyone else. It is
 pages per week against a threshold in `store/readingGoal` measured from a reset epoch in
