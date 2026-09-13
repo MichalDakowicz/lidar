@@ -10,6 +10,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { useBrowsePreload } from '@/features/browse/useBrowsePreload';
 import { FriendRequestListener } from '@/features/friends/FriendRequestListener';
 import { StatsPeriodSheet } from '@/features/stats/StatsPeriodSheet';
+import { StreakSnapshot } from '@/features/stats/StreakSnapshot';
 import { useIsbnScannerStore } from '@/store/isbnScanner';
 import { useQuickAddSheetStore } from '@/store/quickAddSheet';
 import { useStatsPeriodSheet } from '@/store/statsPeriod';
@@ -100,6 +101,10 @@ export default function TabsLayout() {
       />
       <StatsPeriodSheet ref={periodRef} onPicked={() => periodRef.current?.dismiss()} />
       <FriendRequestListener />
+      {/* Publishes the reading streak for Pulsar's cross-app strip. Here rather
+          than on Stats: the figure has to stay current whatever tab is open,
+          and here it is the signed-in owner's shelf by construction. */}
+      <StreakSnapshot />
     </>
   );
 }

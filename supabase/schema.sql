@@ -340,6 +340,28 @@ end $$;
 -- costs nothing to keep.
 --   public.books.formats, .price_paid, .store_name, .acquisition_date, .edition
 
+-- Lidar's streak publish channel, on Radar's user_settings row.
+--
+-- The one place this file touches a table it does not own, and it is deliberate:
+-- Lidar is the only writer and Pulsar the only reader, so the migration lives
+-- with the app the columns belong to rather than in Radar's file, which would
+-- carry a column Radar never reads. The prerequisite check at the top of this
+-- file already guarantees Radar's schema ran first, so the table exists.
+--
+-- The channel exists because the reading streak cannot be derived by anybody
+-- else. It is pages per week against a threshold in store/readingGoal, measured
+-- from a reset epoch in store/streakEpoch — both device-local MMKV, neither in
+-- this database. Pulsar used to read book_progress directly and guess at both,
+-- so a streak you had reset in Lidar still showed as running there. This is the
+-- twin of the current_streak/streak_updated_at pair Radar publishes for itself.
+--
+-- updated_at is what makes a stale snapshot detectable: a phone that has not
+-- opened Lidar in a week must not keep publishing last week's streak as today's,
+-- so the reader ages the figure out rather than trusting it forever.
+alter table public.user_settings
+  add column if not exists lidar_streak            int not null default 0,
+  add column if not exists lidar_streak_updated_at timestamptz;
+
 -- ============================================================================
 -- RLS — the same two-policy shape the siblings use: owner writes, visible reads.
 -- private.can_view(target) is Radar's and reads user_settings.friends_visibility,

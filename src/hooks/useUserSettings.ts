@@ -12,9 +12,9 @@ import {
 } from '@/lib/userSettings';
 
 // Server-canonical settings backed by public.user_settings — the row Radar
-// created for this account. Only the two shared columns are touched (see
-// lib/userSettings for why), and the write is a sparse upsert so Radar's own
-// columns are never overwritten.
+// created for this account. Only the two shared columns and Lidar's own streak
+// publish channel are touched (see lib/userSettings for why), and the write is
+// a sparse upsert so Radar's own columns are never overwritten.
 
 export { DEFAULT_SETTINGS, type FriendsVisibility, type ThemePref, type UserSettings } from '@/lib/userSettings';
 
@@ -25,7 +25,7 @@ function settingsKey(userId: string | undefined) {
 async function fetchSettings(userId: string): Promise<UserSettings> {
   const { data, error } = await supabase
     .from('user_settings')
-    .select('friends_visibility, theme')
+    .select('friends_visibility, theme, lidar_streak, lidar_streak_updated_at')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw error;
