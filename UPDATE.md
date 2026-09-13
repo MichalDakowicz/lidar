@@ -2,6 +2,11 @@
 
 See `UPDATE-schema.md` for how to write these.
 
+## 1.1.1 — Unreleased
+
+### Changed
+- Sign-in screen names Pulsar too, so all four apps point at the one account
+
 ## 1.1.0 — 2026-09-09
 
 ### Added
