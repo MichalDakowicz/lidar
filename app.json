@@ -2,7 +2,7 @@
   "expo": {
     "name": "Lidar",
     "slug": "lidar",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "lidar",
@@ -16,7 +16,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.michaldakowicz.lidar",
-      "versionCode": 4
+      "versionCode": 5
     },
     "web": {
       "output": "single",
