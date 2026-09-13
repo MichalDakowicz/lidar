@@ -174,8 +174,8 @@ function RowCard({ book, ratings, onPress, highlighted = false, readOnly = false
       onPress={() => onPress?.(book)}
       style={[{ cursor: 'pointer' }, webTransition('background-color'), hovered ? { backgroundColor: 'hsl(0 0% 16%)' } : null]}
       className={cn(
-        'flex-row gap-3 rounded-xl border-l-4 p-3',
-        highlighted ? 'border-l-primary bg-neutral-800' : 'border-l-transparent bg-neutral-900',
+        'flex-row gap-3 rounded-xl p-3',
+        highlighted ? 'bg-neutral-800' : 'bg-neutral-900',
       )}
     >
       <View className="h-28 w-20 overflow-hidden rounded-lg bg-neutral-800">
