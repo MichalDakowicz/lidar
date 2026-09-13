@@ -15,7 +15,7 @@ contract; `../../sonar/docs/shared-database.md` is Sonar's, and says the same th
 | `public.profiles` | Radar | Read; writes username / display name / avatar. **Never** touches `favorites`. |
 | `public.friendships` | Radar | Read; writes via the RPCs below. |
 | `public.friend_requests` | Radar | Read; inserts its own requests. |
-| `public.user_settings` | Radar | Reads and writes **only** `friends_visibility` and `theme`. |
+| `public.user_settings` | Radar | Reads and writes **only** `friends_visibility`, `theme`, and its own `lidar_streak` / `lidar_streak_updated_at`. |
 | `private.can_view(uuid)` | Radar | Every Lidar read policy calls it. |
 | `accept_friend_request`, `decline_friend_request`, `remove_friend`, `can_view_user` | Radar | Called as-is. |
 
@@ -30,6 +30,31 @@ Consequences worth stating plainly, because they are user-visible:
   the bookshelf together. "Friends only" meaning three different things in three apps
   would be a way to leak a shelf you thought you had closed, so it deliberately does not.
 - **One theme preference.** `user_settings.theme` is shared for the same reason.
+- **Your reading streak shows up in Pulsar.** Lidar snapshots it to
+  `user_settings.lidar_streak` whenever it moves, and Pulsar's cross-app strip reads that
+  figure. Resetting the streak in Lidar therefore resets it in Pulsar too, which is the
+  point — see below.
+
+## Lidar's publish channel
+
+`user_settings.lidar_streak` and `lidar_streak_updated_at` are Radar's columns by
+ownership — they are added by Radar's `supabase/schema.sql`, because Radar owns the table
+— but **Lidar is the only writer** and Pulsar is the only reader. They are the twin of the
+`current_streak` / `streak_updated_at` pair Radar publishes for itself.
+
+The channel exists because the reading streak cannot be derived by anyone else. It is
+pages per week against a threshold in `store/readingGoal` measured from a reset epoch in
+`store/streakEpoch` — both device-local MMKV, neither in this database. Pulsar used to
+read `book_progress` directly and guess at both numbers, which meant a streak you had
+reset in Lidar still showed as running in Pulsar. Snapshotting the answer is the only
+honest version.
+
+`features/stats/StreakSnapshot` does the writing, mounted from the tabs layout so it is
+always the signed-in owner's own shelf — `useStats` also renders a friend's public shelf,
+and publishing from there would stamp their streak onto your row. `lib/streakSnapshot`
+decides when: on a change, or every 12 hours so the stamp cannot lapse. A reader must age
+the figure out rather than trust it forever, because a phone that has not opened Lidar in
+a week would otherwise keep publishing last week's run as today's.
 
 ## What is Lidar's own
 
