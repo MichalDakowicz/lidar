@@ -6,6 +6,8 @@ See `UPDATE-schema.md` for how to write these.
 
 ### Added
 - Sign-in screen can continue with a Ping app already signed in on this phone
+- Android: a new-version notice shows release notes and remembers Later for that version
+- Settings: check for updates and download the latest Android build from About
 
 ### Changed
 - Settings: signing out asks whether to leave just Lidar or every Ping app
