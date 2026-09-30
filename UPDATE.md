@@ -2,7 +2,10 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.1.1 — Unreleased
+## 1.2.0 — Unreleased
+
+### Added
+- Sign-in screen can continue with a Ping app already signed in on this phone
 
 ### Changed
 - Sign-in screen names Pulsar too, so all four apps point at the one account
