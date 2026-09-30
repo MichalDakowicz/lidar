@@ -4,6 +4,12 @@
 It says what Lidar is, what state it is in, what is verified, what is not, and what to do
 next, in order. Update it as work lands — it is the handover, not a changelog.
 
+> **Android update tracking (2026-09-30).** The launch notice and Settings → About
+> check Lidar's GitHub releases, compare against the Expo config version and remember
+> Later per release. About no longer carries a separate version string. Local tests,
+> lint, types and Android/web bundle builds pass; device verification
+> is pending because phone testing is disabled in Cellar settings.
+>
 > **0.2.0 is under way.** `TODO.md` is the work order — Items 1, 2, 3, 5, 6, 7 and 9 have
 > landed (strip ownership, rectangular covers, drop the recent rail, Browse replaces
 > Ratings, Radar's stats with a page streak, the page tracker, Biblioteka Narodowa as an
