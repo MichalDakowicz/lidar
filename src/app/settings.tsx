@@ -1,17 +1,17 @@
-import { BookOpen, Database, Globe, Info, LogOut, Monitor } from 'lucide-react-native';
+import { BookOpen, Database, Globe, Info, Monitor } from 'lucide-react-native';
 import { useRef } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { ContentShell } from '@/components/layout/ContentShell';
 import { NavIslands } from '@/components/layout/NavIslands';
 import type { BottomSheetModal } from '@/components/ui/Sheet';
-import { signOut } from '@/features/auth/authActions';
 import { CardSizeControl } from '@/features/settings/CardSizeControl';
 import { DataTools } from '@/features/settings/DataTools';
 import { ImportExportSheet } from '@/features/settings/ImportExportSheet';
 import { PrivacyControl } from '@/features/settings/PrivacyControl';
 import { BookmarkModeControl } from '@/features/settings/BookmarkModeControl';
 import { SettingsSection } from '@/features/settings/SettingsSection';
+import { SignOutControl } from '@/features/settings/SignOutControl';
 import { StreakResetControl } from '@/features/settings/StreakResetControl';
 import { ThemeControl } from '@/features/settings/ThemeControl';
 import { WeeklyGoalControl } from '@/features/settings/WeeklyGoalControl';
@@ -21,7 +21,7 @@ import { MAX_W, useCenteredContentStyle } from '@/hooks/useResponsive';
 import { COLORS } from '@/theme/colors';
 
 const MUTED = COLORS.muted;
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.2.0';
 
 /**
  * App preferences, pushed from the gear on the Profile tab rather than owning a
@@ -85,13 +85,7 @@ export default function Settings() {
             </View>
           </SettingsSection>
 
-          <Pressable
-            onPress={signOut}
-            className="flex-row items-center justify-center gap-2 rounded-full border border-border py-3 active:opacity-80"
-          >
-            <LogOut size={16} color={COLORS.foreground} />
-            <Text className="font-medium text-foreground">Sign out</Text>
-          </Pressable>
+          <SignOutControl />
         </ScrollView>
       </ContentShell>
 

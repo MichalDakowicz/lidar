@@ -8,6 +8,7 @@ See `UPDATE-schema.md` for how to write these.
 - Sign-in screen can continue with a Ping app already signed in on this phone
 
 ### Changed
+- Settings: signing out asks whether to leave just Lidar or every Ping app
 - Sign-in screen names Pulsar too, so all four apps point at the one account
 - Library rows drop the coloured rule down their left edge
 
