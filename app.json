@@ -2,7 +2,7 @@
   "expo": {
     "name": "Lidar",
     "slug": "lidar",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "lidar",
@@ -40,7 +40,8 @@
       ],
       "expo-sharing",
       "expo-web-browser",
-      "./plugins/withGradleMemory"
+      "./plugins/withGradleMemory",
+      "./plugins/withPingSiblings"
     ],
     "experiments": {
       "typedRoutes": false,
