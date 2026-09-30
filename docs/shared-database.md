@@ -129,3 +129,18 @@ The one place to watch is `book_activity`'s realtime subscription
 wakes on every insert to that table. It is Lidar's own table, so only Lidar's writes hit
 it, and the handler only invalidates a query — but if the feed ever gets busy, that is the
 thing to narrow.
+
+## Signing in from a sibling
+
+No table and no column, but one dependency on Radar. When another Ping app on the phone
+signs Lidar in (`PING.md` §9.13), the one-time token it hands over is minted by Radar's
+`sign-in-handoff` edge function (`radar/supabase/functions/sign-in-handoff`) — and when
+Lidar is the one giving, it calls that same function. Lidar redeems the token through
+`auth.verifyOtp` into a session of its own, so nothing is shared at rest.
+
+If the function is not deployed, every handoff answers "failed" and the login screen says
+so; email and Google sign-in are untouched. Deploying it is the only setup.
+
+Sign-out passes its scope explicitly. "Every Ping app" is `signOut({ scope: 'global' })`:
+it ends every session the account has, on every device and on the web, which is what
+supabase-js did by default before the choice existed.
