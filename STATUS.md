@@ -7,8 +7,9 @@ next, in order. Update it as work lands — it is the handover, not a changelog.
 > **Android update tracking (2026-09-30).** The launch notice and Settings → About
 > check Lidar's GitHub releases, compare against the Expo config version and remember
 > Later per release. About no longer carries a separate version string. Local tests,
-> lint, types and Android/web bundle builds pass; device verification
-> is pending because phone testing is disabled in Cellar settings.
+> lint, types and Android/web bundle builds pass. The release APK is installed and
+> launches on the phone (2026-09-30), with no startup errors logged. Installation needs
+> `adb install --no-streaming --user 0 -r`; the default multi-profile install stayed pending.
 >
 > **0.2.0 is under way.** `TODO.md` is the work order — Items 1, 2, 3, 5, 6, 7 and 9 have
 > landed (strip ownership, rectangular covers, drop the recent rail, Browse replaces
