@@ -158,6 +158,11 @@ error; do not describe the change as shipped.
 Expo Go binary, so a scan silently never fires there. Anything touching the scanner is
 only verified on a dev or release build.
 
+**The daily reminder needs a real build too.** `expo-notifications` schedules into Android's
+queue, which Expo Go does not give you, so a reminder silently never fires there. The queue is
+rebuilt from `store/reminderPrefs` and the page ledger whenever either changes and on every
+foreground (`features/notifications/useReminders`); `lib/reminderPlan` is the part to test.
+
 ### Then the web build, same pass
 
 Once the mobile install succeeds, ship web too — standing authorization, so do it without
