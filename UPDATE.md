@@ -10,8 +10,10 @@ See `UPDATE-schema.md` for how to write these.
 - Settings: show a code that signs another device in, or scan a browser's code to let it in
 - Android: a new-version notice shows release notes and remembers Later for that version
 - Settings: check for updates and download the latest Android build from About
+- Settings: an optional daily reading reminder, skipped on days you have logged pages
 
 ### Changed
+- Android: signed with a new key, so remove the old version once before installing
 - Settings: signing out asks whether to leave just Lidar or every Ping app
 - Sign-in screen names Pulsar too, so all four apps point at the one account
 - Library rows drop the coloured rule down their left edge

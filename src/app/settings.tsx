@@ -12,6 +12,7 @@ import { DataTools } from '@/features/settings/DataTools';
 import { ImportExportSheet } from '@/features/settings/ImportExportSheet';
 import { PrivacyControl } from '@/features/settings/PrivacyControl';
 import { BookmarkModeControl } from '@/features/settings/BookmarkModeControl';
+import { ReminderControl } from '@/features/settings/ReminderControl';
 import { SettingsSection } from '@/features/settings/SettingsSection';
 import { SignOutControl } from '@/features/settings/SignOutControl';
 import { StreakResetControl } from '@/features/settings/StreakResetControl';
@@ -71,6 +72,7 @@ export default function Settings() {
               number is the page you finished or the one you will open on.
             </Text>
             <StreakResetControl />
+            <ReminderControl />
           </SettingsSection>
 
           <SettingsSection icon={<Database size={18} color={MUTED} />} title="Data">

@@ -125,7 +125,13 @@ mv app/build/outputs/apk/release/app-release.apk \
 adb install --no-streaming --user 0 -r app/build/outputs/apk/release/lidar-v<version>.apk
 ```
 
-Release builds are signed with the debug keystore, so replacement installs upgrade in place.
+Release and debug builds are signed with the Ping family key (`plugins/withPingSigning.js`),
+read from `<workspace>/credentials/ping-family-signing.properties` — outside every repo — or from
+the file `PING_SIGNING_PROPERTIES` names (a worktree outside the workspace needs that). A release
+build without it fails at signing instead of falling back to the stock debug key, whose APK would
+not install over this one. Replacement installs upgrade in place. The first install after the
+move off the stock debug key needs the old build uninstalled once (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`);
+that loses the app's local state, so ask before running `adb uninstall`.
 On this phone, installs without `--user 0` stayed pending after transfer, even unlocked.
 Target profile 0 and use `--no-streaming`; this completed all four updates on 2026-09-30.
 
@@ -152,6 +158,11 @@ error; do not describe the change as shipped.
 binary, so a scan silently never fires there. Anything touching the ISBN scanner or the
 sign-in QR screens (`qr-scan`, `qr-show`; PING.md §9.14) is only verified on a dev or
 release build, and the QR approve step needs a signed-in session of your own.
+
+**The daily reminder needs a real build too.** `expo-notifications` schedules into Android's
+queue, which Expo Go does not give you, so a reminder silently never fires there. The queue is
+rebuilt from `store/reminderPrefs` and the page ledger whenever either changes and on every
+foreground (`features/notifications/useReminders`); `lib/reminderPlan` is the part to test.
 
 ### Then the web build, same pass
 
