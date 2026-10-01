@@ -35,7 +35,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Lidar uses the camera to scan a book's ISBN barcode."
+          "cameraPermission": "Lidar uses the camera to scan a book's ISBN barcode, or a QR code that signs another device in."
         }
       ],
       "expo-sharing",
