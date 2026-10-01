@@ -148,9 +148,10 @@ claiming it is running. Never `input keyevent`/`swipe` past a lock screen.
 Report the actual result — if the build fails or the install rejects, say so with the
 error; do not describe the change as shipped.
 
-**The barcode scanner needs a real build.** `expo-camera`'s native module is not in the
-Expo Go binary, so a scan silently never fires there. Anything touching the scanner is
-only verified on a dev or release build.
+**The scanners need a real build.** `expo-camera`'s native module is not in the Expo Go
+binary, so a scan silently never fires there. Anything touching the ISBN scanner or the
+sign-in QR screens (`qr-scan`, `qr-show`; PING.md §9.14) is only verified on a dev or
+release build, and the QR approve step needs a signed-in session of your own.
 
 ### Then the web build, same pass
 
