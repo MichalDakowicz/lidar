@@ -56,7 +56,7 @@ next, in order. Update it as work lands — it is the handover, not a changelog.
 > Polish ISBN coverage). Read it before picking up any feature work; the rest of this
 > file still describes 0.1.0 except where §2 says otherwise.
 
-Last updated: 2026-09-09. **`1.1.0` is released** — tagged, APK on the GitHub release, and
+Last updated: 2026-10-01. **`1.2.0` is released** — tagged, APK on the GitHub release, and
 nothing unreleased is sitting on `main`. **The app is up:** the release APK is installed and
 running on the phone and the web build is live at https://lidar-shelf.web.app.
 

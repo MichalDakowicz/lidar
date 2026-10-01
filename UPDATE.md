@@ -2,7 +2,7 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.2.0 — Unreleased
+## 1.2.0 — 2026-10-01
 
 ### Added
 - Sign-in screen can continue with a Ping app already signed in on this phone
