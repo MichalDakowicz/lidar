@@ -1,16 +1,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
+import { booksQueryKey, dropBook, patchBook, refreshBook } from '@/hooks/booksCache';
 import { bookKey } from '@/lib/bookKey';
 import { normalizeBook, toBookRow, type BookRow } from '@/lib/normalizeBook';
 import { stripUndefined } from '@/lib/stripUndefined';
 import { supabase } from '@/lib/supabase';
 import type { Book, BookActivityType } from '@/types/book';
 
-export function booksQueryKey(userId: string | undefined) {
-  return ['books', userId] as const;
-}
+// Realtime (useLibraryRealtime) and our own writes both patch single rows into this
+// list, so a full re-read is only the catch-up after the app was away - the socket
+// is not delivering while it is backgrounded.
+const LIBRARY_STALE_MS = 5 * 60 * 1000;
 
 async function fetchBooks(userId: string): Promise<Book[]> {
   const { data, error } = await supabase
@@ -50,14 +51,8 @@ async function logActivity(
 export type NewBook = Partial<Book> & { title: string };
 
 /**
- * The library, plus its write helpers. Realtime replaces the legacy
- * Firebase `onValue` subscription: any change to this user's rows invalidates
- * the cached list.
- *
- * Channel name carries a random suffix — React's dev-mode double-invoke can run
- * this effect twice before the first channel's removeChannel() finishes, and
- * supabase-js caches channels by name, so reusing an already-subscribed channel
- * throws on `.on()`.
+ * The library, plus its write helpers. A write patches the one row it touched
+ * into the cached list (hooks/booksCache) rather than refetching the shelf.
  */
 export function useBooks() {
   const { user } = useAuth();
@@ -68,24 +63,8 @@ export function useBooks() {
     queryKey,
     queryFn: () => fetchBooks(user!.id),
     enabled: !!user,
+    staleTime: LIBRARY_STALE_MS,
   });
-
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel(`books:${user.id}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'books', filter: `user_id=eq.${user.id}` },
-        () => queryClient.invalidateQueries({ queryKey }),
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient, queryKey]);
 
   const addBook = async (book: NewBook): Promise<Book | null> => {
     if (!user) return null;
@@ -105,7 +84,7 @@ export function useBooks() {
     await logActivity(user.id, { id: inserted.id, bookKey: key, title: inserted.title }, 'added', {
       status: inserted.status,
     });
-    queryClient.invalidateQueries({ queryKey });
+    patchBook(queryClient, user.id, inserted);
     return inserted;
   };
 
@@ -132,7 +111,7 @@ export function useBooks() {
       }
     }
 
-    queryClient.invalidateQueries({ queryKey });
+    void refreshBook(queryClient, user.id, bookId);
   };
 
   const removeBook = async (bookId: string) => {
@@ -148,7 +127,7 @@ export function useBooks() {
       // off the release, not the shelf, so a re-add finds its score again.
       await logActivity(user.id, { id: null, bookKey: book.bookKey, title: book.title }, 'removed', {});
     }
-    queryClient.invalidateQueries({ queryKey });
+    dropBook(queryClient, user.id, bookId);
   };
 
   return {
