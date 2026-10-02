@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
-import { booksQueryKey } from '@/hooks/booksCache';
+import { refreshBook } from '@/hooks/booksCache';
 import { normalizeProgress, type ProgressRow } from '@/lib/normalizeBook';
 import { stripUndefined } from '@/lib/stripUndefined';
 import { supabase } from '@/lib/supabase';
@@ -83,7 +83,7 @@ export function useProgress() {
     }
 
     queryClient.invalidateQueries({ queryKey });
-    queryClient.invalidateQueries({ queryKey: booksQueryKey(user.id) });
+    if (book.id) void refreshBook(queryClient, user.id, book.id);
   };
 
   return { progress: entries, loading: query.isLoading, error: query.error, logProgress };

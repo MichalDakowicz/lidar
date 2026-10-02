@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
-import { booksQueryKey } from '@/hooks/booksCache';
+import { refreshBook } from '@/hooks/booksCache';
 import { progressQueryKey } from '@/hooks/useProgress';
 import { normalizeRead, type ReadRow } from '@/lib/normalizeBook';
 import { countablePages } from '@/lib/pages';
@@ -143,7 +143,7 @@ export function useReads() {
     if (activityError) console.error('Failed to log read activity', activityError);
 
     queryClient.invalidateQueries({ queryKey });
-    queryClient.invalidateQueries({ queryKey: booksQueryKey(user.id) });
+    void refreshBook(queryClient, user.id, book.id);
     queryClient.invalidateQueries({ queryKey: progressQueryKey(user.id) });
   };
 
@@ -175,7 +175,7 @@ export function useReads() {
     // The closing ledger row is gone with it — book_progress.read_id cascades —
     // so the week that read belonged to loses its pages back.
     queryClient.invalidateQueries({ queryKey });
-    queryClient.invalidateQueries({ queryKey: booksQueryKey(user.id) });
+    if (read?.bookId) void refreshBook(queryClient, user.id, read.bookId);
     queryClient.invalidateQueries({ queryKey: progressQueryKey(user.id) });
   };
 
