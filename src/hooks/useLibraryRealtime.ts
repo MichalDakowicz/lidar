@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 import { booksQueryKey, dropBook, refreshBook } from '@/hooks/booksCache';
+import { ratingsQueryKey } from '@/hooks/useBookRatings';
 import { progressQueryKey } from '@/hooks/useProgress';
 import { readsQueryKey } from '@/hooks/useReads';
 import { supabase } from '@/lib/supabase';
@@ -13,8 +14,8 @@ import { supabase } from '@/lib/supabase';
  * mounted screen - and every one refetched its whole table for each event.
  *
  * A book event patches the row it names (Postgres only puts the primary key in a
- * DELETE's `old` record, which is all that is needed to drop it). The read log and
- * the page ledger are a few small columns a row, so they simply refetch.
+ * DELETE's `old` record, which is all that is needed to drop it). The read log, the
+ * page ledger and the ratings are a few small columns a row, so they simply refetch.
  */
 export function useLibraryRealtime() {
   const { user } = useAuth();
@@ -43,6 +44,9 @@ export function useLibraryRealtime() {
       )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'book_progress', filter }, () =>
         queryClient.invalidateQueries({ queryKey: progressQueryKey(uid) }),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'book_ratings', filter }, () =>
+        queryClient.invalidateQueries({ queryKey: ratingsQueryKey(uid) }),
       )
       .subscribe();
 
