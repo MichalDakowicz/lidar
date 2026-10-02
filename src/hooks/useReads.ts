@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
-import { booksQueryKey } from '@/hooks/useBooks';
+import { refreshBook } from '@/hooks/booksCache';
 import { progressQueryKey } from '@/hooks/useProgress';
 import { normalizeRead, type ReadRow } from '@/lib/normalizeBook';
 import { countablePages } from '@/lib/pages';
@@ -17,7 +17,7 @@ import type { Book, Read } from '@/types/book';
 // both. One row per finished read is small — thousands are tens of kilobytes.
 const READ_LIMIT = 5000;
 
-function readsQueryKey(userId: string | undefined) {
+export function readsQueryKey(userId: string | undefined) {
   return ['reads', userId] as const;
 }
 
@@ -56,21 +56,6 @@ export function useReads() {
     queryFn: () => fetchReads(user!.id),
     enabled: !!user,
   });
-
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel(`book_reads:${user.id}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'book_reads', filter: `user_id=eq.${user.id}` },
-        () => queryClient.invalidateQueries({ queryKey }),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient, queryKey]);
 
   // Memoized rather than `query.data ?? []` inline: a fresh array literal every
   // render would re-run every consumer's derivation over the whole log.
@@ -158,7 +143,7 @@ export function useReads() {
     if (activityError) console.error('Failed to log read activity', activityError);
 
     queryClient.invalidateQueries({ queryKey });
-    queryClient.invalidateQueries({ queryKey: booksQueryKey(user.id) });
+    void refreshBook(queryClient, user.id, book.id);
     queryClient.invalidateQueries({ queryKey: progressQueryKey(user.id) });
   };
 
@@ -190,7 +175,7 @@ export function useReads() {
     // The closing ledger row is gone with it — book_progress.read_id cascades —
     // so the week that read belonged to loses its pages back.
     queryClient.invalidateQueries({ queryKey });
-    queryClient.invalidateQueries({ queryKey: booksQueryKey(user.id) });
+    if (read?.bookId) void refreshBook(queryClient, user.id, read.bookId);
     queryClient.invalidateQueries({ queryKey: progressQueryKey(user.id) });
   };
 

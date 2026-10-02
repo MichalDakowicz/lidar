@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 import { normalizeRating, type BookRatingRow } from '@/lib/normalizeBook';
@@ -9,7 +9,7 @@ import { stripUndefined } from '@/lib/stripUndefined';
 import { supabase } from '@/lib/supabase';
 import type { BookRating, Ratings } from '@/types/book';
 
-function ratingsQueryKey(userId: string | undefined) {
+export function ratingsQueryKey(userId: string | undefined) {
   return ['bookRatings', userId] as const;
 }
 
@@ -52,21 +52,6 @@ export function useBookRatings() {
     enabled: !!user,
     staleTime: 60_000,
   });
-
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel(`book_ratings:${user.id}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'book_ratings', filter: `user_id=eq.${user.id}` },
-        () => queryClient.invalidateQueries({ queryKey }),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient, queryKey]);
 
   // Memoized rather than `query.data ?? []` inline: a fresh array literal on
   // every render would re-key the lookup below (and every consumer's memo) even

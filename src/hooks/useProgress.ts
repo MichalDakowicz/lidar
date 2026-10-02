@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
-import { booksQueryKey } from '@/hooks/useBooks';
+import { refreshBook } from '@/hooks/booksCache';
 import { normalizeProgress, type ProgressRow } from '@/lib/normalizeBook';
 import { stripUndefined } from '@/lib/stripUndefined';
 import { supabase } from '@/lib/supabase';
@@ -51,21 +51,6 @@ export function useProgress() {
     enabled: !!user,
   });
 
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel(`book_progress:${user.id}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'book_progress', filter: `user_id=eq.${user.id}` },
-        () => queryClient.invalidateQueries({ queryKey }),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient, queryKey]);
-
   const entries = useMemo(() => query.data ?? [], [query.data]);
 
   /**
@@ -98,7 +83,7 @@ export function useProgress() {
     }
 
     queryClient.invalidateQueries({ queryKey });
-    queryClient.invalidateQueries({ queryKey: booksQueryKey(user.id) });
+    if (book.id) void refreshBook(queryClient, user.id, book.id);
   };
 
   return { progress: entries, loading: query.isLoading, error: query.error, logProgress };

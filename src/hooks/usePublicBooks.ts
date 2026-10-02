@@ -36,6 +36,8 @@ export function usePublicBooks(userId: string | undefined) {
       return (data as BookRow[]).map(normalizeBook);
     },
     enabled: !!userId,
+    // A friend's whole shelf, every column: opening it twice in a row must not pull it twice.
+    staleTime: 5 * 60 * 1000,
   });
   return { books: query.data ?? [], loading: query.isLoading, error: query.error };
 }
