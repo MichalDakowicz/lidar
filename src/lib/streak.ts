@@ -190,11 +190,18 @@ export function currentStreak(daily: Record<string, number>, threshold: WeeklyGo
   return streak;
 }
 
-/** Longest historical run under the same weekly-threshold rule. */
-export function longestStreak(daily: Record<string, number>, threshold: WeeklyGoal): number {
+/**
+ * Longest historical run under the same weekly-threshold rule, including the
+ * current week's exemption: it is not over, so it clears whatever it holds.
+ * Without that the best run could read below the current one — 13 beside a
+ * streak of 17 — because the run still being built was held to a goal it has
+ * until Sunday to meet.
+ */
+export function longestStreak(daily: Record<string, number>, threshold: WeeklyGoal, now: Date = new Date()): number {
   const keys = Object.keys(daily).sort();
   if (keys.length === 0) return 0;
 
+  const thisWeekStart = weekStart(now).getTime();
   const cursor = new Date(keys[0]);
   const end = new Date(keys[keys.length - 1]);
   let run = 0;
@@ -203,7 +210,7 @@ export function longestStreak(daily: Record<string, number>, threshold: WeeklyGo
   while (cursor <= end) {
     const start = weekStart(cursor);
     const inWeek = pagesInWeek(daily, start);
-    const clears = inWeek >= goalFor(threshold, start);
+    const clears = inWeek >= goalFor(threshold, start) || start.getTime() === thisWeekStart;
     if ((daily[dateKey(cursor)] || 0) > 0) {
       if (clears) {
         run++;
