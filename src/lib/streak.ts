@@ -143,9 +143,14 @@ export function dailyPages(
 
 /**
  * Consecutive-day streak walking back from `now`. A day contributes when pages
- * were read and its week meets `threshold`; the current week counts with any
- * pages at all, because it is not over yet and failing someone on Tuesday for a
- * week they can still finish is the daily-nag bug.
+ * were read and its week meets `threshold`.
+ *
+ * The current week is never broken, whatever it holds so far: it is not over,
+ * and failing someone on Tuesday for a week they can still finish is the
+ * daily-nag bug. That includes a week with no pages in it yet — on a fresh
+ * Monday the run from last week is still the streak, rather than a zero that
+ * reads as broken until the first page of the new week. Only a week that has
+ * ended under the threshold ends the run.
  */
 export function currentStreak(daily: Record<string, number>, threshold: number, now: Date = new Date()): number {
   if (Object.keys(daily).length === 0) return 0;
@@ -158,7 +163,7 @@ export function currentStreak(daily: Record<string, number>, threshold: number, 
     const start = weekStart(cursor);
     const inWeek = pagesInWeek(daily, start);
     const isCurrentWeek = start.getTime() === thisWeekStart;
-    const weekQualifies = inWeek >= threshold || (isCurrentWeek && inWeek > 0);
+    const weekQualifies = inWeek >= threshold || isCurrentWeek;
 
     if ((daily[dateKey(cursor)] || 0) > 0) {
       if (!weekQualifies) break;

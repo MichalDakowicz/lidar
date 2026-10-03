@@ -172,6 +172,41 @@ describe('currentStreak', () => {
     const daily = { '2026-06-01': 30, '2026-05-31': 10, '2026-05-30': 10 };
     expect(currentStreak(daily, 150, now)).toBe(1);
   });
+
+  describe('a week with nothing read yet', () => {
+    // Mon 2026-06-01 .. Sun 06-07 cleared the goal: 200 pages on three days.
+    const lastWeek = { '2026-06-01': 100, '2026-06-03': 50, '2026-06-05': 50 };
+
+    it('keeps last week’s run on a fresh Monday instead of showing zero', () => {
+      expect(currentStreak(lastWeek, 150, new Date('2026-06-08T12:00:00'))).toBe(3);
+    });
+
+    it('keeps it for the rest of the week too, since the week is not over', () => {
+      expect(currentStreak(lastWeek, 150, new Date('2026-06-14T12:00:00'))).toBe(3);
+    });
+
+    it('adds the new week’s days to the run once they are read', () => {
+      const daily = { ...lastWeek, '2026-06-09': 10 };
+      expect(currentStreak(daily, 150, new Date('2026-06-10T12:00:00'))).toBe(4);
+    });
+
+    it('is still zero when last week fell short, because that week did end', () => {
+      expect(currentStreak({ '2026-06-05': 10 }, 150, new Date('2026-06-08T12:00:00'))).toBe(0);
+    });
+
+    it('breaks on the Monday after a week that ended short, not before', () => {
+      const daily = { '2026-06-05': 40 };
+      // Sunday: the week can still be made up, so the run is not broken yet.
+      expect(currentStreak(daily, 150, new Date('2026-06-07T12:00:00'))).toBe(1);
+      // Monday: it ended at 40 of 150.
+      expect(currentStreak(daily, 150, new Date('2026-06-08T12:00:00'))).toBe(0);
+    });
+
+    it('carries two cleared weeks across a fresh one', () => {
+      const daily = { '2026-05-26': 160, '2026-06-02': 160 };
+      expect(currentStreak(daily, 150, new Date('2026-06-08T12:00:00'))).toBe(2);
+    });
+  });
 });
 
 describe('longestStreak', () => {
