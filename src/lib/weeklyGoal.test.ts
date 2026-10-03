@@ -111,13 +111,13 @@ describe('the streak under a goal that changed', () => {
 
   it('loses last week when the new goal is applied to the whole history', () => {
     expect(currentStreak(daily, 300, WED)).toBe(1);
-    expect(longestStreak(daily, 300)).toBe(0);
+    expect(longestStreak(daily, 300, WED)).toBe(1);
   });
 
   it('keeps last week when the new goal only starts this Monday', () => {
     const goal = goalSchedule(changeGoal(flat(100), 300, 'from-now', WED));
     expect(currentStreak(daily, goal, WED)).toBe(4);
-    expect(longestStreak(daily, goal)).toBe(3);
+    expect(longestStreak(daily, goal, WED)).toBe(4);
   });
 
   it('asks this week’s pages against this week’s goal', () => {

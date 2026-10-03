@@ -218,7 +218,29 @@ describe('longestStreak', () => {
       // a fortnight of nothing
       '2026-06-15': 200,
     };
-    expect(longestStreak(daily, 150)).toBe(3);
+    expect(longestStreak(daily, 150, new Date('2026-06-17T12:00:00'))).toBe(3);
+  });
+
+  it('counts the current week on any pages at all, as currentStreak does', () => {
+    // Wednesday: 3 days read, 60 of 150 pages — the week is not over, so the
+    // run stands and the best run cannot sit below it.
+    const now = new Date('2026-06-03T12:00:00');
+    const daily = { '2026-06-01': 20, '2026-06-02': 20, '2026-06-03': 20 };
+    expect(longestStreak(daily, 150, now)).toBe(3);
+  });
+
+  it('never reads below the current streak, however the week stands', () => {
+    // Last week cleared (200 of 150) and this one holds 10 pages so far.
+    const now = new Date('2026-06-10T12:00:00');
+    const daily = { '2026-06-01': 100, '2026-06-03': 50, '2026-06-05': 50, '2026-06-09': 10 };
+    expect(currentStreak(daily, 150, now)).toBe(4);
+    expect(longestStreak(daily, 150, now)).toBeGreaterThanOrEqual(currentStreak(daily, 150, now));
+  });
+
+  it('still holds a past week that ended short to the goal', () => {
+    const now = new Date('2026-06-17T12:00:00');
+    const daily = { '2026-06-01': 30, '2026-06-02': 30, '2026-06-03': 30 };
+    expect(longestStreak(daily, 150, now)).toBe(0);
   });
 });
 
