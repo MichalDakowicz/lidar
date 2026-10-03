@@ -3,17 +3,32 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 
 import { useToast } from '@/components/ui/Toast';
+import { RatingKindToggle } from '@/features/ratings/RatingKindToggle';
 import { RatingSlider, RatingSliderPrecise, RatingValue } from '@/features/ratings/RatingSlider';
 import { useBookRatings, type RateTarget } from '@/hooks/useBookRatings';
-import { FACETS, recalcOverall, toFacetValues, toRatingsPayload, type FacetValues } from '@/lib/ratings';
+import { guessKindFromGenres } from '@/lib/genreKind';
+import {
+  FACETS_BY_KIND,
+  kindOfRatings,
+  recalcOverall,
+  toFacetValues,
+  toRatingsPayload,
+  type FacetKey,
+  type FacetValues,
+  type RatingKind,
+} from '@/lib/ratings';
 import { COLORS } from '@/theme/colors';
 
 type RatingEditorProps = {
   /** What is being rated — owning it is not required. */
   target: RateTarget;
+  /** The book's catalogue genres — they pick the facet set the editor opens on. */
+  genres?: string[];
   /** Rendered above the facets, e.g. a note that this is not on your shelf. */
   note?: string;
 };
+
+type Draft = { facets: FacetValues; overall: number; review: string; kind: RatingKind };
 
 /**
  * Rate a release, owned or not.
@@ -25,8 +40,10 @@ type RatingEditorProps = {
  *
  * Four facets at half-star steps, plus an overall score that can be dragged to
  * a tenth or auto-filled from the facets — the same shape Radar rates films in.
+ * Which four depends on the book: a made-up story is scored on plot and
+ * characters, a true account (a biography, a war memoir) on what it gave you.
  */
-export function RatingEditor({ target, note }: RatingEditorProps) {
+export function RatingEditor({ target, genres, note }: RatingEditorProps) {
   const { ratingFor, saveRating, removeRating } = useBookRatings();
   const { show } = useToast();
   const existing = ratingFor(target.bookKey);
@@ -35,21 +52,23 @@ export function RatingEditor({ target, note }: RatingEditorProps) {
   // is whatever the stored rating says — including when it arrives after first
   // render, or when a realtime echo of your own save lands. There is no
   // seeding effect to race, and an edit in progress cannot be overwritten.
-  const [draft, setDraft] = useState<{ facets: FacetValues; overall: number; review: string } | null>(null);
+  const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
 
   const facets = draft?.facets ?? toFacetValues(existing?.ratings);
   const overall = draft?.overall ?? existing?.ratings.overall ?? 0;
   const review = draft?.review ?? existing?.review ?? '';
+  // What you rated it on beats what the genres suggest; the genres only decide a
+  // book with no rating, or one that cannot tell (prose and an overall fit both).
+  const kind = draft?.kind ?? kindOfRatings(existing?.ratings) ?? guessKindFromGenres(genres);
   const dirty = draft !== null;
 
-  const edit = (patch: Partial<{ facets: FacetValues; overall: number; review: string }>) =>
-    setDraft({ facets, overall, review, ...patch });
+  const edit = (patch: Partial<Draft>) => setDraft({ facets, overall, review, kind, ...patch });
 
-  const setFacet = (key: keyof FacetValues, value: number) => edit({ facets: { ...facets, [key]: value } });
+  const setFacet = (key: FacetKey, value: number) => edit({ facets: { ...facets, [key]: value } });
 
   const autoFill = () => {
-    const average = recalcOverall(facets);
+    const average = recalcOverall(facets, kind);
     if (average == null) return show('Rate a category first');
     edit({ overall: average });
   };
@@ -57,7 +76,7 @@ export function RatingEditor({ target, note }: RatingEditorProps) {
   const save = async () => {
     setSaving(true);
     try {
-      await saveRating(target, toRatingsPayload(facets, overall), review);
+      await saveRating(target, toRatingsPayload(facets, overall, kind), review);
       setDraft(null);
       show('Rating saved');
     } catch (error) {
@@ -94,6 +113,8 @@ export function RatingEditor({ target, note }: RatingEditorProps) {
 
       {!!note && <Text className="text-xs text-muted-foreground">{note}</Text>}
 
+      <RatingKindToggle kind={kind} onChange={(next) => edit({ kind: next })} />
+
       <View className="gap-3 rounded-xl border border-border bg-card p-4">
         <View className="flex-row items-center justify-between">
           <Text className="text-xs font-semibold uppercase text-muted-foreground">Overall</Text>
@@ -109,19 +130,16 @@ export function RatingEditor({ target, note }: RatingEditorProps) {
       </View>
 
       <View className="gap-4">
-        {FACETS.map((facet) => (
+        {FACETS_BY_KIND[kind].map((facet) => (
           <View key={facet.key} className="gap-2">
             <View className="flex-row items-center justify-between">
               <View>
                 <Text className="text-xs font-semibold uppercase text-muted-foreground">{facet.label}</Text>
                 <Text className="text-[11px] text-muted-foreground/70">{facet.hint}</Text>
               </View>
-              <RatingValue value={facets[facet.key as keyof FacetValues]} />
+              <RatingValue value={facets[facet.key]} />
             </View>
-            <RatingSlider
-              value={facets[facet.key as keyof FacetValues]}
-              onChange={(value) => setFacet(facet.key as keyof FacetValues, value)}
-            />
+            <RatingSlider value={facets[facet.key]} onChange={(value) => setFacet(facet.key, value)} />
           </View>
         ))}
       </View>

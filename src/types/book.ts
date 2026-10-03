@@ -9,16 +9,21 @@
 export type BookStatus = 'Readlist' | 'Reading' | 'Read' | 'Did not finish';
 
 /**
- * The four facets plus the overall score, in the same jsonb shape Radar stores
+ * The facets plus the overall score, in the same jsonb shape Radar stores
  * film ratings in and Sonar stores album ratings in — so lib/personalScore is
  * one function shared by all three apps. Every value is 0–5 in half steps
- * (overall in 0.1 steps); 0 means unrated.
+ * (overall in 0.1 steps); 0 means unrated. A rating holds one of two facet
+ * sets (lib/ratings): prose / plot / characters / replay for a made-up story,
+ * prose / insight / credibility / impact for a true account.
  */
 export type Ratings = {
   prose?: number;
   plot?: number;
   characters?: number;
   replay?: number;
+  insight?: number;
+  credibility?: number;
+  impact?: number;
   overall?: number;
 };
 
