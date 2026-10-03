@@ -126,6 +126,7 @@ export function BookDetailScreen({ bookId, bookKey }: BookDetailScreenProps) {
               coverUrl: display.coverUrl,
               publishedDate: display.publishedDate,
             }}
+            genres={display.genres}
             note={tracked ? undefined : 'You can rate this without adding it — the score is kept against the book.'}
           />
 

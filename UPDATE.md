@@ -5,6 +5,8 @@ See `UPDATE-schema.md` for how to write these.
 ## 1.3.0 — Unreleased
 
 ### Added
+- Book page: rate a biography, memoir or war book on Insight, Credibility and Impact, not plot
+- Book page: a Story or True account switch picks which questions a rating asks
 - Sign-in screen: continue with Bazaar when it is installed on this phone
 
 ### Changed

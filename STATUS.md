@@ -148,8 +148,10 @@ all clean (206 tests, 0 errors, 0 warnings) as of the last commit.
   covers, so one is borrowed from another provider when they answer.
 - `src/lib/normalizeBook.ts` — the single read boundary (`normalizeBook`, `normalizeRead`,
   `normalizeRating`) and the single write mapper (`toBookRow` + `stripUndefined`).
-- `src/lib/formats.ts`, `bookStatus.ts` (incl. `readingProgress`), `ratings.ts` (facets:
-  prose / plot / characters / replay).
+- `src/lib/formats.ts`, `bookStatus.ts` (incl. `readingProgress`), `ratings.ts` (two facet
+  sets: story = prose / plot / characters / replay, true account = prose / insight / credibility /
+  impact; the kind is never stored, `kindOfRatings` reads it off the keys and `genreKind.ts`
+  guesses it from genres for an unrated book).
 
 ### The barcode scanner — built and installed, camera not yet pointed at a book
 - `src/features/books/add/IsbnScannerSheet.tsx` — `CameraView` with
