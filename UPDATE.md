@@ -2,7 +2,7 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.3.0 — Unreleased
+## 1.3.0 — 2026-10-03
 
 ### Added
 - Book page: rate a biography, memoir or war book on Insight, Credibility and Impact, not plot
