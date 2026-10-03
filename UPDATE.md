@@ -13,6 +13,7 @@ See `UPDATE-schema.md` for how to write these.
 ### Fixed
 - Sign-in screen: continuing with an app that is already open now signs you in
 - Stats: a new week keeps your streak going instead of showing zero until you read
+- Book page: saving a lower page than your bookmark asks first, so a slip cannot reset your place
 
 ## 1.2.0 — 2026-10-01
 

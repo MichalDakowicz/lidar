@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { LowerPageConfirm } from '@/features/books/detail/LowerPageConfirm';
 import { PageMoveReceipt } from '@/features/books/detail/PageMoveReceipt';
 import { PageSpanFields } from '@/features/books/detail/PageSpanFields';
 import { ProgressActions } from '@/features/books/detail/ProgressActions';
 import { countablePages, firstPage, pagesReadAt, progressRatio } from '@/lib/pages';
-import { displayPage, finishesBook, planPageMove, type BookmarkMode } from '@/lib/progress';
+import { displayPage, finishesBook, losesBookmark, planPageMove, type BookmarkMode } from '@/lib/progress';
 import { formatRelativeTime } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
 import type { Book } from '@/types/book';
@@ -63,6 +64,7 @@ export function ProgressPanel({
   const saved = displayPage(book.currentPage, mode);
   const [draft, setDraft] = useState(saved == null ? '' : String(saved));
   const [saving, setSaving] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   // Re-sync when the row or the mode changes underneath — realtime, the same
   // account on another device, or the toggle below. Adjusted during render
@@ -86,19 +88,27 @@ export function ProgressPanel({
   const canSave = move.valid && !move.unchanged && !saving;
   const finishes = move.valid && finishesBook(book, move.to);
 
-  const commit = async (override?: { page: number | null; pages: number }) => {
-    if (!override && !canSave) return;
+  const write = async (next: { page: number | null; pages: number }) => {
     setSaving(true);
     try {
-      await onSetPage(override ?? { page: move.to, pages: move.pages });
+      await onSetPage(next);
     } finally {
       setSaving(false);
     }
   };
 
+  // Save and the keyboard's Done both land here. A move that takes the bookmark
+  // off a page it is already on asks first (lib/progress.losesBookmark); Reset
+  // does not, because pressing it is the question.
+  const save = () => {
+    if (!canSave) return;
+    if (losesBookmark(move)) setConfirming(true);
+    else void write({ page: move.to, pages: move.pages });
+  };
+
   // A re-read starts from nothing. The pages already read stay in the ledger,
   // so this costs the streak nothing and gives the next pass room to count.
-  const resetBookmark = book.currentPage == null || saving ? null : () => commit({ page: null, pages: 0 });
+  const resetBookmark = book.currentPage == null || saving ? null : () => write({ page: null, pages: 0 });
 
   return (
     <View className="gap-3">
@@ -149,7 +159,7 @@ export function ProgressPanel({
             <TextInput
               value={draft}
               onChangeText={setDraft}
-              onSubmitEditing={() => commit()}
+              onSubmitEditing={save}
               keyboardType="number-pad"
               returnKeyType="done"
               placeholder={saved == null ? 'Page…' : String(saved)}
@@ -167,8 +177,20 @@ export function ProgressPanel({
         finishes={finishes}
         canSave={canSave}
         saving={saving}
-        onSave={() => commit()}
+        onSave={save}
         onReset={resetBookmark}
+      />
+
+      <LowerPageConfirm
+        visible={confirming}
+        clearing={move.to == null}
+        saved={saved}
+        typed={draft}
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          if (canSave) void write({ page: move.to, pages: move.pages });
+        }}
       />
     </View>
   );
