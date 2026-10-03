@@ -10,6 +10,9 @@ See `UPDATE-schema.md` for how to write these.
 ### Changed
 - Sign-in screen: Ping apps on this phone sit behind one Choose an app button
 
+### Fixed
+- Sign-in screen: continuing with an app that is already open now signs you in
+
 ## 1.2.0 — 2026-10-01
 
 ### Added
