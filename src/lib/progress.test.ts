@@ -1,4 +1,12 @@
-import { closingMove, displayPage, finishesBook, pagesGained, planPageMove, resolveTypedPage } from './progress';
+import {
+  closingMove,
+  displayPage,
+  finishesBook,
+  losesBookmark,
+  pagesGained,
+  planPageMove,
+  resolveTypedPage,
+} from './progress';
 import type { Book } from '@/types/book';
 
 type Span = Pick<Book, 'pageCount' | 'startPage' | 'currentPage'>;
@@ -96,6 +104,39 @@ describe('planPageMove', () => {
 
   it('rejects a page before the book begins', () => {
     expect(planPageMove(span({ startPage: 17 }), '3', 'finished').valid).toBe(false);
+  });
+});
+
+describe('losesBookmark', () => {
+  it('is true when the typed page is behind the saved one', () => {
+    expect(losesBookmark(planPageMove(span({ currentPage: 214 }), '120', 'finished'))).toBe(true);
+  });
+
+  it('is true when the field is emptied over a saved bookmark', () => {
+    expect(losesBookmark(planPageMove(span({ currentPage: 214 }), '', 'finished'))).toBe(true);
+  });
+
+  it('is false for a forward move, which only ever adds pages', () => {
+    expect(losesBookmark(planPageMove(span({ currentPage: 120 }), '214', 'finished'))).toBe(false);
+  });
+
+  it('is false when nothing changes, so Save has nothing to confirm', () => {
+    expect(losesBookmark(planPageMove(span({ currentPage: 214 }), '214', 'finished'))).toBe(false);
+  });
+
+  it('is false when there was no bookmark to lose', () => {
+    expect(losesBookmark(planPageMove(span(), '', 'finished'))).toBe(false);
+    expect(losesBookmark(planPageMove(span(), '40', 'finished'))).toBe(false);
+  });
+
+  it('is false for a field that cannot be read as a page', () => {
+    expect(losesBookmark(planPageMove(span({ currentPage: 214 }), '2f', 'finished'))).toBe(false);
+  });
+
+  it('judges the stored page, so "next page" mode behaves the same', () => {
+    // Typing 214 in next-page mode stores 213: one behind a bookmark on 214.
+    expect(losesBookmark(planPageMove(span({ currentPage: 214 }), '214', 'next'))).toBe(true);
+    expect(losesBookmark(planPageMove(span({ currentPage: 214 }), '215', 'next'))).toBe(false);
   });
 });
 

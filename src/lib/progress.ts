@@ -108,6 +108,21 @@ export function planPageMove(book: Bookmark, raw: string, mode: BookmarkMode): P
 }
 
 /**
+ * Would saving this move take the bookmark off a page it is already on?
+ *
+ * A bookmark that goes backwards, or is cleared by emptying the field, is the
+ * one save that quietly throws progress away — a stray digit is all it takes —
+ * so the panel asks before it writes. A re-read is the same move done on
+ * purpose, which is why it is a question and not a refusal. An unreadable or
+ * unchanged field is not a move at all, and a bookmark that was never set has
+ * nothing to lose.
+ */
+export function losesBookmark(move: PageMove): boolean {
+  if (!move.valid || move.unchanged || move.from == null) return false;
+  return move.to == null || move.backwards;
+}
+
+/**
  * Does a bookmark landing here mean the book is finished?
  *
  * The last page is the whole answer: there is nothing left to read past it, so
