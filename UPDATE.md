@@ -4,6 +4,9 @@ See `UPDATE-schema.md` for how to write these.
 
 ## 1.3.0 — Unreleased
 
+### Changed
+- Sign-in screen: Ping apps on this phone sit behind one Choose an app button
+
 ## 1.2.0 — 2026-10-01
 
 ### Added
