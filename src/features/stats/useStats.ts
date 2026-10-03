@@ -4,7 +4,8 @@ import { personalScore } from '@/lib/personalScore';
 import { ratingDistribution, type RatingDistributionResult } from '@/lib/ratingDistribution';
 import { computeStats, type LibraryStats } from '@/lib/stats';
 import { periodStart, scopeReadsToPeriod, type StatsPeriodId } from '@/lib/statsPeriod';
-import { currentStreak, dailyPages, longestStreak, weekShortfall } from '@/lib/streak';
+import { currentStreak, dailyPages, goalFor, longestStreak, weekShortfall, type WeeklyGoal } from '@/lib/streak';
+import { EMPTY_GOAL_HISTORY, goalSchedule, type GoalPeriod } from '@/lib/weeklyGoal';
 import type { Book, BookRating, Progress, Read } from '@/types/book';
 
 /** Stable identity, so a caller with no ledger does not re-derive every render. */
@@ -22,6 +23,8 @@ export type StatsBundle = {
   weekPages: number;
   /** Reads inside the window — the headline "finished" number. */
   periodReads: number;
+  /** The goal for the week starting on a given Monday, as it stood then. */
+  goalForWeek: (weekStart: Date) => number;
 };
 
 /**
@@ -39,6 +42,7 @@ export function useStats({
   progress = EMPTY_PROGRESS,
   period,
   weeklyGoal,
+  goalHistory = EMPTY_GOAL_HISTORY,
   streakSince = null,
 }: {
   books: Book[];
@@ -48,6 +52,11 @@ export function useStats({
   progress?: Progress[];
   period: StatsPeriodId;
   weeklyGoal: number;
+  /**
+   * Earlier goals (store/readingGoal), so a goal changed "from this week" does not
+   * rewrite the weeks read under the old one. Omitted means one number throughout.
+   */
+  goalHistory?: GoalPeriod[];
   /** Streak reset (store/streakEpoch): earlier reads stay, the habit restarts. */
   streakSince?: string | null;
 }): StatsBundle {
@@ -68,9 +77,14 @@ export function useStats({
   // dailyPages settles which of the two owns each book so nothing is counted
   // twice.
   const daily = useMemo(() => dailyPages(reads, progress, streakSince), [reads, progress, streakSince]);
-  const streak = useMemo(() => currentStreak(daily, weeklyGoal), [daily, weeklyGoal]);
-  const longest = useMemo(() => longestStreak(daily, weeklyGoal), [daily, weeklyGoal]);
-  const week = useMemo(() => weekShortfall(daily, weeklyGoal), [daily, weeklyGoal]);
+  const goal = useMemo<WeeklyGoal>(
+    () => goalSchedule({ weeklyPages: weeklyGoal, history: goalHistory }),
+    [weeklyGoal, goalHistory],
+  );
+  const goalForWeek = useMemo(() => (start: Date) => goalFor(goal, start), [goal]);
+  const streak = useMemo(() => currentStreak(daily, goal), [daily, goal]);
+  const longest = useMemo(() => longestStreak(daily, goal), [daily, goal]);
+  const week = useMemo(() => weekShortfall(daily, goal), [daily, goal]);
 
   return {
     stats,
@@ -81,5 +95,6 @@ export function useStats({
     weekNeeded: week.needed,
     weekPages: week.read,
     periodReads: scopedReads.length,
+    goalForWeek,
   };
 }

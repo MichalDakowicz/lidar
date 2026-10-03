@@ -31,6 +31,7 @@ export function StreakSnapshot() {
   const { ratings } = useBookRatings();
   const { settings, loading: settingsLoading, updateSettings } = useUserSettings();
   const weeklyGoal = useReadingGoal((s) => s.weeklyPages);
+  const goalHistory = useReadingGoal((s) => s.history);
   const streakSince = useStreakEpoch((s) => s.since);
 
   const { streak } = useStats({
@@ -42,6 +43,7 @@ export function StreakSnapshot() {
     // is irrelevant to the published figure — 'all' just says that out loud.
     period: 'all',
     weeklyGoal,
+    goalHistory,
     streakSince,
   });
 

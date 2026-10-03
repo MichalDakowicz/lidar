@@ -31,6 +31,7 @@ function StatsScreen() {
   const period = useStatsPeriod((s) => s.period);
   const presentPeriod = useStatsPeriodSheet((s) => s.present);
   const weeklyGoal = useReadingGoal((s) => s.weeklyPages);
+  const goalHistory = useReadingGoal((s) => s.history);
   const streakSince = useStreakEpoch((s) => s.since);
 
   if (loading) {
@@ -61,6 +62,7 @@ function StatsScreen() {
           progress={progress}
           period={period}
           weeklyGoal={weeklyGoal}
+          goalHistory={goalHistory}
           streakSince={streakSince}
           ratingsFor={(book: Book) => ratingFor(book.bookKey)?.ratings ?? null}
           onOpenBook={(book) => router.push({ pathname: '/book/[bookId]', params: { bookId: book.id } })}

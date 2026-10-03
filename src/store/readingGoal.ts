@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { mmkvStorage } from '@/lib/mmkvStorage';
+import { changeGoal, type GoalPeriod, type GoalScope } from '@/lib/weeklyGoal';
 
 /**
  * Pages a week the streak asks for.
@@ -33,15 +34,26 @@ export function clampWeeklyPages(pages: number): number {
 }
 
 type ReadingGoalState = {
+  /** The goal now. Every week from `history`'s last end onwards. */
   weeklyPages: number;
-  setWeeklyPages: (weeklyPages: number) => void;
+  /**
+   * The goals before it, each with the Monday it stopped applying (lib/weeklyGoal).
+   * Empty until someone changes the goal "from this week" — which is why a state
+   * persisted before this field existed loads as one number for all of history,
+   * exactly what it was.
+   */
+  history: GoalPeriod[];
+  /** Change the goal, for the weeks from now on or for the whole history. */
+  setGoal: (weeklyPages: number, scope: GoalScope) => void;
 };
 
 export const useReadingGoal = create<ReadingGoalState>()(
   persist(
     (set) => ({
       weeklyPages: DEFAULT_WEEKLY_PAGES,
-      setWeeklyPages: (weeklyPages) => set({ weeklyPages: clampWeeklyPages(weeklyPages) }),
+      history: [],
+      setGoal: (weeklyPages, scope) =>
+        set((state) => changeGoal(state, clampWeeklyPages(weeklyPages), scope)),
     }),
     { name: 'reading-goal', storage: createJSONStorage(() => mmkvStorage), version: 1 },
   ),

@@ -18,7 +18,7 @@ const WEEKS_TO_SHOW = 26;
 const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 type Day = { dateStr: string; day: number; pages: number; isToday: boolean; isFuture: boolean };
-type Week = { label: string; days: Day[] };
+type Week = { label: string; start: Date; days: Day[] };
 
 function buildWeeks(daily: Record<string, number>, today: Date): Week[] {
   const todayStr = dateKey(today);
@@ -50,7 +50,7 @@ function buildWeeks(daily: Record<string, number>, today: Date): Week[] {
         isFuture: date > today,
       });
     }
-    weeks.push({ label, days });
+    weeks.push({ label, start, days });
   }
   return weeks;
 }
@@ -64,11 +64,17 @@ function fillFor(pages: number, dayTarget: number): string {
   return 'border-primary bg-primary/55';
 }
 
-export function StreakCalendar({ daily, weeklyGoal }: { daily: Record<string, number>; weeklyGoal: number }) {
+type StreakCalendarProps = {
+  daily: Record<string, number>;
+  /** The goal for the week starting on a Monday, so a week keeps the shading of the goal it was read under. */
+  goalForWeek: (weekStart: Date) => number;
+};
+
+export function StreakCalendar({ daily, goalForWeek }: StreakCalendarProps) {
   const scrollRef = useRef<ScrollView>(null);
   const didInit = useRef(false);
   const weeks = buildWeeks(daily, new Date());
-  const dayTarget = Math.max(1, Math.round(weeklyGoal / 7));
+  const dayTargetOf = (week: Week) => Math.max(1, Math.round(goalForWeek(week.start) / 7));
 
   return (
     <View className="flex-row gap-2">
@@ -103,7 +109,7 @@ export function StreakCalendar({ daily, weeklyGoal }: { daily: Record<string, nu
                 key={day.dateStr}
                 accessibilityLabel={`${day.dateStr}: ${day.pages} pages`}
                 className={`h-10 w-10 items-center justify-center rounded-md border ${
-                  day.isFuture ? 'border-border/30 bg-secondary/20 opacity-30' : fillFor(day.pages, dayTarget)
+                  day.isFuture ? 'border-border/30 bg-secondary/20 opacity-30' : fillFor(day.pages, dayTargetOf(week))
                 } ${day.isToday ? 'border-2 border-primary' : ''}`}
               >
                 <Text className={`text-xs font-medium ${day.pages > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
