@@ -142,17 +142,29 @@ export function dailyPages(
 }
 
 /**
+ * The pages a week asks for: one number for every week, or a function of the
+ * week's Monday when the goal has changed over time (lib/weeklyGoal). A plain
+ * number is the common case and the one the maths below was written for.
+ */
+export type WeeklyGoal = number | ((weekStart: Date) => number);
+
+/** What the goal asks of the week starting on this Monday. */
+export function goalFor(goal: WeeklyGoal, start: Date): number {
+  return typeof goal === 'function' ? goal(start) : goal;
+}
+
+/**
  * Consecutive-day streak walking back from `now`. A day contributes when pages
- * were read and its week meets `threshold`.
+ * were read and its week meets that week's goal.
  *
  * The current week is never broken, whatever it holds so far: it is not over,
  * and failing someone on Tuesday for a week they can still finish is the
  * daily-nag bug. That includes a week with no pages in it yet — on a fresh
  * Monday the run from last week is still the streak, rather than a zero that
  * reads as broken until the first page of the new week. Only a week that has
- * ended under the threshold ends the run.
+ * ended under its goal ends the run.
  */
-export function currentStreak(daily: Record<string, number>, threshold: number, now: Date = new Date()): number {
+export function currentStreak(daily: Record<string, number>, threshold: WeeklyGoal, now: Date = new Date()): number {
   if (Object.keys(daily).length === 0) return 0;
 
   const thisWeekStart = weekStart(now).getTime();
@@ -163,7 +175,7 @@ export function currentStreak(daily: Record<string, number>, threshold: number, 
     const start = weekStart(cursor);
     const inWeek = pagesInWeek(daily, start);
     const isCurrentWeek = start.getTime() === thisWeekStart;
-    const weekQualifies = inWeek >= threshold || isCurrentWeek;
+    const weekQualifies = inWeek >= goalFor(threshold, start) || isCurrentWeek;
 
     if ((daily[dateKey(cursor)] || 0) > 0) {
       if (!weekQualifies) break;
@@ -179,7 +191,7 @@ export function currentStreak(daily: Record<string, number>, threshold: number, 
 }
 
 /** Longest historical run under the same weekly-threshold rule. */
-export function longestStreak(daily: Record<string, number>, threshold: number): number {
+export function longestStreak(daily: Record<string, number>, threshold: WeeklyGoal): number {
   const keys = Object.keys(daily).sort();
   if (keys.length === 0) return 0;
 
@@ -189,13 +201,15 @@ export function longestStreak(daily: Record<string, number>, threshold: number):
   let longest = 0;
 
   while (cursor <= end) {
-    const inWeek = pagesInWeek(daily, weekStart(cursor));
+    const start = weekStart(cursor);
+    const inWeek = pagesInWeek(daily, start);
+    const clears = inWeek >= goalFor(threshold, start);
     if ((daily[dateKey(cursor)] || 0) > 0) {
-      if (inWeek >= threshold) {
+      if (clears) {
         run++;
         longest = Math.max(longest, run);
       }
-    } else if (inWeek < threshold) {
+    } else if (!clears) {
       run = 0;
     }
     cursor.setDate(cursor.getDate() + 1);
@@ -206,10 +220,10 @@ export function longestStreak(daily: Record<string, number>, threshold: number):
 /** Pages still owed this week to keep the streak alive. 0 means safe. */
 export function weekShortfall(
   daily: Record<string, number>,
-  threshold: number,
+  threshold: WeeklyGoal,
   now: Date = new Date(),
 ): { weekStart: string; needed: number; read: number } {
   const start = weekStart(now);
   const read = pagesInWeek(daily, start);
-  return { weekStart: dateKey(start), needed: Math.max(0, threshold - read), read };
+  return { weekStart: dateKey(start), needed: Math.max(0, goalFor(threshold, start) - read), read };
 }

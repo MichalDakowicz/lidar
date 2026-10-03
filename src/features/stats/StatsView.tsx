@@ -13,6 +13,7 @@ import { StatsOverview } from '@/features/stats/StatsOverview';
 import { useStats } from '@/features/stats/useStats';
 import { useNavBarSpace } from '@/hooks/useNavBarSpace';
 import { periodShortLabel, type StatsPeriodId } from '@/lib/statsPeriod';
+import type { GoalPeriod } from '@/lib/weeklyGoal';
 import { DEFAULT_WEEKLY_PAGES } from '@/store/readingGoal';
 import { COLORS } from '@/theme/colors';
 import type { Book, BookRating, Progress, Ratings, Read } from '@/types/book';
@@ -40,6 +41,8 @@ type StatsViewProps = {
    * somebody else's numbers is the default.
    */
   weeklyGoal?: number;
+  /** The reader's earlier goals, so past weeks are judged by the goal they had. Same omission rule. */
+  goalHistory?: GoalPeriod[];
   /**
    * Streak reset (store/streakEpoch). Omitted on a friend's shelf for the same
    * reason as the goal: it is this device's reset, not theirs.
@@ -72,10 +75,11 @@ export function StatsView({
   onOpenBook,
   onOpenPeriod,
   weeklyGoal = DEFAULT_WEEKLY_PAGES,
+  goalHistory,
   streakSince = null,
 }: StatsViewProps) {
   const navBarSpace = useNavBarSpace();
-  const bundle = useStats({ books, reads, ratings, progress, period, weeklyGoal, streakSince });
+  const bundle = useStats({ books, reads, ratings, progress, period, weeklyGoal, goalHistory, streakSince });
   const { stats, distribution, streak, longestStreak, weekNeeded, weekPages } = bundle;
 
   if (books.length === 0 && ratings.length === 0) {
@@ -116,7 +120,7 @@ export function StatsView({
           </Text>
         </View>
 
-        <StreakCalendar daily={bundle.dailyPages} weeklyGoal={weeklyGoal} />
+        <StreakCalendar daily={bundle.dailyPages} goalForWeek={bundle.goalForWeek} />
       </View>
 
       <View className="mb-12">

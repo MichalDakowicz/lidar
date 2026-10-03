@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
+import { useToast } from '@/components/ui/Toast';
+import { latestPeriod } from '@/lib/weeklyGoal';
 import { clampWeeklyPages, useReadingGoal } from '@/store/readingGoal';
 import { COLORS } from '@/theme/colors';
 
+import { GoalApply } from './GoalApply';
 import { SettingLabel } from './SettingsSection';
+import { useHasPastWeeks } from './useHasPastWeeks';
 
 /**
  * Pages a week the reading streak asks for. A week that clears it keeps the
@@ -25,36 +29,51 @@ import { SettingLabel } from './SettingsSection';
  * 360pt phone, which is why the steppers are not wider than they are.
  */
 export function WeeklyGoalControl() {
-  const { weeklyPages, setWeeklyPages } = useReadingGoal();
+  const { weeklyPages, history, setGoal } = useReadingGoal();
+  const { show } = useToast();
+  const hasPast = useHasPastWeeks();
+  // The goal in the field, which is not the goal in force until it is applied
+  // (GoalApply): the steppers are tapped in runs, and each tap rewriting the
+  // streak would make a run of +10s a run of questions.
+  const [goal, setGoalDraft] = useState(weeklyPages);
   const [draft, setDraft] = useState(String(weeklyPages));
 
-  // Re-sync when the stored goal moves under the field — a stepper press, or
-  // another screen. Adjusted during render rather than in an effect: an effect
-  // would paint the stale number for a frame first.
+  // Re-sync when the stored goal moves under the field — an apply, or another
+  // screen. Adjusted during render rather than in an effect: an effect would
+  // paint the stale number for a frame first.
   const [seen, setSeen] = useState(weeklyPages);
   if (seen !== weeklyPages) {
     setSeen(weeklyPages);
+    setGoalDraft(weeklyPages);
     setDraft(String(weeklyPages));
   }
 
-  const bump = (delta: number) => setWeeklyPages(weeklyPages + delta);
+  const pick = (pages: number) => {
+    const next = clampWeeklyPages(pages);
+    setGoalDraft(next);
+    setDraft(String(next));
+  };
+  const bump = (delta: number) => pick(goal + delta);
 
   // An empty field is someone mid-edit, not a goal of zero: it commits as the
   // last good number rather than snapping to the minimum under their fingers.
   const commit = () => {
     const typed = Number.parseInt(draft.trim(), 10);
-    if (Number.isNaN(typed)) {
-      setDraft(String(weeklyPages));
-      return;
-    }
-    const next = clampWeeklyPages(typed);
-    setDraft(String(next));
-    if (next !== weeklyPages) setWeeklyPages(next);
+    pick(Number.isNaN(typed) ? goal : typed);
   };
+
+  const latest = latestPeriod(history);
 
   return (
     <>
-      <SettingLabel title="Weekly page goal" description="Pages a week to keep your reading streak" />
+      <SettingLabel
+        title="Weekly page goal"
+        description={
+          latest
+            ? `Pages a week to keep your reading streak. Weeks before ${formatMonday(latest.until)} count against ${latest.pages.toLocaleString()}.`
+            : 'Pages a week to keep your reading streak'
+        }
+      />
 
       <View className="flex-row items-stretch gap-1.5">
         <TallStep label="−10" onPress={() => bump(-10)} accessibilityLabel="Ten pages fewer" />
@@ -83,8 +102,41 @@ export function WeeklyGoalControl() {
         />
         <TallStep label="+10" onPress={() => bump(10)} accessibilityLabel="Ten pages more" />
       </View>
+
+      {goal !== weeklyPages ? (
+        <GoalApply
+          current={weeklyPages}
+          goal={goal}
+          askScope={hasPast}
+          onApply={(scope) => {
+            setGoal(goal, scope);
+            show(`Weekly goal is now ${goal.toLocaleString()} pages`);
+          }}
+          onCancel={() => pick(weeklyPages)}
+        />
+      ) : null}
+
+      {latest ? (
+        <Pressable
+          onPress={() => {
+            setGoal(weeklyPages, 'whole-history');
+            show(`Every week counts against ${weeklyPages.toLocaleString()} pages`);
+          }}
+          className="py-1 active:opacity-70"
+        >
+          <Text className="text-center text-xs text-muted-foreground underline">
+            Undo — count {weeklyPages.toLocaleString()} for the whole history
+          </Text>
+        </Pressable>
+      ) : null}
     </>
   );
+}
+
+/** The Monday a goal period ended on, as a reader would say it. */
+function formatMonday(key: string): string {
+  const date = new Date(`${key}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? key : date.toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
 }
 
 type Step = { label: string; onPress: () => void; accessibilityLabel: string };
