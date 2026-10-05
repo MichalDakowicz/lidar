@@ -17,6 +17,7 @@ type LibrarySectionProps = {
   books: Book[];
   ratingsFor?: (book: Book) => Ratings | null;
   onPress: (book: Book) => void;
+  onLongPress?: (book: Book) => void;
   highlightedId?: string | null;
   /** Featured banners for a short rail, cover tiles for a long one. */
   variant?: 'featured' | 'cover';
@@ -26,7 +27,7 @@ type LibrarySectionProps = {
 };
 
 /**
- * One rail above the main grid (Recently finished, Readlist). A lone book
+ * One rail above the main grid (Continue reading, Readlist). A lone book
  * renders as a plain full-width banner; two or more go through the carousel,
  * shrunk a touch so the next one peeks in and the row reads as scrollable.
  */
@@ -35,6 +36,7 @@ export function LibrarySection({
   books,
   ratingsFor,
   onPress,
+  onLongPress,
   highlightedId,
   variant = 'featured',
   collapsible,
@@ -62,6 +64,7 @@ export function LibrarySection({
               variant="featured"
               ratings={ratingsFor?.(books[0]) ?? null}
               onPress={onPress}
+              onLongPress={onLongPress}
               highlighted={highlightedId === books[0].id}
             />
           </View>
@@ -72,6 +75,7 @@ export function LibrarySection({
             cardWidth={variant === 'featured' ? Math.min(MAX_FEATURED_WIDTH, width - 64) : undefined}
             ratingsFor={ratingsFor}
             onPress={onPress}
+            onLongPress={onLongPress}
             highlightedId={highlightedId}
           />
         ))}

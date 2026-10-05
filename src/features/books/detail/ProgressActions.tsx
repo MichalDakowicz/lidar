@@ -9,8 +9,11 @@ type ProgressActionsProps = {
   canSave: boolean;
   saving: boolean;
   onSave: () => void;
-  /** Clears the bookmark outright, for a book about to be read again. */
-  onReset: (() => void) | null;
+  /**
+   * Clears the bookmark outright, for a book about to be read again. Null
+   * greys it out; leaving it off hides it (the quick log is for moving forward).
+   */
+  onReset?: (() => void) | null;
 };
 
 /**
@@ -48,17 +51,19 @@ export function ProgressActions({ finishes, canSave, saving, onSave, onReset }: 
         </Text>
       </Pressable>
 
-      <Pressable
-        onPress={() => onReset?.()}
-        disabled={!onReset}
-        accessibilityRole="button"
-        accessibilityLabel="Clear the bookmark to read it again — the pages you read stay counted"
-        className="flex-row items-center gap-1.5 rounded-xl border border-border bg-secondary px-3 py-3 active:opacity-70"
-        style={{ opacity: onReset ? 1 : 0.4 }}
-      >
-        <RotateCcw size={14} color={COLORS.muted} />
-        <Text className="text-xs font-medium text-muted-foreground">Reset</Text>
-      </Pressable>
+      {onReset !== undefined && (
+        <Pressable
+          onPress={() => onReset?.()}
+          disabled={!onReset}
+          accessibilityRole="button"
+          accessibilityLabel="Clear the bookmark to read it again — the pages you read stay counted"
+          className="flex-row items-center gap-1.5 rounded-xl border border-border bg-secondary px-3 py-3 active:opacity-70"
+          style={{ opacity: onReset ? 1 : 0.4 }}
+        >
+          <RotateCcw size={14} color={COLORS.muted} />
+          <Text className="text-xs font-medium text-muted-foreground">Reset</Text>
+        </Pressable>
+      )}
     </View>
   );
 }

@@ -1,15 +1,15 @@
-import { BookOpen, Lock } from 'lucide-react-native';
-import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { LowerPageConfirm } from '@/features/books/detail/LowerPageConfirm';
+import { PageMoveFields } from '@/features/books/detail/PageMoveFields';
 import { PageMoveReceipt } from '@/features/books/detail/PageMoveReceipt';
 import { PageSpanFields } from '@/features/books/detail/PageSpanFields';
 import { ProgressActions } from '@/features/books/detail/ProgressActions';
+import { usePageDraft } from '@/features/books/detail/usePageDraft';
+import type { PageLogMove } from '@/features/books/detail/usePageLog';
 import { countablePages, firstPage, pagesReadAt, progressRatio } from '@/lib/pages';
-import { displayPage, finishesBook, losesBookmark, planPageMove, type BookmarkMode } from '@/lib/progress';
-import { formatRelativeTime } from '@/lib/utils';
+import type { BookmarkMode } from '@/lib/progress';
 import { COLORS } from '@/theme/colors';
 import type { Book } from '@/types/book';
 
@@ -23,7 +23,7 @@ type ProgressPanelProps = {
   form: BookForm;
   onFormChange: (patch: Partial<BookForm>) => void;
   issues?: FormIssues;
-  onSetPage: (move: { page: number | null; pages: number }) => Promise<void> | void;
+  onSetPage: (move: PageLogMove) => Promise<void> | void;
 };
 
 /**
@@ -46,7 +46,7 @@ type ProgressPanelProps = {
  * pages land on (public.book_progress). The ledger is what the streak and the
  * calendar add up — a bookmark alone cannot answer "how many pages this week".
  * A save that lands on the last page finishes the book instead, in one write,
- * so the same pages cannot be counted by both (useBookDetail.setPage).
+ * so the same pages cannot be counted by both (usePageLog).
  *
  * The length of the book and the page its story starts on sit directly above
  * the counter, because they are what the counter is measured against. Which
@@ -61,20 +61,7 @@ export function ProgressPanel({
   issues,
   onSetPage,
 }: ProgressPanelProps) {
-  const saved = displayPage(book.currentPage, mode);
-  const [draft, setDraft] = useState(saved == null ? '' : String(saved));
-  const [saving, setSaving] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-
-  // Re-sync when the row or the mode changes underneath — realtime, the same
-  // account on another device, or the toggle below. Adjusted during render
-  // rather than in an effect: an effect would paint the stale number for a
-  // frame first, and React flags the cascading render it causes.
-  const [seen, setSeen] = useState<{ page: number | null; mode: BookmarkMode }>({ page: book.currentPage, mode });
-  if (seen.page !== book.currentPage || seen.mode !== mode) {
-    setSeen({ page: book.currentPage, mode });
-    setDraft(saved == null ? '' : String(saved));
-  }
+  const page = usePageDraft(book, mode, onSetPage);
 
   // `total` is the last page number the reader types against; `countable` is
   // how many pages that actually is once the front matter is skipped, and it is
@@ -83,32 +70,6 @@ export function ProgressPanel({
   const countable = countablePages(book);
   const start = firstPage(book);
   const ratio = progressRatio(book) ?? 0;
-  const move = planPageMove(book, draft, mode);
-  const lastSaved = formatRelativeTime(book.progressUpdatedAt);
-  const canSave = move.valid && !move.unchanged && !saving;
-  const finishes = move.valid && finishesBook(book, move.to);
-
-  const write = async (next: { page: number | null; pages: number }) => {
-    setSaving(true);
-    try {
-      await onSetPage(next);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Save and the keyboard's Done both land here. A move that takes the bookmark
-  // off a page it is already on asks first (lib/progress.losesBookmark); Reset
-  // does not, because pressing it is the question.
-  const save = () => {
-    if (!canSave) return;
-    if (losesBookmark(move)) setConfirming(true);
-    else void write({ page: move.to, pages: move.pages });
-  };
-
-  // A re-read starts from nothing. The pages already read stay in the ledger,
-  // so this costs the streak nothing and gives the next pass room to count.
-  const resetBookmark = book.currentPage == null || saving ? null : () => write({ page: null, pages: 0 });
 
   return (
     <View className="gap-3">
@@ -138,59 +99,27 @@ export function ProgressPanel({
 
       <PageSpanFields form={form} onChange={onFormChange} issues={issues} />
 
-      {/* The pair is the whole interaction, so the two halves are the same
-          width and the same height: a zero flex basis makes them equal whatever
-          either one is holding. */}
-      <View className="flex-row items-end gap-2">
-        <View className="min-w-0 flex-1 gap-1.5" style={{ flexBasis: 0 }}>
-          <Text className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Last saved</Text>
-          <View className="h-11 flex-row items-center gap-2 rounded-lg border border-border bg-background px-3 opacity-70">
-            <Lock size={15} color={COLORS.mutedDeep} />
-            <Text numberOfLines={1} className="flex-1 text-sm text-muted-foreground">
-              {saved == null ? 'Not started' : saved}
-            </Text>
-          </View>
-        </View>
+      <PageMoveFields saved={page.saved} draft={page.draft} onChange={page.setDraft} onSubmit={page.save} />
 
-        <View className="min-w-0 flex-1 gap-1.5" style={{ flexBasis: 0 }}>
-          <Text className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Now on page</Text>
-          <View className="h-11 flex-row items-center gap-2 rounded-lg border border-border bg-secondary px-3">
-            <BookOpen size={15} color={COLORS.muted} />
-            <TextInput
-              value={draft}
-              onChangeText={setDraft}
-              onSubmitEditing={save}
-              keyboardType="number-pad"
-              returnKeyType="done"
-              placeholder={saved == null ? 'Page…' : String(saved)}
-              placeholderTextColor={COLORS.mutedDeep}
-              className="flex-1 text-sm text-foreground"
-              accessibilityLabel="New page"
-            />
-          </View>
-        </View>
-      </View>
+      <PageMoveReceipt move={page.move} lastSaved={page.lastSaved} total={total} finishes={page.finishes} />
 
-      <PageMoveReceipt move={move} lastSaved={lastSaved} total={total} finishes={finishes} />
-
+      {/* Reset is the re-read: the pages already read stay in the ledger, so it
+          costs the streak nothing and gives the next pass room to count. */}
       <ProgressActions
-        finishes={finishes}
-        canSave={canSave}
-        saving={saving}
-        onSave={save}
-        onReset={resetBookmark}
+        finishes={page.finishes}
+        canSave={page.canSave}
+        saving={page.saving}
+        onSave={page.save}
+        onReset={page.reset}
       />
 
       <LowerPageConfirm
-        visible={confirming}
-        clearing={move.to == null}
-        saved={saved}
-        typed={draft}
-        onCancel={() => setConfirming(false)}
-        onConfirm={() => {
-          setConfirming(false);
-          if (canSave) void write({ page: move.to, pages: move.pages });
-        }}
+        visible={page.confirming}
+        clearing={page.move.to == null}
+        saved={page.saved}
+        typed={page.draft}
+        onCancel={page.cancelConfirm}
+        onConfirm={page.confirm}
       />
     </View>
   );
