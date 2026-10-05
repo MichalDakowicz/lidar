@@ -14,6 +14,7 @@ import { LibraryFilterSheet } from '@/features/library/LibraryFilterSheet';
 import { LibraryGroups } from '@/features/library/LibraryGroups';
 import { LibrarySection } from '@/features/library/LibrarySection';
 import { LibraryToolbar } from '@/features/library/LibraryToolbar';
+import { QuickPageSheet } from '@/features/library/QuickPageSheet';
 import { GroupingSheet } from '@/features/library/GroupingSheet';
 import { useLibraryFilters } from '@/features/library/useLibraryFilters';
 import { useBookRatings } from '@/hooks/useBookRatings';
@@ -78,9 +79,18 @@ function LibraryScreen() {
 
   const filterSheetRef = useRef<BottomSheetModal>(null);
   const groupingSheetRef = useRef<BottomSheetModal>(null);
+  const quickPageSheetRef = useRef<BottomSheetModal>(null);
+  // By id, so the sheet follows the row as the save lands rather than holding
+  // the copy that was long-pressed.
+  const [quickPageId, setQuickPageId] = useState<string | null>(null);
+  const quickPageBook = books.find((book) => book.id === quickPageId) ?? null;
 
   const openBook = (book: Book) => router.push({ pathname: '/book/[bookId]', params: { bookId: book.id } });
   const ratingsFor = (book: Book) => ratingFor(book.bookKey)?.ratings ?? null;
+  const openQuickPage = (book: Book) => {
+    setQuickPageId(book.id);
+    quickPageSheetRef.current?.present();
+  };
 
   if (loading) {
     return (
@@ -101,7 +111,13 @@ function LibraryScreen() {
 
   const sections = (
     <>
-      <LibrarySection title="Continue reading" books={filters.continueReading} ratingsFor={ratingsFor} onPress={openBook} />
+      <LibrarySection
+        title="Continue reading"
+        books={filters.continueReading}
+        ratingsFor={ratingsFor}
+        onPress={openBook}
+        onLongPress={openQuickPage}
+      />
       <LibrarySection
         title="Readlist"
         books={filters.readlist}
@@ -164,6 +180,11 @@ function LibraryScreen() {
 
       <LibraryFilterSheet ref={filterSheetRef} />
       <GroupingSheet ref={groupingSheetRef} />
+      <QuickPageSheet
+        ref={quickPageSheetRef}
+        book={quickPageBook}
+        onDone={() => quickPageSheetRef.current?.dismiss()}
+      />
     </View>
   );
 }

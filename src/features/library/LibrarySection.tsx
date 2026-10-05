@@ -17,6 +17,7 @@ type LibrarySectionProps = {
   books: Book[];
   ratingsFor?: (book: Book) => Ratings | null;
   onPress: (book: Book) => void;
+  onLongPress?: (book: Book) => void;
   highlightedId?: string | null;
   /** Featured banners for a short rail, cover tiles for a long one. */
   variant?: 'featured' | 'cover';
@@ -35,6 +36,7 @@ export function LibrarySection({
   books,
   ratingsFor,
   onPress,
+  onLongPress,
   highlightedId,
   variant = 'featured',
   collapsible,
@@ -62,6 +64,7 @@ export function LibrarySection({
               variant="featured"
               ratings={ratingsFor?.(books[0]) ?? null}
               onPress={onPress}
+              onLongPress={onLongPress}
               highlighted={highlightedId === books[0].id}
             />
           </View>
@@ -72,6 +75,7 @@ export function LibrarySection({
             cardWidth={variant === 'featured' ? Math.min(MAX_FEATURED_WIDTH, width - 64) : undefined}
             ratingsFor={ratingsFor}
             onPress={onPress}
+            onLongPress={onLongPress}
             highlightedId={highlightedId}
           />
         ))}
