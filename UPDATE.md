@@ -2,7 +2,7 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.4.0 — Unreleased
+## 1.4.0 — 2026-10-05
 
 ### Added
 - Library: a Continue reading rail on top, last book read first, with how far in you are
