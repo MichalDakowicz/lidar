@@ -101,6 +101,7 @@ function LibraryScreen() {
 
   const sections = (
     <>
+      <LibrarySection title="Continue reading" books={filters.continueReading} ratingsFor={ratingsFor} onPress={openBook} />
       <LibrarySection
         title="Readlist"
         books={filters.readlist}

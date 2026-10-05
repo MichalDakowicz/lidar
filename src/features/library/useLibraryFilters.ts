@@ -10,13 +10,16 @@ import {
   type GroupBy,
 } from '@/lib/libraryFacets';
 import { isStarted } from '@/lib/bookStatus';
+import { continueReadingRail } from '@/lib/continueReading';
 import { bookMatchesSearchQuery } from '@/lib/librarySearch';
 import { compareBooks, type SortBy, type SortDir } from '@/lib/librarySort';
 import type { Book } from '@/types/book';
 import type { StatusFilter } from '@/store/libraryPrefs';
 
 export type LibraryFilters = {
-  /** The one rail above the main list. */
+  /** Books on the go, last bookmark moved first — the top rail. */
+  continueReading: Book[];
+  /** What is next, under it. */
   readlist: Book[];
   /** Everything the filters allow, minus what the rails already showed. */
   mainBooks: Book[];
@@ -58,9 +61,14 @@ export function useLibraryFilters({
   groupBy,
   scoreFor,
 }: LibraryFilterInput): LibraryFilters {
-  // The rail answers "what is next", so it is not narrowed by the filter chips
-  // — only by the search box, or searching would leave a rail of non-matches at
-  // the top of the results.
+  // The rails answer "where was I" and "what is next", so they are not narrowed
+  // by the filter chips — only by the search box, or searching would leave a
+  // rail of non-matches at the top of the results.
+  const readingRail = useMemo(() => {
+    const rail = continueReadingRail(books);
+    return searchQuery.trim() ? rail.filter((book) => bookMatchesSearchQuery(book, searchQuery)) : rail;
+  }, [books, searchQuery]);
+
   const readlistRail = useMemo(() => {
     const rail = books
       .filter((book) => book.status === 'Readlist')
@@ -81,12 +89,12 @@ export function useLibraryFilters({
 
   const railIds = useMemo(() => {
     const ids = new Set<string>();
-    // Only the readlist rail claims its books outright. A book you finished
-    // yesterday still belongs in the main grid — that rail is a shortcut, not a
-    // section that owns rows.
+    // Both rails own their rows: a book on the go or on the readlist shows once,
+    // in its rail, rather than again in the grid below it.
+    readingRail.forEach((book) => ids.add(book.id));
     readlistRail.forEach((book) => ids.add(book.id));
     return ids;
-  }, [readlistRail]);
+  }, [readingRail, readlistRail]);
 
   const mainBooks = useMemo(
     () => (statusFilter === 'all' ? filtered.filter((book) => !railIds.has(book.id)) : filtered),
@@ -101,6 +109,7 @@ export function useLibraryFilters({
   const readPool = useMemo(() => filtered.filter(isStarted), [filtered]);
 
   return {
+    continueReading: readingRail,
     readlist: readlistRail,
     mainBooks,
     groups,

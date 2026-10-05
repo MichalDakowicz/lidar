@@ -7,6 +7,8 @@ import { CoverImage } from '@/components/media/CoverImage';
 import { RatingStars, ScoreBadge } from '@/components/media/RatingStars';
 import { StatusBadge } from '@/components/media/StatusBadges';
 import { useHover, webTransition } from '@/hooks/useResponsive';
+import { isReading, readingProgress } from '@/lib/bookStatus';
+import { bookmarkLabel } from '@/lib/continueReading';
 import { authorsToDisplayString, cn, formatRelativeTime, publishedYear } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
 import type { Book, Ratings } from '@/types/book';
@@ -200,14 +202,20 @@ function RowCard({ book, ratings, onPress, highlighted = false, readOnly = false
 }
 
 /**
- * Wide banner for the library's own sections (Recently finished, Readlist).
+ * Wide banner for the library's own sections (Continue reading).
  * Crops the cover to 16:9 on purpose: a row of cards at full width reads as a
  * list of tiles, and the banner is what makes a section feel like a shelf
  * rather than more grid.
  */
-function FeaturedCard({ book, ratings, onPress, highlighted = false, readOnly = false, showStatus = true }: BookCardProps) {
+function FeaturedCard({ book, ratings, onPress, highlighted = false, showStatus = true }: BookCardProps) {
   const authorLine = authorsToDisplayString(book.authors);
-  const lastRead = formatRelativeTime(book.lastReadAt);
+  // A book on the go says where the bookmark is and when it moved; anything
+  // else says when you last finished it.
+  const reading = isReading(book);
+  const progress = reading ? readingProgress(book) : null;
+  const meta = reading
+    ? [bookmarkLabel(book), formatRelativeTime(book.progressUpdatedAt)].filter(Boolean).join(' · ')
+    : formatRelativeTime(book.lastReadAt);
 
   return (
     <Pressable
@@ -240,10 +248,15 @@ function FeaturedCard({ book, ratings, onPress, highlighted = false, readOnly = 
               {authorLine}
             </Text>
           )}
-          {!!lastRead && <Text className="text-[11px] text-neutral-400">{lastRead}</Text>}
+          {!!meta && <Text className="text-[11px] text-neutral-400">{meta}</Text>}
         </View>
       </View>
 
+      {progress != null && progress > 0 && (
+        <View className="absolute inset-x-0 bottom-0 h-1 bg-white/15">
+          <View className="h-full bg-primary" style={{ width: `${Math.round(progress * 100)}%` }} />
+        </View>
+      )}
     </Pressable>
   );
 }
