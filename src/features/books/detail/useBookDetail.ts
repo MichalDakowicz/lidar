@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 
 import { useBookResult } from '@/features/books/add/useBookSearch';
 import { DEFAULT_DRAFT, useQuickAdd, type QuickAddDraft } from '@/features/books/add/useQuickAdd';
+import { usePageLog, type PageLogMove } from '@/features/books/detail/usePageLog';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookRatings } from '@/hooks/useBookRatings';
 import { useProgress } from '@/hooks/useProgress';
 import { useReads } from '@/hooks/useReads';
 import { googleIdFromKey } from '@/lib/bookKey';
-import { finishesBook } from '@/lib/progress';
 import type { Book, Progress, Ratings, Read } from '@/types/book';
 
 export type BookDisplay = {
@@ -46,7 +46,7 @@ export type BookDetail = {
    * Move the bookmark and record what the move was worth. Returns true when the
    * move reached the last page and the book was logged as finished.
    */
-  setPage: (move: { page: number | null; pages: number }) => Promise<boolean>;
+  setPage: (move: PageLogMove) => Promise<boolean>;
   /** Finishes with no date on them (Radar's undated watches, in books). */
   setUndatedReads: (undatedReads: number) => Promise<void>;
   pending: boolean;
@@ -68,7 +68,8 @@ export function useBookDetail({ bookId, bookKey }: { bookId?: string; bookKey?: 
   const { books, loading: booksLoading, updateBook } = useBooks();
   const { ratingFor } = useBookRatings();
   const { reads, logRead, removeRead } = useReads();
-  const { progress, logProgress } = useProgress();
+  const { progress } = useProgress();
+  const logPage = usePageLog();
   const { add, remove, pendingKey } = useQuickAdd();
 
   const book = useMemo(() => {
@@ -151,33 +152,8 @@ export function useBookDetail({ bookId, bookKey }: { bookId?: string; bookKey?: 
       if (book) await logRead(book);
     },
     removeRead,
-    // Moving the bookmark is silent: a feed row per page turn would drown
-    // everything else a friend did that week.
-    //
-    // Two writes, in this order: the live bookmark on the row, then the ledger
-    // row that says what the move was worth. The bookmark alone cannot answer
-    // "how many pages this week" — that is the whole reason public.book_progress
-    // exists (hooks/useProgress).
-    // Reaching the last page is finishing, so it takes the finish path instead
-    // of this one: logRead writes the closing ledger row for exactly the pages
-    // between the bookmark and the end, which is the same number this move is
-    // worth. Doing both would count them twice.
-    setPage: async ({ page, pages }: { page: number | null; pages: number }) => {
-      if (!book) return false;
-      if (finishesBook(book, page)) {
-        await logRead(book);
-        return true;
-      }
-      const recordedAt = new Date().toISOString();
-      await updateBook(
-        book.id,
-        { currentPage: page, progressUpdatedAt: page == null ? null : recordedAt },
-        { silent: true },
-      );
-      await logProgress(book, { page, pages, recordedAt });
-      return false;
-    },
-    // Silent for the same reason: nobody's feed needs "remembered reading this
+    setPage: (move: PageLogMove) => (book ? logPage(book, move) : Promise.resolve(false)),
+    // Silent, like a bookmark move: nobody's feed needs "remembered reading this
     // once, years ago".
     setUndatedReads: async (undatedReads: number) => {
       if (!book) return;
