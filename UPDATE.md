@@ -8,6 +8,9 @@ See `UPDATE-schema.md` for how to write these.
 - Library: a Continue reading rail on top, last book read first, with how far in you are
 - Library: long-press a Continue reading book to log your page without opening it
 
+### Fixed
+- Library, Profile and the book page: section titles carry Lidar violet, not Radar blue
+
 ## 1.3.0 — 2026-10-03
 
 ### Added
