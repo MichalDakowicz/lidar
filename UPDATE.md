@@ -2,7 +2,11 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.5.0 — Unreleased
+## 1.6.0 — Unreleased
+
+### Added
+
+- Sign-in: enter a code from another Ping app without using the camera
 
 ## 1.4.0 — 2026-10-05
 
