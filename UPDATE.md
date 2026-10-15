@@ -2,7 +2,11 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.5.0 — Unreleased
+## 1.5.1 — Unreleased
+
+### Fixed
+
+- Inputs stay above the Android keyboard on full-screen forms
 
 ## 1.4.0 — 2026-10-05
 
