@@ -2,7 +2,17 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.5.0 — Unreleased
+## 1.6.1 — Unreleased
+
+## 1.6.0 — 2026-10-20
+
+### Added
+
+- Sign-in: enter a code from another Ping app without using the camera
+
+### Fixed
+
+- Inputs stay above the Android keyboard on full-screen forms
 
 ## 1.4.0 — 2026-10-05
 
