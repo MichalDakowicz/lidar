@@ -1,5 +1,8 @@
 # Lidar — status
 
+> **Release 1.6.0 (2026-10-20).** Manual sign-in codes, full-screen Android keyboard handling and realtime feed cache updates are merged into main. All 488 tests, ESLint and TypeScript checks pass. The signed Android APK and SHA256 checksums are published on GitHub; https://lidar-shelf.web.app matches the tested web export byte for byte. The shared manual-code migration and qr-login function are deployed and verified. No Android device was connected, so installation and handset UI checks were unavailable.
+
+
 **Read this file and you have everything. Do not go looking for context elsewhere first.**
 It says what Lidar is, what state it is in, what is verified, what is not, and what to do
 next, in order. Update it as work lands — it is the handover, not a changelog.
