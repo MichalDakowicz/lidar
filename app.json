@@ -16,7 +16,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.michaldakowicz.lidar",
-      "versionCode": 9
+      "versionCode": 10
     },
     "web": {
       "output": "single",
