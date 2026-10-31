@@ -16,6 +16,8 @@ installWebCrypto();
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    // Keep old cloud sessions separate and require a new sign-in after cutover.
+    storageKey: 'lidar-self-hosted-auth-v1',
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,

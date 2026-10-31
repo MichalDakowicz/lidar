@@ -1,5 +1,15 @@
 # Lidar — status
 
+> **Lidar 1.6.1 backend cutover (2026-10-31).** Android and the existing Firebase
+> site now use `https://ping-api.dakowicz.xyz`, with a local publishable key and fresh
+> sign-in storage. Signed Android installed/launched; the user confirmed Google
+> sign-in and their books. All 493 tests, lint/types, owner/non-owner/anonymous RLS,
+> shared account/RPC checks, handoff and public Realtime event delivery passed.
+> Resend SMTP delivery was received and Auth recovery submission passed. Radar and
+> Cellar are excluded; Sonar/Pulsar/Bazaar remain cloud clients. Cloud Lidar writes
+> are fenced; local writes now require reconciliation before rollback. See
+> [docs/backend-cutover.md](docs/backend-cutover.md) for evidence and limitations.
+
 > **Release 1.6.0 (2026-10-20).** Manual sign-in codes, full-screen Android keyboard handling and realtime feed cache updates are merged into main. All 488 tests, ESLint and TypeScript checks pass. The signed Android APK and SHA256 checksums are published on GitHub; https://lidar-shelf.web.app matches the tested web export byte for byte. The shared manual-code migration and qr-login function are deployed and verified. No Android device was connected, so installation and handset UI checks were unavailable.
 
 

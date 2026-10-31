@@ -2,7 +2,18 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.6.1 — Unreleased
+## 1.6.2 — Unreleased
+
+## 1.6.1 — 2026-10-31
+
+### Changed
+
+- Sign-in: Lidar uses Ping’s own server; sign in again after updating
+- Sign-in: apps still on the previous server are not offered as sign-in donors
+
+### Fixed
+
+- Web: navigation icons load correctly from the exported app assets
 
 ## 1.6.0 — 2026-10-20
 
