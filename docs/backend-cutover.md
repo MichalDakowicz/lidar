@@ -1,4 +1,13 @@
-# Dedicated Ping backend — Lidar 1.6.2
+# Dedicated Ping backend — Lidar 1.6.3
+
+Lidar 1.6.3/code 13 enables same-backend handoff with Pulsar and Sonar. Actual
+Pulsar handoff passed in both directions on Android using app-local sign-out.
+The signed update installed in place and launched without errors. All 490 tests,
+lint/types, family-signature and secret checks pass; all 24 web files match the
+existing Firebase site. Bazaar stays on cloud; Radar/Cellar remain excluded.
+PR #27 remains open and unmerged.
+
+## Earlier 1.6.2 release
 
 Android 1.6.2 (code 12) and https://lidar-shelf.web.app use
 https://ping-api.dakowicz.xyz. Version 1.6.2 keeps the existing self-hosted sign-in

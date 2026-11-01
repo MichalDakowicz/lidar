@@ -2,7 +2,9 @@
 
 See `UPDATE-schema.md` for how to write these.
 
-## 1.6.3 — Unreleased
+## 1.6.4 — Unreleased
+
+## 1.6.3 — 2026-11-01
 
 ### Changed
 
