@@ -3,8 +3,10 @@
 > **Lidar 1.6.2 reciprocal Sonar sign-in (2026-11-01).** Sonar Android/web now use
 > Ping and passed the user's Google/albums/search check. The 1.6.2 source enables
 > same-backend sign-in with Sonar; Pulsar/Bazaar remain blocked across backends.
-> All 493 tests, lint and types pass. Signed Android build/install and web deploy
-> are being completed; do not yet describe 1.6.2 as shipped.
+> All 493 tests, lint and types pass. Signed Android installed/launched without
+> startup errors; the user confirmed books and actual handoff in both directions.
+> Web is deployed to the existing Firebase URL and all 24 files match live bytes.
+> APK publication is being completed; PR #27 remains open and unmerged.
 
 > **Lidar 1.6.1 backend cutover (2026-10-31).** Android and the existing Firebase
 > site now use `https://ping-api.dakowicz.xyz`, with a local publishable key and fresh
