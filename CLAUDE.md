@@ -7,10 +7,12 @@ the practical target — the user tests on a physical device over ADB.
 **Start at `STATUS.md`.** It is the handover: what is done, what is left, in order, plus
 the traps. Read it before planning anything.
 
-**Lidar, Radar (`../radar`) and Sonar (`../sonar`) share one Supabase project.** Accounts,
-profiles, friendships, the privacy setting and the theme preference are the same rows in
-all three apps. Read `docs/shared-database.md` before touching anything under `supabase/`
-or any table Radar owns.
+**Ping consists of Lidar, Sonar, Pulsar and Bazaar.** Radar and Cellar are separate
+products. Preserve their historical shared database dependencies, but do not release or
+configure them as Ping siblings. The staged migration uses
+`https://ping-api.dakowicz.xyz` and local public API keys. Lidar is the first client;
+Sonar and Pulsar's Android/web cutovers are verified; Bazaar remains on cloud. Shared sign-in must
+only offer apps on the same backend. Read `docs/shared-database.md` before database work.
 
 Structure rules (they are why the siblings are maintainable):
 

@@ -3,9 +3,11 @@
 **Point it at a spine and it knows the book.**
 
 Lidar tracks a book collection — hardcover, paperback, ebook, audiobook — across a native
-Android app and the web, on the same account as
-[Radar](https://github.com/MichalDakowicz/radar) (films) and
-[Sonar](https://github.com/MichalDakowicz/sonar) (records).
+Android app and the web. It belongs to Ping alongside Sonar, Pulsar and Bazaar.
+Lidar uses the dedicated shared backend at `https://ping-api.dakowicz.xyz`.
+The other Ping apps remain on cloud during the staged migration; account IDs are
+preserved, but later changes do not synchronize between backends. Radar and Cellar
+are separate products. See [the backend cutover notes](docs/backend-cutover.md).
 
 ## Features
 
@@ -27,7 +29,7 @@ Android app and the web, on the same account as
 - **Ratings page.** A tier list of everything you have an opinion about. Search any book
   and drop it into S–F in one tap — owning it is never required.
 - **Social.** Friends' activity feed with reactions, friend requests, and a public shelf
-  you can share by link — one friend list shared with Radar and Sonar.
+  you can share by link, using Ping's shared account and friend-list schema.
 - **Stats.** Pages and books finished, format split, top authors, eras, genres, where
   books came from, what you have spent, and the shape of how you rate.
 
@@ -55,7 +57,7 @@ npm start
 
 | Variable | Why |
 | --- | --- |
-| `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` | The shared Supabase project — copy them out of `../radar/.env` |
+| `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Dedicated Ping endpoint and its local publishable key; ask the server administrator |
 | `EXPO_PUBLIC_GOOGLE_BOOKS_KEY` | Optional. Only raises the per-IP quota; searches work without it |
 
 ### Database

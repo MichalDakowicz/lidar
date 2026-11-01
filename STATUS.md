@@ -1,5 +1,30 @@
 # Lidar — status
 
+> **Lidar 1.6.3 reciprocal Pulsar sign-in.** Pulsar's Android cutover is verified
+> by the user. The source now permits local Lidar/Sonar/Pulsar handoff and keeps
+> cloud Bazaar blocked. All 490 tests, lint and types pass. The signed Android
+> update installed in place and launched without errors; actual Pulsar handoff
+> passed in both directions using app-local sign-out. Web is deployed, and all
+> 24 exported files match live bytes. PR #27 remains open and unmerged.
+
+> **Lidar 1.6.2 reciprocal Sonar sign-in (2026-11-01).** Sonar Android/web now use
+> Ping and passed the user's Google/albums/search check. The 1.6.2 source enables
+> same-backend sign-in with Sonar; Pulsar/Bazaar remain blocked across backends.
+> All 493 tests, lint and types pass. Signed Android installed/launched without
+> startup errors; the user confirmed books and actual handoff in both directions.
+> Web is deployed to the existing Firebase URL and all 24 files match live bytes.
+> APK/checksum are published as v1.6.2; PR #27 remains open and unmerged.
+
+> **Lidar 1.6.1 backend cutover (2026-10-31).** Android and the existing Firebase
+> site now use `https://ping-api.dakowicz.xyz`, with a local publishable key and fresh
+> sign-in storage. Signed Android installed/launched; the user confirmed Google
+> sign-in and their books. All 493 tests, lint/types, owner/non-owner/anonymous RLS,
+> shared account/RPC checks, handoff and public Realtime event delivery passed.
+> Resend SMTP delivery was received and Auth recovery submission passed. Radar and
+> Cellar are excluded; Sonar/Pulsar/Bazaar remain cloud clients. Cloud Lidar writes
+> are fenced; local writes now require reconciliation before rollback. See
+> [docs/backend-cutover.md](docs/backend-cutover.md) for evidence and limitations.
+
 > **Release 1.6.0 (2026-10-20).** Manual sign-in codes, full-screen Android keyboard handling and realtime feed cache updates are merged into main. All 488 tests, ESLint and TypeScript checks pass. The signed Android APK and SHA256 checksums are published on GitHub; https://lidar-shelf.web.app matches the tested web export byte for byte. The shared manual-code migration and qr-login function are deployed and verified. No Android device was connected, so installation and handset UI checks were unavailable.
 
 

@@ -1,3 +1,11 @@
+# Current migration scope
+
+Ping now consists of Lidar, Sonar, Pulsar and Bazaar; Radar and Cellar are separate
+products. Lidar 1.6.1 is live on `https://ping-api.dakowicz.xyz`; the other Ping apps
+remain cloud clients during staging. IDs and shared schema were preserved, but
+later cross-backend changes are not synchronized. See [backend-cutover.md](backend-cutover.md).
+The sections below document the historical schema contract and dependencies, not
+current product membership or a claim that all releases share one live database.
 # One database, three apps
 
 Radar (films), Sonar (records) and Lidar (books) run on the **same Supabase project**. Not
