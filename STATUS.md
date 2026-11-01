@@ -1,5 +1,10 @@
 # Lidar — status
 
+> **Lidar 1.6.3 reciprocal Pulsar sign-in.** Pulsar's Android cutover is verified
+> by the user. The source now permits local Lidar/Sonar/Pulsar handoff and keeps
+> cloud Bazaar blocked. Validation, Android installation and web deployment for
+> this reciprocal update are pending. PR #27 remains open and unmerged.
+
 > **Lidar 1.6.2 reciprocal Sonar sign-in (2026-11-01).** Sonar Android/web now use
 > Ping and passed the user's Google/albums/search check. The 1.6.2 source enables
 > same-backend sign-in with Sonar; Pulsar/Bazaar remain blocked across backends.
