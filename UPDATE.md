@@ -2,6 +2,8 @@
 
 See `UPDATE-schema.md` for how to write these.
 
+## 1.6.3 — Unreleased
+
 ## 1.6.2 — 2026-11-01
 
 ### Changed
