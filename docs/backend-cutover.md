@@ -1,5 +1,18 @@
 # Dedicated Ping backend — Lidar 1.6.1
 
+## Sonar reciprocal sign-in update — 2026-11-01
+
+Sonar Android 2.4.1 and its Firebase site now use the same Ping backend. The user
+confirmed Google sign-in, albums and Spotify search on Android. Its six cloud
+tables are fenced after backups and an exact zero-import reconciliation; local
+Lidar rows, Auth/session state and shared settings were preserved. Lidar 1.6.2
+(code 12) is prepared to enable sign-in with Sonar in both directions. Pulsar and
+Bazaar remain cloud-backed and are excluded from local handoff; Radar/Cellar
+remain separate. The reciprocal update passes 493 tests, lint and types; its
+Android install and web deployment are pending.
+
+## Original Lidar cutover evidence
+
 Lidar Android (versionCode 11) and https://lidar-shelf.web.app use
 https://ping-api.dakowicz.xyz. Google sign-in uses Ping's own production OAuth
 client. Confirmation and recovery email use Resend. Frontend builds contain only

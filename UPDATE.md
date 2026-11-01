@@ -4,6 +4,10 @@ See `UPDATE-schema.md` for how to write these.
 
 ## 1.6.2 — Unreleased
 
+### Changed
+
+- Sign-in: continue with Sonar after both apps move to Ping's dedicated server
+
 ## 1.6.1 — 2026-10-31
 
 ### Changed

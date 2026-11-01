@@ -11,7 +11,7 @@ the traps. Read it before planning anything.
 products. Preserve their historical shared database dependencies, but do not release or
 configure them as Ping siblings. The staged migration uses
 `https://ping-api.dakowicz.xyz` and local public API keys. Lidar is the first client;
-Sonar, Pulsar and Bazaar remain on cloud until separately verified. Shared sign-in must
+Sonar's Android/web cutover is verified; Pulsar and Bazaar remain on cloud. Shared sign-in must
 only offer apps on the same backend. Read `docs/shared-database.md` before database work.
 
 Structure rules (they are why the siblings are maintainable):
